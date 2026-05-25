@@ -234,12 +234,14 @@ export class AuthService {
       const user = await this.userRepository.findByEmail(email);
 
       if (!user) {
+        logger.warn('Login failed: user not found', { email }, LOG_CONTEXTS.AUTH);
         return { success: false, message: '用户不存在' };
       }
 
       // 检查账户是否被锁定
       if (user.status === 'locked') {
         if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+          logger.warn('Login failed: account locked', { email, userId: user.id, lockedUntil: user.lockedUntil }, LOG_CONTEXTS.AUTH);
           return { success: false, message: '账户已被锁定，请稍后重试' };
         }
         // 锁定时间已过，解锁账户
@@ -256,9 +258,11 @@ export class AuthService {
           const lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
           await this.userRepository.lockUser(user.id, lockedUntil);
           await this.userRepository.updateLoginAttempts(user.id, newAttempts);
+          logger.warn('Login failed: account locked due to too many attempts', { email, userId: user.id, attempts: newAttempts }, LOG_CONTEXTS.AUTH);
           return { success: false, message: '登录失败次数过多，账户已被锁定 15 分钟' };
         }
         await this.userRepository.updateLoginAttempts(user.id, newAttempts);
+        logger.warn('Login failed: wrong password', { email, userId: user.id, attempts: newAttempts }, LOG_CONTEXTS.AUTH);
         return { success: false, message: '密码错误' };
       }
 
@@ -274,6 +278,7 @@ export class AuthService {
         await this.userRepository.setRememberToken(user.id, refreshToken);
       }
 
+      logger.info('Login successful', { email, userId: user.id }, LOG_CONTEXTS.AUTH);
       return {
         success: true,
         message: '登录成功',
