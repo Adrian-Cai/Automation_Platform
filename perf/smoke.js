@@ -4,9 +4,6 @@ import { SharedArray } from 'k6/data';
 
 const BASE_URL = (__ENV.BASE_URL || '').replace(/\/$/, '');
 const API_TOKEN = __ENV.API_TOKEN || '';
-const SMOKE_EMAIL = __ENV.SMOKE_EMAIL || '';
-const SMOKE_PASSWORD = __ENV.SMOKE_PASSWORD || '';
-let authToken = API_TOKEN;
 
 if (!BASE_URL) {
   throw new Error('BASE_URL is required');
@@ -32,39 +29,12 @@ export const options = {
   },
 };
 
-function resolveBody(body) {
-  if (!body) {
-    return {};
-  }
-
-  const text = JSON.stringify(body)
-    .replaceAll('${SMOKE_EMAIL}', SMOKE_EMAIL)
-    .replaceAll('${SMOKE_PASSWORD}', SMOKE_PASSWORD);
-
-  return JSON.parse(text);
-}
-
 function shouldSkip(api) {
-  if (api.requiresToken && !authToken) {
-    return true;
-  }
-
-  if (api.requiresCredentials && (!SMOKE_EMAIL || !SMOKE_PASSWORD)) {
+  if (api.requiresToken && !API_TOKEN) {
     return true;
   }
 
   return false;
-}
-
-function captureAuthToken(api, response) {
-  if (!api.captureToken || response.status !== api.expectedStatus) {
-    return;
-  }
-
-  const body = response.json();
-  if (body && typeof body.token === 'string') {
-    authToken = body.token;
-  }
 }
 
 export default function () {
@@ -79,15 +49,15 @@ export default function () {
       'Content-Type': 'application/json',
     };
 
-    if (authToken) {
-      headers.Authorization = `Bearer ${authToken}`;
+    if (API_TOKEN) {
+      headers.Authorization = `Bearer ${API_TOKEN}`;
     }
 
     const params = {
       headers,
       tags: { api: api.name },
     };
-    const body = JSON.stringify(resolveBody(api.body));
+    const body = api.body ? JSON.stringify(api.body) : null;
     let response;
 
     if (method === 'POST') {
@@ -104,8 +74,6 @@ export default function () {
       [`${api.name} status is ${api.expectedStatus}`]: (r) => r.status === api.expectedStatus,
       [`${api.name} response time < 800ms`]: (r) => r.timings.duration < 800,
     });
-
-    captureAuthToken(api, response);
 
     sleep(1);
   }
