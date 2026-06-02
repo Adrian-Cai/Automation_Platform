@@ -19,14 +19,10 @@ import {
   Gauge,
   BrainCircuit,
   FileText,
-  ListChecks,
-  Wand2,
   ShieldCheck,
   History,
   ClipboardList,
   Target,
-  FileText,
-  ShieldCheck,
   PanelLeftClose,
   PanelLeftOpen
 } from "lucide-react";
@@ -61,7 +57,7 @@ const navItems: NavItem[] = [
   {
     icon: <BrainCircuit className="h-5 w-5" />,
     label: "AI 工作台",
-    children: [
+children: [
       { label: "工作台总览", href: "/ai-workbench/overview", icon: <BrainCircuit className="h-4 w-4" /> },
       { label: "需求输入与解析", href: "/ai-workbench/requirement-input", icon: <ClipboardList className="h-4 w-4" /> },
       { label: "需求分析与测试点", href: "/ai-workbench/requirement-analysis", icon: <Target className="h-4 w-4" /> },

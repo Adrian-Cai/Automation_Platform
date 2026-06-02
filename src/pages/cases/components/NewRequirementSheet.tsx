@@ -114,7 +114,7 @@ export function NewRequirementSheet({ open, onOpenChange }: NewRequirementSheetP
       params.set('initReq', requirementText.trim());
       setLocation(`/ai-workbench/case-generation?${params.toString()}`);
     } catch (error) {
-      console.error('[AICaseCreate] failed to navigate', error);
+      console.error('[NewRequirementSheet] failed to navigate', error);
       toast.error('跳转失败，请重试');
     } finally {
       setIsSubmitting(false);

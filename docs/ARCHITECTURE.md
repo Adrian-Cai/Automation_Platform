@@ -218,8 +218,7 @@ graph TB
             APICases[APICases<br/>API用例]
             UICases[UICases<br/>UI用例]
             PerformanceCases[PerformanceCases<br/>性能用例]
-            AICases[AICases<br/>AI用例]
-            AICaseCreate[AICaseCreate<br/>AI用例创建]
+            AICases[AICases<br/>AI工作台]
         end
 
         subgraph "任务与报告"
@@ -375,7 +374,6 @@ graph TB
             UI_Cases["/cases/ui"]
             Perf_Cases["/cases/performance"]
             AI_Cases["/cases/ai"]
-            AI_Create["/cases/ai-create"]
         end
 
         Tasks["/tasks"]

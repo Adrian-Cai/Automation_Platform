@@ -344,8 +344,8 @@ function AiCasesInner() {
           }
         } else {
           // 文档在 localStorage 中不存在（新建场景）
-          // 从 URL 参数读取 initName / initReq（由 AICaseCreate 传过来），
-          // 这里负责创建文档并写入 localStorage（不再由 AICaseCreate 提前写入）
+          // 从 URL 参数读取 initName / initReq（由新建需求入口传过来），
+          // 这里负责创建文档并写入 localStorage（不再由旧新建页提前写入）
           const searchParamsForInit = new URLSearchParams(window.location.search);
           const initName = searchParamsForInit.get('initName')?.trim() || 'AI Testcase Workspace';
           const initReq = searchParamsForInit.get('initReq')?.trim() || '';
@@ -1099,7 +1099,7 @@ const applyWorkspaceDetail = useCallback(
     <AICasesWorkspaceView
       saveStateText={saveStateText}
       remoteStatusText={remoteStatusText}
-      onOpenHistory={() => setLocation('/ai-workbench/history-export')}
+onOpenHistory={() => setLocation('/ai-workbench/history-export')}
       workspaceSummary={workspaceSummary}
       isRemoteLinked={isRemoteLinked}
       activeTab={activeTab}

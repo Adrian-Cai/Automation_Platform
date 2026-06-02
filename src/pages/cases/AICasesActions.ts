@@ -6,8 +6,6 @@ import { saveNodeAttachment } from '@/lib/aiCaseStorage';
 import { createAiCaseAttachmentId, type AiCaseMindData, type AiCaseNodeStatus, type AiCaseWorkspaceDocument } from '@/types/aiCases';
 import { MAX_UPLOAD_BYTES, getFirstGeneratedCaseId, type RemoteSyncMeta, type StreamGenerateResultPayload, type WorkspaceTab } from './AICasesUtils';
 
-const AI_CASE_WORKBENCH_PATH = '/ai-workbench/case-generation';
-
 interface UploadAiCaseImageFilesOptions {
   inputFiles: File[];
   source: 'picker' | 'paste';
