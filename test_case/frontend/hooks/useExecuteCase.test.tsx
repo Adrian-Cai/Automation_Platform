@@ -1,5 +1,5 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
 import {
@@ -19,19 +19,44 @@ vi.mock('@/api', () => ({
 
 vi.mock('@/services/websocket', () => ({
   wsClient: {
-    isConnected: vi.fn(),
-    // subscribeToExecution 返回 Promise<() => void>（与实际 WebSocket 实现一致）
+    isConnected: vi.fn().mockReturnValue(false),
     subscribeToExecution: vi.fn().mockResolvedValue(vi.fn()),
   },
 }));
 
-// Helper to create QueryClient wrapper
+// Mock polling config to disable real polling in tests
+vi.mock('@/config/polling', () => ({
+  POLLING_CONFIG: {
+    INTERVALS: { FAST: 100, NORMAL: 100, MEDIUM: 100, SLOW: 100, WEBSOCKET_BACKUP: 100 },
+    WINDOWS: { PENDING_FAST_POLL: 1000, EARLY_EXECUTION: 2000, MID_EXECUTION: 3000, MAX_EXECUTION_TIME: 5000 },
+    STUCK_DETECTION: { EARLY_THRESHOLD: 1000, CRITICAL_THRESHOLD: 2000, ALERT_COOLDOWN: 100 },
+    WEBSOCKET: {},
+    RETRY: {},
+  },
+  calculatePollingInterval: vi.fn().mockReturnValue(false),
+  checkStuckStatus: vi.fn().mockReturnValue({
+    isStuck: false,
+    isEarlyStuck: false,
+    isCriticallyStuck: false,
+    elapsedTime: 0,
+    severity: 'none',
+  }),
+  getStuckMessage: vi.fn().mockReturnValue(''),
+  formatElapsedTime: vi.fn().mockReturnValue('0s'),
+}));
+
+// Suppress console output during tests
+const originalConsoleLog = console.log;
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         retry: false,
         staleTime: 0,
+        refetchInterval: false,
       },
       mutations: {
         retry: false,
@@ -47,6 +72,15 @@ function createWrapper() {
 describe('useExecuteCase', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    console.log = vi.fn();
+    console.error = vi.fn();
+    console.warn = vi.fn();
+  });
+
+  afterEach(() => {
+    console.log = originalConsoleLog;
+    console.error = originalConsoleError;
+    console.warn = originalConsoleWarn;
   });
 
   it('should execute a single case successfully', async () => {
@@ -101,7 +135,6 @@ describe('useExecuteCase', () => {
   });
 
   it('should set isPending state during execution', async () => {
-    // 使用一个不会自动 resolve 的 Promise（手动控制 resolve 时机）
     let resolveFn: (value: unknown) => void;
     const pendingPromise = new Promise((resolve) => {
       resolveFn = resolve;
@@ -112,17 +145,14 @@ describe('useExecuteCase', () => {
       wrapper: createWrapper(),
     });
 
-    // 触发 mutate（不 await，让其保持 pending 状态）
     act(() => {
       result.current.mutate({ caseId: 1, projectId: 10 });
     });
 
-    // mutate 触发后，isPending 应为 true
     await waitFor(() => {
       expect(result.current.isPending).toBe(true);
     });
 
-    // 手动 resolve 让 mutate 完成
     await act(async () => {
       resolveFn!({ success: true, data: { runId: 123, buildUrl: '', status: 'pending' } });
     });
@@ -136,6 +166,15 @@ describe('useExecuteCase', () => {
 describe('useExecuteBatch', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    console.log = vi.fn();
+    console.error = vi.fn();
+    console.warn = vi.fn();
+  });
+
+  afterEach(() => {
+    console.log = originalConsoleLog;
+    console.error = originalConsoleError;
+    console.warn = originalConsoleWarn;
   });
 
   it('should execute batch cases successfully', async () => {
@@ -201,6 +240,15 @@ describe('useExecuteBatch', () => {
 describe('useManualSync', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    console.log = vi.fn();
+    console.error = vi.fn();
+    console.warn = vi.fn();
+  });
+
+  afterEach(() => {
+    console.log = originalConsoleLog;
+    console.error = originalConsoleError;
+    console.warn = originalConsoleWarn;
   });
 
   it('should sync execution status successfully', async () => {
@@ -313,8 +361,15 @@ describe('useManualSync', () => {
 describe('useBatchExecution', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // 注意：不使用 vi.useFakeTimers()，因为它与 @testing-library/react 的 waitFor 不兼容
-    // waitFor 依赖真实定时器来轮询检查断言
+    console.log = vi.fn();
+    console.error = vi.fn();
+    console.warn = vi.fn();
+  });
+
+  afterEach(() => {
+    console.log = originalConsoleLog;
+    console.error = originalConsoleError;
+    console.warn = originalConsoleWarn;
   });
 
   it('should fetch batch execution data when runId is provided', async () => {
@@ -332,7 +387,6 @@ describe('useBatchExecution', () => {
     };
 
     vi.mocked(api.request).mockResolvedValue(mockBatchData);
-    vi.mocked(wsClient.isConnected).mockReturnValue(false);
 
     const { result } = renderHook(() => useBatchExecution(123), {
       wrapper: createWrapper(),
@@ -347,8 +401,6 @@ describe('useBatchExecution', () => {
   });
 
   it('should not fetch when runId is null', () => {
-    vi.mocked(wsClient.isConnected).mockReturnValue(false);
-
     const { result } = renderHook(() => useBatchExecution(null), {
       wrapper: createWrapper(),
     });
@@ -374,7 +426,6 @@ describe('useBatchExecution', () => {
     };
 
     vi.mocked(api.request).mockResolvedValue(mockCompletedData);
-    vi.mocked(wsClient.isConnected).mockReturnValue(false);
 
     const { result } = renderHook(() => useBatchExecution(123), {
       wrapper: createWrapper(),
@@ -386,16 +437,22 @@ describe('useBatchExecution', () => {
 
     expect(result.current.data?.status).toBe('success');
 
-    // 执行完成后 refetchInterval 应返回 false，不再轮询
-    // 验证：当 status 为 success 时，不会触发额外的 api.request 调用
     const callCountAfterSuccess = vi.mocked(api.request).mock.calls.length;
 
-    // 短暂等待确认无额外调用（React Query 使用真实定时器轮询，completed 状态不会调用）
     await new Promise(resolve => setTimeout(resolve, 100));
     expect(vi.mocked(api.request).mock.calls.length).toBe(callCountAfterSuccess);
   });
 
   it('should detect stuck execution', async () => {
+    const { checkStuckStatus } = await import('@/config/polling');
+    vi.mocked(checkStuckStatus).mockReturnValue({
+      isStuck: true,
+      isEarlyStuck: false,
+      isCriticallyStuck: true,
+      elapsedTime: 360000,
+      severity: 'critical',
+    });
+
     const mockStuckData = {
       success: true,
       data: {
@@ -405,12 +462,11 @@ describe('useBatchExecution', () => {
         passed_cases: 2,
         failed_cases: 0,
         skipped_cases: 0,
-        start_time: new Date(Date.now() - 6 * 60 * 1000).toISOString(), // 6 minutes ago
+        start_time: new Date(Date.now() - 6 * 60 * 1000).toISOString(),
       },
     };
 
     vi.mocked(api.request).mockResolvedValue(mockStuckData);
-    vi.mocked(wsClient.isConnected).mockReturnValue(false);
 
     const { result } = renderHook(() => useBatchExecution(123), {
       wrapper: createWrapper(),
@@ -458,13 +514,15 @@ describe('useBatchExecution', () => {
 
     unmount();
 
-    // 等待 unmount 后 unsubscribe 被调用（Promise resolve 后异步调用）
     await waitFor(() => {
       expect(mockUnsubscribe).toHaveBeenCalled();
     }, { timeout: 1000 });
   });
 
   it('should use slow polling when WebSocket is connected', async () => {
+    vi.mocked(wsClient.isConnected).mockReturnValue(true);
+    vi.mocked(wsClient.subscribeToExecution).mockResolvedValue(vi.fn() as any);
+
     const mockBatchData = {
       success: true,
       data: {
@@ -479,8 +537,6 @@ describe('useBatchExecution', () => {
     };
 
     vi.mocked(api.request).mockResolvedValue(mockBatchData);
-    vi.mocked(wsClient.isConnected).mockReturnValue(true);
-    vi.mocked(wsClient.subscribeToExecution).mockResolvedValue(vi.fn() as any);
 
     const { result } = renderHook(() => useBatchExecution(123), {
       wrapper: createWrapper(),
@@ -497,6 +553,15 @@ describe('useBatchExecution', () => {
 describe('useTestExecution', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    console.log = vi.fn();
+    console.error = vi.fn();
+    console.warn = vi.fn();
+  });
+
+  afterEach(() => {
+    console.log = originalConsoleLog;
+    console.error = originalConsoleError;
+    console.warn = originalConsoleWarn;
   });
 
   it('should execute a case and track runId', async () => {
@@ -524,7 +589,6 @@ describe('useTestExecution', () => {
     vi.mocked(api.request)
       .mockResolvedValueOnce(mockExecuteResponse)
       .mockResolvedValue(mockBatchData);
-    vi.mocked(wsClient.isConnected).mockReturnValue(false);
 
     const { result } = renderHook(() => useTestExecution(), {
       wrapper: createWrapper(),
@@ -570,7 +634,6 @@ describe('useTestExecution', () => {
     vi.mocked(api.request)
       .mockResolvedValueOnce(mockExecuteResponse)
       .mockResolvedValue(mockBatchData);
-    vi.mocked(wsClient.isConnected).mockReturnValue(false);
 
     const { result } = renderHook(() => useTestExecution(), {
       wrapper: createWrapper(),
@@ -590,14 +653,11 @@ describe('useTestExecution', () => {
   it('should handle execution error', async () => {
     const mockError = new Error('Execution failed');
     vi.mocked(api.request).mockRejectedValueOnce(mockError);
-    vi.mocked(wsClient.isConnected).mockReturnValue(false);
 
     const { result } = renderHook(() => useTestExecution(), {
       wrapper: createWrapper(),
     });
 
-    // executeCase 会 throw，用 try/catch 捕获而不是 expect(...).rejects，
-    // 这样可以确保 React 的状态更新（setError）在 act 内部正确刷新
     let thrownError: Error | null = null;
     await act(async () => {
       try {
@@ -655,7 +715,6 @@ describe('useTestExecution', () => {
       .mockResolvedValueOnce(mockExecuteResponse)
       .mockResolvedValueOnce(mockBatchData)
       .mockResolvedValueOnce(mockSyncResponse);
-    vi.mocked(wsClient.isConnected).mockReturnValue(false);
 
     const { result } = renderHook(() => useTestExecution(), {
       wrapper: createWrapper(),
@@ -690,7 +749,6 @@ describe('useTestExecution', () => {
     };
 
     vi.mocked(api.request).mockResolvedValueOnce(mockExecuteResponse);
-    vi.mocked(wsClient.isConnected).mockReturnValue(false);
 
     const { result } = renderHook(() => useTestExecution(), {
       wrapper: createWrapper(),
