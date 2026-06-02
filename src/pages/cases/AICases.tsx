@@ -36,7 +36,7 @@ import {
 } from '@/types/aiCases';
 import { changeAiCaseNodeStatus, generateAiCases, uploadAiCaseImageFiles } from './AICasesActions';
 import { runAiCaseStreamGeneration } from './AICasesStream';
-import { AICasesWorkspaceView } from './AICasesWorkspaceView';
+import { AICasesWorkspaceView, type AiWorkspaceRoutePage } from './AICasesWorkspaceView';
 import {
   DEFAULT_REMOTE_SYNC_META,
   WAIT_COPY_MAGIC,
@@ -48,7 +48,6 @@ import {
   sanitizeImportedNodes,
   type CleanupStaleAttachmentOptions,
   type RemoteSyncMeta,
-  type WorkspaceTab,
 } from './AICasesUtils';
 
 function AiCasesInner() {
@@ -118,7 +117,6 @@ function AiCasesInner() {
 // 浮动面板拖拽
   // 需求编辑弹窗
   const [isRequirementDialogOpen, setIsRequirementDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>('results');
   useEffect(() => {
     selectedNodeIdRef.current = selectedNodeId;
   }, [selectedNodeId]);
@@ -586,13 +584,37 @@ function AiCasesInner() {
     };
   }, [attachments.length, highRiskCases.length, isRemoteLinked, progress.completionRate, progress.total, requirementText]);
 
-    const handleFocusGeneratedCase = useCallback((nodeId: string) => {
-    setActiveTab('results');
+  const workspacePage = useMemo<AiWorkspaceRoutePage>(() => {
+    const pathname = window.location.pathname;
+    if (pathname === '/cases/ai') {
+      return 'overview';
+    }
+    if (pathname.endsWith('/materials')) {
+      return 'materials';
+    }
+    if (pathname.endsWith('/coverage')) {
+      return 'coverage';
+    }
+    if (pathname.endsWith('/execution')) {
+      return 'execution';
+    }
+    return 'results';
+  }, [location]);
+
+  const navigateToWorkspacePage = useCallback((page: AiWorkspaceRoutePage) => {
+    const params = new URLSearchParams(window.location.search);
+    const query = params.toString();
+    const suffix = page === 'overview' ? '' : `/${page}`;
+    setLocation(`/cases/ai${suffix}${query ? `?${query}` : ''}`);
+  }, [setLocation]);
+
+  const handleFocusGeneratedCase = useCallback((nodeId: string) => {
+    navigateToWorkspacePage('results');
     selectedNodeIdRef.current = nodeId;
     selectedNodeIdsRef.current = [nodeId];
     setSelectedNodeId(nodeId);
     setSelectedNodeIds([nodeId]);
-  }, []);
+  }, [navigateToWorkspacePage]);
 
   const startGenerateProgress = useCallback(
     (initialStage: string = '正在连接后端流式通道...') => {
@@ -916,7 +938,6 @@ const applyWorkspaceDetail = useCallback(
     streamGenerateFromBackend,
     showNodeKindTagsRef,
     isWorkspaceNameUserEditedRef,
-    setActiveTab,
     setIsRequirementDialogOpen,
     startGenerateProgress,
     setIsGenerating,
@@ -1102,8 +1123,7 @@ const applyWorkspaceDetail = useCallback(
       onOpenHistory={() => setLocation('/ai-workbench/history-export')}
       workspaceSummary={workspaceSummary}
       isRemoteLinked={isRemoteLinked}
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
+      workspacePage={workspacePage}
       requirementText={requirementText}
       attachments={attachments}
       isGenerating={isGenerating}

@@ -25,8 +25,6 @@ import {
   History,
   ClipboardList,
   Target,
-  FileText,
-  ShieldCheck,
   PanelLeftClose,
   PanelLeftOpen
 } from "lucide-react";
