@@ -23,6 +23,7 @@ import PerformanceCases from "./pages/cases/PerformanceCases";
 import AICases from "./pages/cases/AICases";
 import AICaseCreate from "./pages/cases/AICaseCreate";
 import AICaseHistory from "./pages/cases/AICaseHistory";
+import RequirementInputParsePage from "./pages/cases/RequirementInputParsePage";
 import Reports from "./pages/reports/Reports";
 import ReportDetail from "./pages/reports/ReportDetail";
 import SystemSettings from "./pages/settings/SystemSettings";
@@ -182,6 +183,13 @@ function Router() {
           <ProtectedRoute>
             <Layout>
               <AICaseHistory />
+            </Layout>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/requirements/input-parse">
+          <ProtectedRoute>
+            <Layout>
+              <RequirementInputParsePage />
             </Layout>
           </ProtectedRoute>
         </Route>
