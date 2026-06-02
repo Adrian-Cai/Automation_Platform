@@ -217,7 +217,7 @@
 
 .filterBar {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) repeat(3, 160px);
+  grid-template-columns: minmax(260px, 1fr) repeat(4, 150px);
   gap: 12px;
   padding: 16px;
   margin: 20px 0;

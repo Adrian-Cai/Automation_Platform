@@ -17,6 +17,7 @@ import type {
   RequirementRisk,
   TestPoint,
   TestPointFormValues,
+  RiskLevel,
   TestPointModalMode,
   TestPointPriority,
   TestPointStatus,
@@ -138,6 +139,7 @@ export default function RequirementAnalysis(): JSX.Element {
 
   const updatePriority = (priority: TestPointPriority | 'all') => setFilters((current) => ({ ...current, priority }));
   const updateStatus = (status: TestPointStatus | 'all') => setFilters((current) => ({ ...current, status }));
+  const updateRiskLevel = (riskLevel: RiskLevel | 'all') => setFilters((current) => ({ ...current, riskLevel }));
 
   return (
     <main className={styles.pageShell}>
@@ -179,6 +181,12 @@ export default function RequirementAnalysis(): JSX.Element {
           <option value="draft">草稿</option>
           <option value="generated">已生成</option>
           <option value="confirmed">已确认</option>
+        </select>
+        <select value={filters.riskLevel} onChange={(event) => updateRiskLevel(event.target.value as RiskLevel | 'all')}>
+          <option value="all">全部风险</option>
+          <option value="high">高风险</option>
+          <option value="medium">中风险</option>
+          <option value="low">低风险</option>
         </select>
       </section>
 
