@@ -29,8 +29,6 @@ export type AiWorkspaceRoutePage = 'overview' | 'materials' | 'results' | 'cover
 interface AICasesWorkspaceViewProps {
   saveStateText: string;
   remoteStatusText: string;
-  onOpenHistory: () => void;
-  onNewWorkspace?: () => void;
   workspaceSummary: WorkspaceSummaryViewModel;
   isRemoteLinked: boolean;
   workspacePage: AiWorkspaceRoutePage;
@@ -76,8 +74,6 @@ interface AICasesWorkspaceViewProps {
 export function AICasesWorkspaceView({
   saveStateText,
   remoteStatusText,
-  onOpenHistory,
-  onNewWorkspace,
   workspaceSummary,
   isRemoteLinked,
   workspacePage,
@@ -128,8 +124,6 @@ export function AICasesWorkspaceView({
           saveStateText={saveStateText}
           remoteStatusText={remoteStatusText}
           onOpenRequirement={() => setIsRequirementDialogOpen(true)}
-          onOpenHistory={() => onOpenHistory()}
-          onNewWorkspace={onNewWorkspace}
         />
       
           <WorkbenchSummaryBar

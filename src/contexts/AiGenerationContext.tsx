@@ -18,9 +18,9 @@ export interface AiGenerationState {
   /** 当前阶段文字描述 */
   stageText: string;
   /**
-   * 正在生成的工作台文档 ID（来自 AI 工作台新建入口的 handleGenerate）。
+   * 正在生成的工作台文档 ID（来自 AI 工作台的 handleGenerate）。
    * 生成中时为非空字符串；生成结束后重置为 null。
-   * 供 AI 工作台列表入口用于：
+   * 供 AI 工作台页面用于：
    *   1. 对正在生成的卡片展示进度条 overlay
    *   2. 生成结束后自动刷新列表（从 非null → null 触发 reload）
    */
