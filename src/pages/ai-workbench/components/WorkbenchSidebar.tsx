@@ -186,7 +186,7 @@ function HistoryWorkspaceList({
   );
 }
 
-export interface AiCaseSidebarProps {
+export interface WorkbenchSidebarProps {
   isGenerating: boolean; generationProgress: number; generationStageText: string; onGenerate: () => void;
   progress: AiCaseProgress;
   selectedNode: AiCaseNode | null; selectedNodeStatus: AiCaseNodeStatus;
@@ -207,7 +207,7 @@ export interface AiCaseSidebarProps {
   mindData: AiCaseMindData | null;
 }
 
-export function AiCaseSidebar({
+export function WorkbenchSidebar({
   isGenerating, generationProgress: _generationProgress, generationStageText: _generationStageText, onGenerate: _onGenerate, progress,
   selectedNode, selectedNodeStatus, canEditSelectedNode,
   canEditAnySelectedNode, isMultiSelect, selectedTestcaseCount,
@@ -215,7 +215,7 @@ export function AiCaseSidebar({
   attachments, isUploading, onUploadAttachment, onDeleteAttachment,
   isRemoteLinked, remoteWorkspaceId, isPublishingRemote, isSyncingRemote,
   onPublishRemote, onSyncFromRemote, onResetTemplate, onLoadHistoryWorkspace, mindData,
-}: AiCaseSidebarProps) {
+}: WorkbenchSidebarProps) {
   const isBusy = isGenerating || isPublishingRemote || isSyncingRemote;
   const hasSelectedNode = Boolean(selectedNode);
   const selectedNodeLabel = selectedNode?.topic ?? '未选中节点';

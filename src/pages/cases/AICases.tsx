@@ -1120,7 +1120,7 @@ const applyWorkspaceDetail = useCallback(
     <AICasesWorkspaceView
       saveStateText={saveStateText}
       remoteStatusText={remoteStatusText}
-onOpenHistory={() => setLocation('/ai-workbench/history-export')}
+      onOpenHistory={() => setLocation('/ai-workbench/history-export')}
       workspaceSummary={workspaceSummary}
       isRemoteLinked={isRemoteLinked}
       workspacePage={workspacePage}

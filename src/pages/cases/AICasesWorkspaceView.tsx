@@ -1,8 +1,8 @@
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { Activity, Bot, Bug, CheckCircle2, GitBranch, Link2, ListTree, Loader2 } from 'lucide-react';
-import { AiCaseSidebar } from './components/AiCaseSidebar';
-import { AiWorkspaceHeader } from './components/AiWorkspaceHeader';
-import { AiWorkspaceSummaryBar } from './components/AiWorkspaceSummaryBar';
+import { WorkbenchSidebar } from '../ai-workbench/components/WorkbenchSidebar';
+import { WorkbenchHeader } from '../ai-workbench/components/WorkbenchHeader';
+import { WorkbenchSummaryBar } from '../ai-workbench/components/WorkbenchSummaryBar';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { AiCaseAttachmentPreview, AiCaseMindData, AiCaseNode, AiCaseNodeStatus, AiCaseProgress } from '@/types/aiCases';
@@ -121,7 +121,7 @@ export function AICasesWorkspaceView({
     <div className="h-full flex flex-col bg-white dark:bg-slate-950 overflow-hidden">
 
       {/* 顶部标题栏（全屏时隐藏） */}
-      <AiWorkspaceHeader
+      <WorkbenchHeader
           title="AI 用例工作台"
           saveStateText={saveStateText}
           remoteStatusText={remoteStatusText}
@@ -129,7 +129,7 @@ export function AICasesWorkspaceView({
           onOpenHistory={() => onOpenHistory()}
         />
       
-          <AiWorkspaceSummaryBar
+          <WorkbenchSummaryBar
             items={[
               { label: '输入材料', value: `${workspaceSummary.materialCount}`, hint: '需求、附件和远端上下文' },
               { label: '生成用例', value: `${workspaceSummary.caseCount}`, hint: '当前工作台中的测试点数量' },
@@ -138,7 +138,6 @@ export function AICasesWorkspaceView({
               { label: '执行状态', value: workspaceSummary.executionState, hint: isRemoteLinked ? remoteStatusText : '尚未发布到远端工作台' },
             ]}
           />
-
 
       {/* 主体内容 */}
       {workspacePage === 'overview' ? (
@@ -328,7 +327,7 @@ export function AICasesWorkspaceView({
       {workspacePage === 'coverage' ? (
         <section className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
           <div className="grid gap-4">
-            <AiWorkspaceSummaryBar
+            <WorkbenchSummaryBar
               items={[
                 { label: '高风险项', value: `${highRiskCases.length}`, hint: '优先级 P0 / 失败项优先展示' },
                 { label: '待补充项', value: `${coverageGapCases.length}`, hint: '待执行、阻塞和失败项合并展示' },
@@ -528,7 +527,7 @@ export function AICasesWorkspaceView({
             </WorkspacePanelCard>
 
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-              <AiCaseSidebar
+              <WorkbenchSidebar
                 isGenerating={isGenerating}
                 generationProgress={generationProgress}
                 generationStageText={generationStageText}
