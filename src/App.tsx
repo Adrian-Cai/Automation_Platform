@@ -23,6 +23,7 @@ import PerformanceCases from "./pages/cases/PerformanceCases";
 import AICases from "./pages/cases/AICases";
 import AICaseCreate from "./pages/cases/AICaseCreate";
 import AICaseHistory from "./pages/cases/AICaseHistory";
+import QualityCoverage from "./pages/ai-workbench/QualityCoverage";
 import Reports from "./pages/reports/Reports";
 import ReportDetail from "./pages/reports/ReportDetail";
 import SystemSettings from "./pages/settings/SystemSettings";
@@ -42,6 +43,7 @@ const queryClient = new QueryClient({
 const AI_REQUIREMENT_INPUT_PATH = '/ai-workbench/requirement-input';
 const AI_CASE_GENERATION_PATH = '/ai-workbench/case-generation';
 const AI_HISTORY_EXPORT_PATH = '/ai-workbench/history-export';
+const AI_QUALITY_COVERAGE_PATH = '/ai-workbench/quality-coverage';
 
 function RedirectWithSearch({ to }: { to: string }) {
   const [, setLocation] = useLocation();
@@ -196,6 +198,13 @@ function Router() {
           <ProtectedRoute>
             <Layout>
               <AICaseHistory />
+            </Layout>
+          </ProtectedRoute>
+        </Route>
+        <Route path={AI_QUALITY_COVERAGE_PATH}>
+          <ProtectedRoute>
+            <Layout>
+              <QualityCoverage />
             </Layout>
           </ProtectedRoute>
         </Route>
