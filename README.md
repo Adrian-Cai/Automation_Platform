@@ -15,17 +15,10 @@
   <img src="https://img.shields.io/badge/Vite-5.0-646CFF?logo=vite" alt="Vite" />
   <img src="https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?logo=tailwindcss" alt="TailwindCSS" />
 
-  <!-- Frontend Utility -->
-  <img src="https://img.shields.io/badge/TanStack%20Query-4.44-EF4444" alt="TanStack Query" />
-  <img src="https://img.shields.io/badge/wouter-2.12-5B21B6" alt="wouter" />
-
-  <img src="https://img.shields.io/badge/sonner-1.4-000000" alt="sonner" />
 </p>
 
 <p align="center">
   <!-- Backend -->
-  <img src="https://img.shields.io/badge/Express-4.18-000000?logo=express" alt="Express" />
-
   <img src="https://img.shields.io/badge/Socket.IO-4.8-010101?logo=socket.io" alt="Socket.IO" />
   <img src="https://img.shields.io/badge/MariaDB-10.x-003545?logo=mariadb" alt="MariaDB" />
 </p>
@@ -35,7 +28,6 @@
   <img src="https://img.shields.io/badge/Vitest-4.1-729B1B?logo=vitest" alt="Vitest" />
 
   <img src="https://img.shields.io/badge/Pytest-8.x-0A9EDC?logo=pytest" alt="Pytest" />
-  <img src="https://img.shields.io/badge/Selenium-4.x-43B02A?logo=selenium" alt="Selenium" />
   <img src="https://img.shields.io/badge/k6-2.0-7A64CA?logo=k6" alt="k6" />
   <img src="https://img.shields.io/badge/Jenkins-Dockerized-2D53EB?logo=jenkins" alt="Jenkins" />
   <img src="https://img.shields.io/badge/Docker-24.x-2496ED?logo=docker" alt="Docker" />
