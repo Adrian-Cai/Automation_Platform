@@ -13,13 +13,11 @@
   <img src="https://img.shields.io/badge/React-18.2-61DAFB?logo=react" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5.3-3178C6?logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Vite-5.0-646CFF?logo=vite" alt="Vite" />
-  <img src="https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?logo=tailwindcss" alt="TailwindCSS" />
 
 </p>
 
 <p align="center">
   <!-- Backend -->
-  <img src="https://img.shields.io/badge/Socket.IO-4.8-010101?logo=socket.io" alt="Socket.IO" />
   <img src="https://img.shields.io/badge/MariaDB-10.x-003545?logo=mariadb" alt="MariaDB" />
 </p>
 
@@ -28,9 +26,7 @@
   <img src="https://img.shields.io/badge/Vitest-4.1-729B1B?logo=vitest" alt="Vitest" />
 
   <img src="https://img.shields.io/badge/Pytest-8.x-0A9EDC?logo=pytest" alt="Pytest" />
-  <img src="https://img.shields.io/badge/k6-2.0-7A64CA?logo=k6" alt="k6" />
   <img src="https://img.shields.io/badge/Jenkins-Dockerized-2D53EB?logo=jenkins" alt="Jenkins" />
-  <img src="https://img.shields.io/badge/Docker-24.x-2496ED?logo=docker" alt="Docker" />
 
   <img src="https://img.shields.io/badge/Node.js-20-339933?logo=node.js" alt="Node.js" />
   <img src="https://img.shields.io/badge/GitHub%20Actions-ubuntu--latest-2088FF?logo=github-actions" alt="GitHub Actions" />
