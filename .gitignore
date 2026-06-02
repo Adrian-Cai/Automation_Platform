@@ -186,6 +186,9 @@ server/db/autotest.db
 # MCP config (contains credentials)
 .mcp.json
 
+# Playwright MCP snapshots
+.playwright-mcp/
+
 # Docker Secrets (contains sensitive information)
 deployment/secrets/
 *.secret
