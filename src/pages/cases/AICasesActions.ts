@@ -4,7 +4,11 @@ import { aiCasesApi, type AiCaseWorkspaceDetail } from '@/api';
 import { appendNodeAttachmentId, expandImportedCaseNodesFromNote, findNodeById, generateMindDataFromRequirement, normalizeMindData, setNodeStatus } from '@/lib/aiCaseMindMap';
 import { saveNodeAttachment } from '@/lib/aiCaseStorage';
 import { createAiCaseAttachmentId, type AiCaseMindData, type AiCaseNodeStatus, type AiCaseWorkspaceDocument } from '@/types/aiCases';
+<<<<<<< HEAD
 import { MAX_UPLOAD_BYTES, getFirstGeneratedCaseId, type RemoteSyncMeta, type StreamGenerateResultPayload } from './AICasesUtils';
+=======
+import { MAX_UPLOAD_BYTES, getFirstGeneratedCaseId, type RemoteSyncMeta, type StreamGenerateResultPayload, type WorkspaceTab } from './AICasesUtils';
+>>>>>>> 198af75170ce7db962b064a6b024be87ba0d55cd
 
 interface UploadAiCaseImageFilesOptions {
   inputFiles: File[];
