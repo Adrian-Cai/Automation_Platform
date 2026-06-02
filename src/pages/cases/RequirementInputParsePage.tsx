@@ -1,221 +1,149 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Play, RefreshCw, Save } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import CleanRulesPanel from '@/pages/ai-workbench/components/CleanRulesPanel';
-import ParseProgressSteps from '@/pages/ai-workbench/components/ParseProgressSteps';
-import RequirementConfigForm from '@/pages/ai-workbench/components/RequirementConfigForm';
-import RequirementContentCompare from '@/pages/ai-workbench/components/RequirementContentCompare';
-import RequirementTextEditor from '@/pages/ai-workbench/components/RequirementTextEditor';
-import RequirementUploadPanel from '@/pages/ai-workbench/components/RequirementUploadPanel';
-import UploadedFileList from '@/pages/ai-workbench/components/UploadedFileList';
-import type { CleanRules, GenerateTarget, RequirementInputMode, RequirementInputState, RequirementType, UploadedFileItem } from '@/lib/requirementInput';
+import { useEffect, useMemo, useState } from "react";
+import { ClipboardList, Play, Save, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import CleanRulesPanel from "@/pages/cases/components/CleanRulesPanel";
+import ParseProgressSteps from "@/pages/cases/components/ParseProgressSteps";
+import RequirementConfigForm, { RequirementConfig } from "@/pages/cases/components/RequirementConfigForm";
+import RequirementContentCompare from "@/pages/cases/components/RequirementContentCompare";
+import RequirementTextEditor from "@/pages/cases/components/RequirementTextEditor";
+import RequirementUploadPanel from "@/pages/cases/components/RequirementUploadPanel";
+import UploadedFileList, { UploadedRequirementFile } from "@/pages/cases/components/UploadedFileList";
 import {
   cleanRequirementText,
-  defaultCleanRules,
-  initialRequirementInputState,
+  defaultCleanRequirementOptions,
+  getFileType,
   loadDraftFromStorage,
   saveDraftToStorage,
-} from '@/lib/requirementInput';
+  CleanRequirementOptions,
+} from "@/pages/cases/requirementInputUtils";
 
-const parseStepDelayMs = 650;
-const simulatedDocumentContent = `1. 项目概述
-本需求来自已上传需求文档，描述电商平台会员中心能力升级。
+const textFileTypes = new Set(["markdown", "text", "excel"]);
 
-2. 功能需求
-2.1 会员注册
-- 用户可通过手机号、邮箱进行注册。
-- 注册时需填写验证码，验证码有效期为 5 分钟。
-用户点击注册后，
-系统需要校验验证码与账号唯一性。
-
-2.2 登录与登出
-- 支持账号密码登录。
-- 支持短信验证码登录。
-- 用户可主动退出登录。`;
-
-function buildInitialState(): RequirementInputState {
-  const draft = loadDraftFromStorage();
-
-  if (!draft) {
-    return initialRequirementInputState;
-  }
-
-  return {
-    ...initialRequirementInputState,
-    ...draft,
-    uploadedFiles: initialRequirementInputState.uploadedFiles,
-    rawContent: '',
-    cleanedContent: '',
-    parseStep: -1,
-    parseStatus: 'idle',
-  };
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = () => reject(new Error(`无法读取文件：${file.name}`));
+    reader.readAsText(file);
+  });
 }
 
-export default function RequirementInputParsePage(): JSX.Element {
-  const [state, setState] = useState<RequirementInputState>(buildInitialState);
-  const timersRef = useRef<number[]>([]);
+function RequirementInputParsePage() {
+  const draft = useMemo(() => loadDraftFromStorage(), []);
+  const [rawText, setRawText] = useState(draft?.rawText ?? "");
+  const [rules, setRules] = useState<CleanRequirementOptions>(defaultCleanRequirementOptions);
+  const [files, setFiles] = useState<UploadedRequirementFile[]>([]);
+  const [progress, setProgress] = useState(35);
+  const [config, setConfig] = useState<RequirementConfig>({
+    title: draft?.title ?? "",
+    productLine: draft?.productLine ?? "",
+    priority: draft?.priority ?? "P1",
+    enableAiSummary: draft?.enableAiSummary ?? true,
+    enableRiskScan: draft?.enableRiskScan ?? true,
+    enableCaseSuggestion: draft?.enableCaseSuggestion ?? true,
+  });
 
-  const canStartParse = useMemo(
-    () => state.uploadedFiles.length > 0 || state.requirementText.trim().length > 0,
-    [state.requirementText, state.uploadedFiles.length]
-  );
+  const cleanedText = useMemo(() => cleanRequirementText(rawText, rules), [rawText, rules]);
+  const wordCount = cleanedText.length;
 
-  const clearTimers = useCallback((): void => {
-    timersRef.current.forEach((timer) => window.clearTimeout(timer));
-    timersRef.current = [];
-  }, []);
+  useEffect(() => {
+    const nextProgress = Math.min(100, 35 + (files.length > 0 ? 15 : 0) + (rawText.trim() ? 25 : 0) + (cleanedText.trim() ? 25 : 0));
+    setProgress(nextProgress);
+  }, [cleanedText, files.length, rawText]);
 
-  useEffect(() => clearTimers, [clearTimers]);
+  const handleFilesSelected = (selectedFiles: File[]) => {
+    selectedFiles.forEach((file) => {
+      const fileType = getFileType(file.name);
+      const baseFile: UploadedRequirementFile = {
+        id: `${file.name}-${file.lastModified}-${file.size}`,
+        name: file.name,
+        size: file.size,
+        type: fileType,
+      };
 
-  const updateState = useCallback((partialState: Partial<RequirementInputState>): void => {
-    setState((current) => ({ ...current, ...partialState }));
-  }, []);
+      setFiles((currentFiles) => [...currentFiles, baseFile]);
 
-  const handleFilesAdd = useCallback((files: UploadedFileItem[]): void => {
-    setState((current) => ({ ...current, uploadedFiles: [...files, ...current.uploadedFiles] }));
-    toast.success(`已添加 ${files.length} 个文件，等待解析`);
-  }, []);
-
-  const handleDeleteFile = useCallback((id: string): void => {
-    setState((current) => ({ ...current, uploadedFiles: current.uploadedFiles.filter((file) => file.id !== id) }));
-  }, []);
-
-  const handlePreviewFile = useCallback((): void => {
-    toast.info('文件预览功能暂未接入，后续支持在线预览。');
-  }, []);
-
-  const handleResetUpload = useCallback((): void => {
-    clearTimers();
-    setState((current) => ({
-      ...current,
-      uploadedFiles: [],
-      rawContent: '',
-      cleanedContent: '',
-      parseStep: -1,
-      parseStatus: 'idle',
-    }));
-    toast.success('已清空上传文件并重置解析进度');
-  }, [clearTimers]);
-
-  const handleSaveDraft = useCallback((): void => {
-    try {
-      saveDraftToStorage({
-        projectName: state.projectName,
-        requirementName: state.requirementName,
-        requirementType: state.requirementType,
-        generateTarget: state.generateTarget,
-        inputMode: state.inputMode,
-        requirementText: state.requirementText,
-        cleanRules: state.cleanRules,
-      });
-      toast.success('草稿已保存');
-    } catch {
-      toast.error('草稿保存失败，请稍后重试');
-    }
-  }, [state.cleanRules, state.generateTarget, state.inputMode, state.projectName, state.requirementName, state.requirementText, state.requirementType]);
-
-  const handleStartParse = useCallback((): void => {
-    if (!canStartParse) {
-      toast.error('请先上传需求文档或粘贴需求文本。');
-      return;
-    }
-
-    clearTimers();
-    const rawContent = state.requirementText.trim().length > 0 ? state.requirementText : simulatedDocumentContent;
-    setState((current) => ({
-      ...current,
-      rawContent,
-      cleanedContent: '',
-      parseStep: 0,
-      parseStatus: 'parsing',
-      uploadedFiles: current.uploadedFiles.map((file) => ({
-        ...file,
-        status: file.status === '上传失败' ? file.status : '上传成功',
-      })),
-    }));
-
-    [1, 2, 3].forEach((step) => {
-      const timer = window.setTimeout(() => {
-        setState((current) => ({ ...current, parseStep: step }));
-      }, parseStepDelayMs * step);
-      timersRef.current.push(timer);
+      if (textFileTypes.has(fileType)) {
+        readFileAsText(file)
+          .then((content) => {
+            setFiles((currentFiles) => currentFiles.map((item) => (item.id === baseFile.id ? { ...item, extractedText: content } : item)));
+            setRawText((currentText) => [currentText, content].filter((item) => item.trim().length > 0).join("\n\n"));
+          })
+          .catch((error: unknown) => {
+            console.warn("读取需求附件失败", error);
+          });
+      }
     });
+  };
 
-    const finishTimer = window.setTimeout(() => {
-      setState((current) => ({
-        ...current,
-        parseStep: 3,
-        parseStatus: 'success',
-        rawContent,
-        cleanedContent: cleanRequirementText(rawContent, current.cleanRules),
-      }));
-      toast.success('需求内容解析与清洗完成');
-    }, parseStepDelayMs * 4);
-    timersRef.current.push(finishTimer);
-  }, [canStartParse, clearTimers, state.requirementText]);
+  const handleSaveDraft = () => {
+    saveDraftToStorage({
+      ...config,
+      rawText,
+      cleanedText,
+      updatedAt: new Date().toISOString(),
+    });
+  };
+
+  const handleStartParse = () => {
+    setProgress(100);
+    handleSaveDraft();
+  };
 
   return (
-    <div className="min-h-full bg-slate-50 px-6 py-6 text-slate-900 lg:px-8">
-      <div className="mx-auto flex max-w-[1500px] flex-col gap-5">
-        <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="min-h-screen bg-slate-50/80 p-6 dark:bg-slate-950">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="flex flex-col gap-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white shadow-lg shadow-blue-500/20 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="mb-2 text-sm font-medium text-slate-500">页面 2 / 6 · 需求输入与解析</div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-950">需求输入与解析</h1>
-            <p className="mt-2 text-sm text-slate-500">上传或粘贴需求文档，智能解析并清洗内容，生成结构化需求信息。</p>
+            <Badge className="mb-3 bg-white/20 text-white hover:bg-white/20">AI 工作台</Badge>
+            <h1 className="flex items-center gap-3 text-2xl font-bold md:text-3xl">
+              <ClipboardList className="h-8 w-8" />
+              需求输入与解析
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm text-blue-50">
+              汇总附件与原始需求文本，完成规则清洗、内容对比和解析配置，为 AI 用例生成提供高质量输入。
+            </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Button type="button" variant="outline" className="gap-2 border-slate-200 bg-white" onClick={handleResetUpload}>
-              <RefreshCw className="h-4 w-4" />
-              重新上传
-            </Button>
-            <Button type="button" variant="outline" className="gap-2 border-slate-200 bg-white" onClick={handleSaveDraft}>
-              <Save className="h-4 w-4" />
+          <div className="flex flex-wrap gap-3">
+            <Button className="bg-white text-blue-700 hover:bg-blue-50" type="button" onClick={handleSaveDraft}>
+              <Save className="mr-2 h-4 w-4" />
               保存草稿
             </Button>
-            <Button type="button" className="gap-2 bg-blue-600 shadow-sm shadow-blue-200 hover:bg-blue-700" onClick={handleStartParse} disabled={!canStartParse || state.parseStatus === 'parsing'}>
-              <Play className="h-4 w-4" />
+            <Button className="bg-slate-950 text-white hover:bg-slate-800" type="button" onClick={handleStartParse}>
+              <Play className="mr-2 h-4 w-4" />
               开始解析
             </Button>
           </div>
-        </header>
+        </div>
 
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(560px,1.05fr)]">
-          <div className="space-y-5">
-            <RequirementUploadPanel
-              inputMode={state.inputMode}
-              onInputModeChange={(inputMode: RequirementInputMode) => updateState({ inputMode })}
-              onFilesAdd={handleFilesAdd}
-            />
-            <RequirementTextEditor
-              value={state.requirementText}
-              onChange={(requirementText: string) => updateState({ requirementText })}
-            />
+        <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
+          <div className="space-y-6">
+            <RequirementUploadPanel onFilesSelected={handleFilesSelected} />
+            <UploadedFileList files={files} onRemove={(id) => setFiles((currentFiles) => currentFiles.filter((file) => file.id !== id))} />
+            <CleanRulesPanel rules={rules} onChange={setRules} />
           </div>
 
-          <div className="space-y-5">
-            <UploadedFileList files={state.uploadedFiles} onPreview={handlePreviewFile} onDelete={handleDeleteFile} />
-            <RequirementConfigForm
-              projectName={state.projectName}
-              requirementName={state.requirementName}
-              requirementType={state.requirementType}
-              generateTarget={state.generateTarget}
-              onProjectNameChange={(projectName: string) => updateState({ projectName })}
-              onRequirementNameChange={(requirementName: string) => updateState({ requirementName })}
-              onRequirementTypeChange={(requirementType: RequirementType) => updateState({ requirementType })}
-              onGenerateTargetChange={(generateTarget: GenerateTarget) => updateState({ generateTarget })}
-            />
-            <CleanRulesPanel
-              rules={state.cleanRules}
-              onChange={(cleanRules: CleanRules) => updateState({ cleanRules })}
-              onReset={() => updateState({ cleanRules: defaultCleanRules })}
-            />
-            <ParseProgressSteps parseStep={state.parseStep} parseStatus={state.parseStatus} />
+          <div className="space-y-6">
+            <RequirementConfigForm config={config} onChange={setConfig} />
+            <RequirementTextEditor value={rawText} onChange={setRawText} />
+            <ParseProgressSteps progress={progress} />
+            <Card className="border-blue-100 bg-blue-50/70 dark:border-blue-900 dark:bg-blue-950/20">
+              <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+                <div className="flex items-center gap-2 text-sm text-blue-900 dark:text-blue-100">
+                  <Sparkles className="h-4 w-4" />
+                  清洗后共 {wordCount} 个字符，可继续调整规则或直接启动解析。
+                </div>
+                <Badge variant={wordCount > 0 ? "success" : "warning"}>{wordCount > 0 ? "输入就绪" : "等待输入"}</Badge>
+              </CardContent>
+            </Card>
+            <RequirementContentCompare rawText={rawText} cleanedText={cleanedText} />
           </div>
-        </section>
-
-        <RequirementContentCompare rawContent={state.rawContent} cleanedContent={state.cleanedContent} />
+        </div>
       </div>
     </div>
   );
 }
+
+export default RequirementInputParsePage;

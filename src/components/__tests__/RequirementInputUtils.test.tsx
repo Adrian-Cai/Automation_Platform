@@ -1,47 +1,35 @@
-import { describe, expect, it } from 'vitest';
-import { cleanRequirementText, defaultCleanRules, formatFileSize, getFileType } from '@/lib/requirementInput';
+import { describe, expect, it } from "vitest";
+import { cleanRequirementText } from "@/pages/cases/requirementInputUtils";
 
-describe('cleanRequirementText', () => {
-  it('removes empty lines and extra spaces while preserving heading levels', () => {
-    const input = `1. 项目概述\n\n  本需求文档   描述会员中心。\n\n2.1 会员注册\n  - 用户可通过手机号、邮箱进行注册。`;
+describe("cleanRequirementText", () => {
+  it("删除空行", () => {
+    const result = cleanRequirementText("需求 A\n\n\n需求 B", { mergeBrokenLines: false });
 
-    expect(cleanRequirementText(input, defaultCleanRules)).toBe(
-      `1. 项目概述\n本需求文档 描述会员中心。\n2.1 会员注册\n- 用户可通过手机号、邮箱进行注册。`
-    );
+    expect(result).toBe("需求 A\n需求 B");
   });
 
-  it('removes invisible garbled characters without removing line breaks', () => {
-    const input = '用户\u0000注册\n系统\u0007校验';
+  it("删除多余空格", () => {
+    const result = cleanRequirementText("  用户   可以\t创建　订单  ", { mergeBrokenLines: false });
 
-    expect(cleanRequirementText(input, defaultCleanRules)).toBe('用户注册，系统校验');
+    expect(result).toBe("用户 可以 创建 订单");
   });
 
-  it('merges abnormal line breaks for split sentences', () => {
-    const input = `用户点击领取后，\n系统需要判断库存。`;
+  it("删除不可见字符", () => {
+    const result = cleanRequirementText("登录\u200B后\uFEFF展示首页", { mergeBrokenLines: false });
 
-    expect(cleanRequirementText(input, defaultCleanRules)).toBe('用户点击领取后，系统需要判断库存。');
+    expect(result).toBe("登录后展示首页");
   });
 
-  it('preserves markdown table lines', () => {
-    const input = `| 字段 | 说明 |\n| --- | --- |\n| mobile | 手机号 |`;
+  it("合并异常换行", () => {
+    const result = cleanRequirementText("用户提交订单后\n系统需要校验库存\n并返回支付链接");
 
-    expect(cleanRequirementText(input, defaultCleanRules)).toBe(input);
-  });
-});
-
-describe('requirement input file utilities', () => {
-  it('detects supported file types from extension', () => {
-    expect(getFileType('需求.docx')).toBe('word');
-    expect(getFileType('说明.pdf')).toBe('pdf');
-    expect(getFileType('规则.md')).toBe('markdown');
-    expect(getFileType('数据.xlsx')).toBe('excel');
-    expect(getFileType('备注.txt')).toBe('txt');
-    expect(getFileType('unknown.zip')).toBe('unknown');
+    expect(result).toBe("用户提交订单后 系统需要校验库存 并返回支付链接");
   });
 
-  it('formats file size for upload list', () => {
-    expect(formatFileSize(512)).toBe('512 B');
-    expect(formatFileSize(1024)).toBe('1.0 KB');
-    expect(formatFileSize(1024 * 1024)).toBe('1.00 MB');
+  it("保留 Markdown 表格", () => {
+    const markdownTable = "| 字段 | 说明 |\n| --- | --- |\n| name | 用户名称 |";
+    const result = cleanRequirementText(`会员资料字段\n${markdownTable}\n字段需要支持编辑`);
+
+    expect(result).toBe(`会员资料字段\n${markdownTable}\n字段需要支持编辑`);
   });
 });

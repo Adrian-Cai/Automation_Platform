@@ -29,6 +29,7 @@
   <img src="https://img.shields.io/badge/Docker-24.x-2496ED?logo=docker" alt="Docker" />
   <img src="https://img.shields.io/badge/Node.js-20-339933?logo=node.js" alt="Node.js" />
   <img src="https://img.shields.io/badge/GitHub%20Actions-ubuntu--latest-2088FF?logo=github-actions" alt="GitHub Actions" />
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
 </p>
 
 一个现代化的全栈自动化测试管理平台，用于管理测试用例、调度 Jenkins 执行任务、监控执行结果。平台专注于测试管理和调度，实际测试执行由 Jenkins 等外部系统完成。

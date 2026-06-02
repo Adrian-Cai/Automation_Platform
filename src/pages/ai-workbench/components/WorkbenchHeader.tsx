@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { BrainCircuit, FileText, History } from 'lucide-react';
+import { BrainCircuit, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface WorkbenchHeaderProps {
@@ -7,7 +7,6 @@ interface WorkbenchHeaderProps {
   saveStateText: string;
   remoteStatusText: string;
   onOpenRequirement: () => void;
-  onOpenHistory: () => void;
   titleIcon?: ReactNode;
 }
 
@@ -16,7 +15,6 @@ export function WorkbenchHeader({
   saveStateText,
   remoteStatusText,
   onOpenRequirement,
-  onOpenHistory,
   titleIcon,
 }: WorkbenchHeaderProps) {
   return (
@@ -28,16 +26,6 @@ export function WorkbenchHeader({
         <h1 className="text-sm font-semibold text-slate-900 dark:text-white">{title}</h1>
       </div>
       <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-7 px-2 text-xs gap-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
-          onClick={onOpenHistory}
-        >
-          <History className="h-3.5 w-3.5" />
-          <span>历史记录</span>
-        </Button>
         <Button
           type="button"
           variant="ghost"
