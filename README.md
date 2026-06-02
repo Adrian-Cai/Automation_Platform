@@ -6,28 +6,16 @@
   <a href="https://github.com/acai1998/Automation_Platform/actions/workflows/k6-smoke.yml"><img src="https://github.com/acai1998/Automation_Platform/actions/workflows/k6-smoke.yml/badge.svg" alt="k6 Smoke" /></a>
   <a href="https://github.com/acai1998/Automation_Platform/actions/workflows/deploy.yml"><img src="https://github.com/acai1998/Automation_Platform/actions/workflows/deploy.yml/badge.svg" alt="Deploy" /></a>
   <a href="https://github.com/acai1998/Automation_Platform/actions/workflows/ci.yml"><img src="https://github.com/acai1998/Automation_Platform/actions/workflows/ci.yml/badge.svg" alt="Sync Test Cases" /></a>
-</p>
-
-<p align="center">
   <!-- Frontend Core -->
   <img src="https://img.shields.io/badge/React-18.2-61DAFB?logo=react" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5.3-3178C6?logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Vite-5.0-646CFF?logo=vite" alt="Vite" />
-
-</p>
-
-<p align="center">
   <!-- Backend -->
   <img src="https://img.shields.io/badge/MariaDB-10.x-003545?logo=mariadb" alt="MariaDB" />
-</p>
-
-<p align="center">
   <!-- Infra & Testing -->
   <img src="https://img.shields.io/badge/Vitest-4.1-729B1B?logo=vitest" alt="Vitest" />
-
   <img src="https://img.shields.io/badge/Pytest-8.x-0A9EDC?logo=pytest" alt="Pytest" />
   <img src="https://img.shields.io/badge/Jenkins-Dockerized-2D53EB?logo=jenkins" alt="Jenkins" />
-
   <img src="https://img.shields.io/badge/Node.js-20-339933?logo=node.js" alt="Node.js" />
   <img src="https://img.shields.io/badge/GitHub%20Actions-ubuntu--latest-2088FF?logo=github-actions" alt="GitHub Actions" />
 </p>
