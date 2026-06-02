@@ -1,168 +1,88 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
 import {
-  ArrowRight,
-  ArrowUpDown,
+  AlertTriangle,
+  BarChart3,
+  Bell,
   BookOpen,
-  Boxes,
-  Bug,
+  Bot,
+  Briefcase,
+  CheckCircle2,
+  ChevronDown,
   ChevronRight,
-  Clock3,
-  Code2,
+  HelpCircle,
+  ClipboardList,
+  Download,
+  Eye,
+  FileQuestion,
   FileText,
-  Filter,
-  FolderUp,
-  Inbox,
-  NotebookTabs,
-  PencilLine,
-  Plus,
-  RefreshCcw,
+  Home,
+  Info,
+  Loader2,
+  Menu,
+  MoreVertical,
   Search,
-  Sparkles,
+  Settings,
+  ShieldAlert,
+  Target,
+  Upload,
 } from 'lucide-react';
+import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { listAllWorkspaceDocuments } from '@/lib/aiCaseStorage';
+import { useAuth } from '@/contexts/AuthContext';
 import { computeProgress } from '@/lib/aiCaseMindMap';
-import type {
-  AiCaseMindData,
-  AiCaseNode,
-  AiCaseNodePriority,
-  AiCaseProgress,
-  AiCaseWorkspaceDocument,
-} from '@/types/aiCases';
-import { useAiGeneration } from '@/contexts/AiGenerationContext';
+import { listAllWorkspaceDocuments } from '@/lib/aiCaseStorage';
+import type { AiCaseNode, AiCaseProgress, AiCaseWorkspaceDocument } from '@/types/aiCases';
 import { NewRequirementSheet } from './components/NewRequirementSheet';
 
-
-
-type HistoryFilterMode = 'all' | 'synced' | 'local-only';
-type HistorySortMode = 'updatedAt' | 'createdAt';
-
-
-interface WorkspaceMetrics {
-  progress: AiCaseProgress;
-  moduleCount: number;
-  highestPriority: AiCaseNodePriority;
-}
-
-interface MaterialChip {
+interface DashboardMetric {
   label: string;
+  value: string;
+  delta: string;
   icon: typeof FileText;
-  tone: string;
+  gradient: string;
 }
 
-interface QuickStartCardItem {
+interface AbilityCard {
   title: string;
   description: string;
-  actionLabel: string;
   icon: typeof FileText;
-  iconTone: string;
+  tone: string;
   onClick: () => void;
 }
 
+interface QuickStep {
+  title: string;
+  description: string;
+  icon: typeof FileText;
+  onClick: () => void;
+}
 
+interface ProjectRow {
+  id: string;
+  projectName: string;
+  requirementName: string;
+  statusLabel: string;
+  statusClassName: string;
+  updatedAt: string;
+}
 
-const MATERIAL_CHIPS: MaterialChip[] = [
-  {
-    label: 'PRD / 需求文档',
-    icon: FileText,
-    tone: 'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300',
-  },
-  {
-    label: 'OpenAPI / 接口文档',
-    icon: NotebookTabs,
-    tone: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300',
-  },
-  {
-    label: '缺陷单',
-    icon: Bug,
-    tone: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300',
-  },
-  {
-    label: '代码变更',
-    icon: Code2,
-    tone: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300',
-  },
-];
+interface CoverageDataPoint {
+  name: string;
+  value: number;
+  color: string;
+  [key: string]: string | number;
+}
 
-
-
-const HISTORY_FILTER_LABELS: Record<HistoryFilterMode, string> = {
-  all: '全部',
-  synced: '已同步',
-  'local-only': '仅本地',
-};
-
-const HISTORY_SORT_LABELS: Record<HistorySortMode, string> = {
-  updatedAt: '最近更新',
-  createdAt: '创建时间',
-};
-
-const PRIORITY_RANK: Record<AiCaseNodePriority, number> = {
-  P0: 0,
-  P1: 1,
-  P2: 2,
-  P3: 3,
-};
-
-const FIRST_USE_STEPS = [
-  {
-    title: '准备输入',
-    description: '整理业务需求、接口文档与边界条件',
-    icon: FileText,
-    tone: 'bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300',
-    indexTone: 'bg-violet-600 text-white',
-  },
-  {
-    title: '生成结果',
-    description: 'AI 生成结构化测试点与用例',
-    icon: Sparkles,
-    tone: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300',
-    indexTone: 'bg-emerald-600 text-white',
-  },
-  {
-    title: '补充优化',
-    description: '人工筛选、补点并确认覆盖风险',
-    icon: PencilLine,
-    tone: 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300',
-    indexTone: 'bg-amber-500 text-white',
-  },
-  {
-    title: '执行回流',
-    description: '执行高风险范围并沉淀结果',
-    icon: RefreshCcw,
-    tone: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300',
-    indexTone: 'bg-blue-600 text-white',
-  },
+const NAV_ITEMS = [
+  { label: '工作台总览', icon: Home, active: true },
+  { label: '需求输入与解析', icon: ClipboardList },
+  { label: '需求分析与测试点', icon: Target },
+  { label: '用例生成与编辑', icon: FileText },
+  { label: '质量检查与覆盖率', icon: BarChart3 },
+  { label: '历史记录与导出', icon: BookOpen },
+  { label: '设置', icon: Settings },
 ] as const;
-
-const PRIORITY_DISPLAY: Record<
-  AiCaseNodePriority,
-  { label: string; className: string }
-> = {
-  P0: {
-    label: '高',
-    className:
-      'bg-rose-50 text-rose-600 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/20',
-  },
-  P1: {
-    label: '中',
-    className:
-      'bg-amber-50 text-amber-600 ring-amber-100 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/20',
-  },
-  P2: {
-    label: '低',
-    className:
-      'bg-emerald-50 text-emerald-600 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/20',
-  },
-  P3: {
-    label: '低',
-    className:
-      'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700',
-  },
-};
 
 function walkNodes(node: AiCaseNode, visit: (current: AiCaseNode) => void): void {
   visit(node);
@@ -171,49 +91,48 @@ function walkNodes(node: AiCaseNode, visit: (current: AiCaseNode) => void): void
   }
 }
 
-function collectWorkspaceMetrics(doc: AiCaseWorkspaceDocument): WorkspaceMetrics {
-  let moduleCount = 0;
-  let highestPriority: AiCaseNodePriority = 'P3';
+function sumProgress(docs: AiCaseWorkspaceDocument[]): AiCaseProgress {
+  const initial: AiCaseProgress = {
+    total: 0,
+    todo: 0,
+    doing: 0,
+    blocked: 0,
+    passed: 0,
+    failed: 0,
+    skipped: 0,
+    done: 0,
+    completionRate: 0,
+  };
 
-  walkNodes(doc.mapData.nodeData, (node) => {
-    const metadata = node.metadata;
-    if (!metadata) return;
-
-    if (metadata.kind === 'module') {
-      moduleCount += 1;
-    }
-
-    if (PRIORITY_RANK[metadata.priority] < PRIORITY_RANK[highestPriority]) {
-      highestPriority = metadata.priority;
-    }
-  });
+  const total = docs.reduce((acc, doc) => {
+    const progress = computeProgress(doc.mapData);
+    return {
+      total: acc.total + progress.total,
+      todo: acc.todo + progress.todo,
+      doing: acc.doing + progress.doing,
+      blocked: acc.blocked + progress.blocked,
+      passed: acc.passed + progress.passed,
+      failed: acc.failed + progress.failed,
+      skipped: acc.skipped + progress.skipped,
+      done: acc.done + progress.done,
+      completionRate: 0,
+    };
+  }, initial);
 
   return {
-    progress: computeProgress(doc.mapData),
-    moduleCount,
-    highestPriority,
+    ...total,
+    completionRate: total.total > 0 ? Math.round((total.done / total.total) * 100) : 0,
   };
 }
 
-function countModules(data: AiCaseMindData): number {
-  let moduleCount = 0;
-  walkNodes(data.nodeData, (node) => {
+function countModules(doc: AiCaseWorkspaceDocument): number {
+  let count = 0;
+  walkNodes(doc.mapData.nodeData, (node) => {
     if (node.metadata?.kind === 'module') {
-      moduleCount += 1;
+      count += 1;
     }
   });
-  return moduleCount;
-}
-
-function formatRelativeTime(ts: number): string {
-  const diff = Math.floor((Date.now() - ts) / 60_000);
-  if (diff < 1) return '刚刚';
-  if (diff < 60) return `${diff} 分钟前`;
-  const hours = Math.floor(diff / 60);
-  if (hours < 24) return `${hours} 小时前`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days} 天前`;
-  return new Date(ts).toLocaleDateString('zh-CN');
+  return count;
 }
 
 function formatDateTime(ts: number): string {
@@ -223,831 +142,396 @@ function formatDateTime(ts: number): string {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
+    hour12: false,
   });
 }
 
-function resolveWorkspaceStatus(
-  doc: AiCaseWorkspaceDocument,
-  progress: AiCaseProgress
-): { label: string; className: string } {
-  if (doc.remoteStatus === 'published') {
-    return {
-      label: '已发布',
-      className: 'bg-emerald-50 text-emerald-700 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/20',
-    };
-  }
-
-  if (doc.remoteStatus === 'archived') {
-    return {
-      label: '已归档',
-      className: 'bg-slate-100 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700',
-    };
-  }
-
+function statusView(progress: AiCaseProgress): { label: string; className: string } {
   if (progress.total === 0) {
-    return {
-      label: '待生成',
-      className: 'bg-amber-50 text-amber-700 ring-amber-100 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/20',
-    };
+    return { label: '待解析', className: 'bg-slate-100 text-slate-600' };
   }
-
   if (progress.completionRate >= 100) {
-    return {
-      label: '已完成',
-      className: 'bg-blue-50 text-blue-700 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20',
-    };
+    return { label: '已完成', className: 'bg-emerald-100 text-emerald-700' };
   }
-
-  return {
-    label: '进行中',
-    className: 'bg-indigo-50 text-indigo-700 ring-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-300 dark:ring-indigo-500/20',
-  };
+  if (progress.done > 0) {
+    return { label: '用例生成中', className: 'bg-blue-100 text-blue-700' };
+  }
+  return { label: '测试点生成中', className: 'bg-orange-100 text-orange-700' };
 }
 
-function resolvePriorityDisplay(priority: AiCaseNodePriority): {
-  label: string;
-  className: string;
-} {
-  return PRIORITY_DISPLAY[priority];
+function buildProjectRows(docs: AiCaseWorkspaceDocument[]): ProjectRow[] {
+  return docs.slice(0, 5).map((doc) => {
+    const progress = computeProgress(doc.mapData);
+    const status = statusView(progress);
+
+    return {
+      id: doc.id,
+      projectName: doc.name || '未命名工作台',
+      requirementName: doc.requirement.trim().split('\n')[0]?.slice(0, 28) || `${countModules(doc)} 个模块测试需求`,
+      statusLabel: status.label,
+      statusClassName: status.className,
+      updatedAt: formatDateTime(doc.updatedAt),
+    };
+  });
 }
 
-function HeroBackdrop() {
+function DashboardSidebar(): JSX.Element {
   return (
-    <>
-      <div className="pointer-events-none absolute inset-x-0 top-4 hidden h-28 xl:block">
-        <div className="absolute left-0 top-8 h-px w-40 bg-[#dbe5ff]" />
-        <div className="absolute left-40 top-8 h-10 w-10 rounded-tl-[18px] border-l border-t border-[#dbe5ff]" />
-        <div className="absolute left-52 top-0 h-px w-52 bg-[#dbe5ff]" />
-        <div className="absolute left-[36%] top-0 h-6 w-6 rounded-tr-[12px] border-r border-t border-[#dbe5ff]" />
-        <div className="absolute left-[36%] top-0 h-px w-20 bg-[#dbe5ff]" />
-        <div className="absolute right-[28%] top-0 h-px w-52 bg-[#dbe5ff]" />
-        <div className="absolute right-[16%] top-0 h-6 w-6 rounded-tl-[12px] border-l border-t border-[#dbe5ff]" />
-        <div className="absolute right-10 top-0 h-px w-44 bg-[#dbe5ff]" />
-      </div>
-
-      <div className="pointer-events-none absolute inset-x-0 bottom-6 hidden h-16 xl:block">
-        <div className="absolute left-16 bottom-0 h-px w-36 bg-[#dbe5ff]" />
-        <div className="absolute left-52 bottom-0 h-5 w-5 rounded-bl-[10px] border-b border-l border-[#dbe5ff]" />
-        <div className="absolute left-[42%] bottom-0 h-px w-56 bg-[#dbe5ff]" />
-        <div className="absolute right-[24%] bottom-0 h-5 w-5 rounded-br-[10px] border-b border-r border-[#dbe5ff]" />
-        <div className="absolute right-12 bottom-0 h-px w-36 bg-[#dbe5ff]" />
-      </div>
-
-      <div className="pointer-events-none absolute -left-14 top-8 h-40 w-40 rounded-full bg-[radial-gradient(circle,_rgba(93,115,255,0.12),_transparent_72%)]" />
-      <div className="pointer-events-none absolute right-8 top-1 h-52 w-52 rounded-full bg-[radial-gradient(circle,_rgba(104,82,255,0.14),_transparent_68%)]" />
-      <div className="pointer-events-none absolute right-[18%] top-14 h-32 w-32 rounded-full bg-[radial-gradient(circle,_rgba(117,180,255,0.18),_transparent_72%)]" />
-    </>
-  );
-}
-
-
-
-interface HeroSectionProps {
-  onCreate: () => void;
-  onCreateFromTemplate: () => void;
-  onViewExample: () => void;
-}
-
-function HeroSection({
-  onCreate,
-  onCreateFromTemplate,
-  onViewExample,
-}: HeroSectionProps) {
-  return (
-    <section className="relative overflow-hidden rounded-[34px] border border-[#dce6fb] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-8 py-8 shadow-[0_22px_64px_rgba(148,163,184,0.10)] dark:border-slate-800 dark:bg-slate-900">
-      <HeroBackdrop />
-
-      <div className="relative flex flex-col gap-8">
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
-          <div className="max-w-4xl">
-            <div className="text-sm font-semibold tracking-[0.22em] text-[#6a7ecb]">
-              AI WORKBENCH
-            </div>
-            <h1 className="mt-3 text-[36px] font-bold tracking-tight text-slate-900 dark:text-white">
-              AI 智能用例工作台
-            </h1>
-            <p className="mt-4 max-w-3xl text-[15px] leading-8 text-slate-600 dark:text-slate-300">
-              基于需求、接口文档、缺陷和代码变更生成结构化测试用例，并支持补充、执行与回流沉淀。
-            </p>
-
-            <div className="mt-5 flex flex-wrap gap-3">
-              {MATERIAL_CHIPS.map((chip) => {
-                const Icon = chip.icon;
-                return (
-                  <span
-                    key={chip.label}
-                    className={`inline-flex items-center gap-2 rounded-[14px] border px-4 py-2 text-sm font-medium shadow-[0_6px_18px_rgba(148,163,184,0.08)] ${chip.tone}`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {chip.label}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 xl:justify-end">
-            <Button
-              type="button"
-              size="lg"
-              className="h-14 rounded-[16px] bg-[linear-gradient(135deg,#4e6bff_0%,#654bff_100%)] px-6 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(92,88,255,0.28)] hover:opacity-95"
-              onClick={onCreate}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              新建工作台
-            </Button>
-            <Button
-              type="button"
-              size="lg"
-              variant="outline"
-              className="h-14 rounded-[16px] border-[#d9e1f6] bg-white px-6 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(148,163,184,0.10)] hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-              onClick={onCreateFromTemplate}
-            >
-              <BookOpen className="mr-2 h-4 w-4" />
-              从模板创建
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-14 rounded-[16px] px-3 text-sm font-semibold text-[#4e6bff] hover:bg-[#eef3ff] hover:text-[#3956f6] dark:text-indigo-300 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-200"
-              onClick={onViewExample}
-            >
-              查看示例
-            </Button>
-          </div>
+    <aside className="hidden w-[246px] shrink-0 border-r border-[#e7ecf5] bg-white/95 px-2 py-5 shadow-[8px_0_28px_rgba(15,23,42,0.03)] lg:flex lg:flex-col">
+      <div className="mb-7 flex items-center gap-3 px-3">
+        <div className="relative h-9 w-9 overflow-hidden rounded-xl bg-[linear-gradient(135deg,#2d7cff_0%,#31d5d0_100%)] shadow-lg shadow-blue-500/20">
+          <div className="absolute left-2 top-2 h-6 w-3 rotate-[26deg] rounded-full bg-white/95" />
+          <div className="absolute right-2 top-2 h-6 w-3 -rotate-[26deg] rounded-full bg-white/70" />
         </div>
+        <div className="text-[20px] font-bold tracking-tight text-slate-950">AI 测试用例生成工作台</div>
       </div>
-    </section>
-  );
-}
 
-interface QuickStartSectionProps {
-  items: QuickStartCardItem[];
-}
-
-function QuickStartSection({ items }: QuickStartSectionProps) {
-  return (
-    <section className="rounded-[32px] border border-[#e3eafc] bg-white/92 px-6 py-5 shadow-[0_18px_50px_rgba(148,163,184,0.10)] backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900">
-      <h2 className="mb-5 text-[30px] font-bold tracking-tight text-slate-900 dark:text-white">常用入口</h2>
-
-      <div className="grid gap-4 xl:grid-cols-3">
-        {items.map((item) => {
+      <nav className="space-y-2">
+        {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           return (
             <button
-              key={item.title}
+              key={item.label}
               type="button"
-              onClick={item.onClick}
-              className="group rounded-[24px] border border-[#dfe7fb] bg-[linear-gradient(180deg,#ffffff_0%,#fbfdff_100%)] p-5 text-left shadow-[0_12px_30px_rgba(148,163,184,0.10)] transition-all hover:-translate-y-0.5 hover:border-[#b8c8ff] hover:shadow-[0_18px_38px_rgba(78,107,255,0.12)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-500/30"
+              className={`flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-[15px] font-semibold transition-colors ${
+                'active' in item && item.active
+                  ? 'bg-[#edf4ff] text-[#1f6fff]'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
             >
-              <div className="flex items-center gap-4">
-                <div className={`flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-[20px] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] ${item.iconTone}`}>
-                  <Icon className="h-7 w-7" />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <div className="text-[28px] font-semibold tracking-tight text-slate-900 dark:text-white">
-                        {item.title}
-                      </div>
-                      <div className="mt-2 max-w-[320px] text-sm leading-7 text-slate-500 dark:text-slate-400">
-                        {item.description}
-                      </div>
-                    </div>
-                    <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[#dde6fb] bg-white text-[#4e6bff] transition-transform group-hover:translate-x-0.5 dark:border-slate-700 dark:bg-slate-900">
-                      <ChevronRight className="h-5 w-5" />
-                    </div>
-                  </div>
-
-                  <div className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-300">
-                    {item.actionLabel}
-                    <ArrowRight className="h-4 w-4" />
-                  </div>
-                </div>
-              </div>
+              <Icon className="h-5 w-5" />
+              <span>{item.label}</span>
             </button>
           );
         })}
-      </div>
-    </section>
+      </nav>
+
+      <button type="button" className="mt-auto flex items-center gap-3 border-t border-[#eef2f7] px-4 pt-5 text-sm font-medium text-slate-500">
+        <Menu className="h-4 w-4" />
+        收起菜单
+      </button>
+    </aside>
   );
 }
 
-interface RecentWorkspacePanelProps {
-  docs: AiCaseWorkspaceDocument[];
-  metrics: Map<string, WorkspaceMetrics>;
-  onOpen: (id: string) => void;
-  onCreate: () => void;
-  onCreateFromTemplate: () => void;
-  onViewAll: () => void;
-  onViewExample: () => void;
-}
-
-function RecentWorkspacePanel({
-  docs,
-  metrics,
-  onOpen,
-  onCreate,
-  onCreateFromTemplate,
-  onViewAll,
-  onViewExample,
-}: RecentWorkspacePanelProps) {
+function DashboardTopbar({ userName }: { userName: string }): JSX.Element {
   return (
-    <div className="rounded-[30px] border border-[#e3eafc] bg-white/95 p-6 shadow-[0_18px_52px_rgba(148,163,184,0.12)] dark:border-slate-800 dark:bg-slate-900">
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <h3 className="text-[30px] font-bold tracking-tight text-slate-900 dark:text-white">继续上次工作</h3>
-        <Button
-          type="button"
-          variant="ghost"
-          className="px-0 text-sm font-semibold text-indigo-600 hover:bg-transparent hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200"
-          onClick={onViewAll}
-        >
-          查看全部
-          <ArrowRight className="ml-1 h-4 w-4" />
-        </Button>
+    <header className="flex h-[70px] shrink-0 items-center gap-5 border-b border-[#e8edf5] bg-white px-6">
+      <button type="button" className="flex h-10 min-w-[205px] items-center justify-between rounded-lg border border-[#dce4f0] bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm">
+        <span className="flex items-center gap-2"><Briefcase className="h-4 w-4 text-[#1f6fff]" />示例项目</span>
+        <ChevronDown className="h-4 w-4 text-slate-400" />
+      </button>
+
+      <div className="mx-auto flex h-10 w-full max-w-[520px] items-center gap-3 rounded-lg border border-[#dce4f0] bg-white px-4 text-slate-400 shadow-sm">
+        <Search className="h-4 w-4" />
+        <span className="flex-1 text-sm">搜索需求、项目、用例、测试点...</span>
+        <kbd className="rounded border border-slate-200 px-1.5 py-0.5 text-xs text-slate-500">⌘ K</kbd>
       </div>
 
-      {docs.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50/60 px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-950/40">
-          <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-[radial-gradient(circle_at_50%_40%,rgba(129,140,248,0.18),rgba(255,255,255,0)_70%)]">
-            <Clock3 className="h-12 w-12 text-slate-400 dark:text-slate-500" />
-          </div>
-          <div className="mt-5 text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-            暂无最近工作台
-          </div>
-          <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-slate-500 dark:text-slate-400">
-            创建第一条需求后，你可以在这里继续未完成的 AI 工作台。
-          </p>
-
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button
-              type="button"
-              className="h-11 rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white hover:bg-indigo-700"
-              onClick={onCreate}
-            >
-              新增需求
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-11 rounded-xl border-slate-200 bg-white px-6 text-sm font-semibold dark:border-slate-700 dark:bg-slate-900"
-              onClick={onCreateFromTemplate}
-            >
-              从模板创建
-            </Button>
-          </div>
-
-          <div className="mt-8 border-t border-slate-200 pt-5 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
-            也可以先
-            <button
-              type="button"
-              className="mx-1 font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200"
-              onClick={onViewExample}
-            >
-              查看示例
-            </button>
-            ，了解完整工作流。
-          </div>
+      <div className="flex items-center gap-4">
+        <div className="relative">
+          <Bell className="h-5 w-5 text-slate-900" />
+          <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">3</span>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {docs.map((doc) => {
-            const currentMetrics = metrics.get(doc.id) ?? {
-              progress: computeProgress(doc.mapData),
-              moduleCount: countModules(doc.mapData),
-              highestPriority: 'P3' as AiCaseNodePriority,
-            };
-            const status = resolveWorkspaceStatus(doc, currentMetrics.progress);
-
-            return (
-              <button
-                key={doc.id}
-                type="button"
-                onClick={() => onOpen(doc.id)}
-                className="w-full rounded-[22px] border border-[#dfe7fb] bg-[linear-gradient(180deg,#ffffff_0%,#fbfdff_100%)] px-5 py-4 text-left shadow-[0_10px_24px_rgba(148,163,184,0.08)] transition-all hover:-translate-y-0.5 hover:border-[#b8c8ff] hover:shadow-[0_16px_32px_rgba(78,107,255,0.12)] dark:border-slate-800 dark:bg-slate-950 dark:hover:border-indigo-500/30 dark:hover:bg-slate-900"
-              >
-                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                  <div className="flex min-w-0 items-center gap-4">
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[16px] bg-[linear-gradient(135deg,#eff4ff_0%,#dfe8ff_100%)] text-[#4e6bff] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:bg-slate-800 dark:text-indigo-300">
-                      <Boxes className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="line-clamp-1 text-lg font-semibold text-slate-900 dark:text-white">
-                        {doc.name}
-                      </div>
-                      <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        最近更新：{formatRelativeTime(doc.updatedAt)}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-1 flex-wrap items-center gap-x-5 gap-y-3 xl:justify-end">
-                    <div className="text-sm text-slate-500 dark:text-slate-400">
-                      模块 <span className="ml-1 font-semibold text-slate-700 dark:text-slate-200">{currentMetrics.moduleCount}</span>
-                    </div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400">
-                      用例 <span className="ml-1 font-semibold text-slate-700 dark:text-slate-200">{currentMetrics.progress.total}</span>
-                    </div>
-                    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${status.className}`}>
-                      {status.label}
-                    </span>
-                    <div className="min-w-[150px]">
-                      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                        <span>完成率</span>
-                        <span>{currentMetrics.progress.completionRate}%</span>
-                      </div>
-                      <div className="mt-2 h-2 rounded-full bg-[#e8eefb] dark:bg-slate-800">
-                        <div
-                          ref={(el) => {
-                            if (el) el.style.width = `${Math.min(currentMetrics.progress.completionRate, 100)}%`;
-                          }}
-                          className="h-2 rounded-full bg-[linear-gradient(90deg,#5e73ff_0%,#3d7cff_100%)] transition-all"
-                        />
-                      </div>
-                    </div>
-                    <ArrowRight className="h-5 w-5 flex-shrink-0 text-[#5a71ff]" />
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+        <HelpCircle className="h-5 w-5 text-slate-900" />
+        <div className="h-5 w-px bg-slate-200" />
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e2e8f0,#94a3b8)] text-sm font-bold text-white">
+            {userName.slice(0, 1)}
+          </div>
+          <div className="hidden leading-tight xl:block">
+            <div className="text-sm font-semibold text-slate-900">{userName}</div>
+            <div className="text-xs text-slate-500">测试工程师</div>
+          </div>
+          <ChevronDown className="h-4 w-4 text-slate-500" />
         </div>
-      )}
-    </div>
-  );
-}
-
-function FirstUseTipsPanel({ onViewExample }: { onViewExample: () => void }) {
-  return (
-    <div className="rounded-[30px] border border-[#e3eafc] bg-white/95 p-6 shadow-[0_18px_52px_rgba(148,163,184,0.12)] dark:border-slate-800 dark:bg-slate-900">
-      <div className="mb-5 text-[30px] font-bold tracking-tight text-slate-900 dark:text-white">推荐工作流</div>
-
-      <div className="space-y-5">
-        {FIRST_USE_STEPS.map((step, index) => {
-          const Icon = step.icon;
-          const isLast = index === FIRST_USE_STEPS.length - 1;
-
-          return (
-            <div key={step.title} className="relative flex gap-4">
-              {!isLast ? (
-                <div className="absolute left-[16px] top-9 h-[calc(100%+12px)] w-px border-l border-dashed border-[#cddafd] dark:border-slate-700" />
-              ) : null}
-
-              <div className="relative flex flex-col items-center">
-                <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${step.indexTone}`}>
-                  {index + 1}
-                </div>
-              </div>
-
-              <div className="flex min-w-0 flex-1 gap-3 rounded-[20px] border border-[#e1e8fb] bg-[linear-gradient(180deg,#ffffff_0%,#fbfdff_100%)] px-3 py-3 shadow-[0_10px_24px_rgba(148,163,184,0.08)] dark:border-slate-800 dark:bg-slate-950/50">
-                <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[18px] ${step.tone}`}>
-                  <Icon className="h-6 w-6" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-lg font-semibold text-slate-900 dark:text-white">
-                    {step.title}
-                  </div>
-                  <div className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                    {step.description}
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
       </div>
-
-      <Button
-        type="button"
-        variant="ghost"
-        className="mt-6 h-12 w-full rounded-[18px] bg-[#f4f7ff] text-sm font-semibold text-[#4e6bff] hover:bg-[#edf2ff] hover:text-[#3956f6] dark:bg-slate-950 dark:text-indigo-300 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-200"
-        onClick={onViewExample}
-      >
-        查看完整工作流
-        <ArrowRight className="ml-1 h-4 w-4" />
-      </Button>
-    </div>
+    </header>
   );
 }
 
-interface HistoryPreviewSectionProps {
-  docs: AiCaseWorkspaceDocument[];
-  metrics: Map<string, WorkspaceMetrics>;
-  searchValue: string;
-  onSearchChange: (value: string) => void;
-  historyFilter: HistoryFilterMode;
-  historySort: HistorySortMode;
-  onToggleFilter: () => void;
-  onToggleSort: () => void;
-  onOpen: (id: string) => void;
-  onViewAll: () => void;
-}
-
-function HistoryPreviewSection({
-  docs,
-  metrics,
-  searchValue,
-  onSearchChange,
-  historyFilter,
-  historySort,
-  onToggleFilter,
-  onToggleSort,
-  onOpen,
-  onViewAll,
-}: HistoryPreviewSectionProps) {
+function MetricCard({ metric }: { metric: DashboardMetric }): JSX.Element {
+  const Icon = metric.icon;
   return (
-    <section className="rounded-[32px] border border-[#e3eafc] bg-white/95 p-6 shadow-[0_18px_52px_rgba(148,163,184,0.12)] dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="rounded-2xl border border-[#e5ebf5] bg-white px-5 py-5 shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
+      <div className="flex items-center gap-4">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg ${metric.gradient}`}>
+          <Icon className="h-6 w-6" />
+        </div>
         <div>
-          <h2 className="text-[30px] font-bold tracking-tight text-slate-900 dark:text-white">全部历史记录</h2>
-        </div>
-        <Button
-          type="button"
-          variant="ghost"
-          className="px-0 text-sm font-semibold text-indigo-600 hover:bg-transparent hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200"
-          onClick={onViewAll}
-        >
-          查看全部
-          <ArrowRight className="ml-1 h-4 w-4" />
-        </Button>
-      </div>
-
-      <div className="mt-5 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <div className="relative w-full max-w-[520px]">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input
-            value={searchValue}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="搜索工作台名称..."
-            className="h-11 rounded-[16px] border-[#d9e3fa] bg-[#fbfcff] pl-11 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-slate-700 dark:bg-slate-900"
-          />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11 rounded-[16px] border-[#d9e3fa] bg-white px-4 text-sm font-medium shadow-[0_8px_20px_rgba(148,163,184,0.10)] dark:border-slate-700 dark:bg-slate-900"
-            onClick={onToggleFilter}
-          >
-            <Filter className="mr-2 h-4 w-4" />
-            筛选: {HISTORY_FILTER_LABELS[historyFilter]}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11 rounded-[16px] border-[#d9e3fa] bg-white px-4 text-sm font-medium shadow-[0_8px_20px_rgba(148,163,184,0.10)] dark:border-slate-700 dark:bg-slate-900"
-            onClick={onToggleSort}
-          >
-            <ArrowUpDown className="mr-2 h-4 w-4" />
-            排序: {HISTORY_SORT_LABELS[historySort]}
-          </Button>
+          <div className="text-sm font-semibold text-slate-600">{metric.label}</div>
+          <div className="mt-1 text-3xl font-bold tracking-tight text-slate-950">{metric.value}</div>
+          <div className="mt-2 text-xs text-slate-500"><span className="font-semibold text-emerald-500">↑ {metric.delta}</span>　较上周</div>
         </div>
       </div>
+    </div>
+  );
+}
 
-      <div className="mt-4 overflow-hidden rounded-[24px] border border-[#dfe7fb] dark:border-slate-800">
-        {docs.length === 0 ? (
-          <div className="flex min-h-[240px] items-center justify-center bg-white px-6 py-10 dark:bg-slate-900">
-            <div className="flex flex-col items-center gap-4 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50 text-violet-500 dark:bg-violet-500/10 dark:text-violet-300">
-                <Inbox className="h-8 w-8" />
-              </div>
-              <div>
-                <div className="text-2xl font-semibold text-slate-900 dark:text-white">暂无历史记录</div>
-                <div className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                  创建第一条需求后，这里会展示你的历史工作台。
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-[#e8eefb] text-sm dark:divide-slate-800">
-              <thead className="bg-[#f8fbff] dark:bg-slate-950/60">
-                <tr className="text-left text-xs font-semibold tracking-wide text-slate-500 dark:text-slate-400">
-                  <th className="px-5 py-3">名称</th>
-                  <th className="px-5 py-3">更新时间</th>
-                  <th className="px-5 py-3">模块数</th>
-                  <th className="px-5 py-3">用例数</th>
-                  <th className="px-5 py-3">优先级</th>
-                  <th className="px-5 py-3">状态</th>
-                  <th className="px-5 py-3">进度</th>
-                  <th className="px-5 py-3 text-right">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e8eefb] bg-white dark:divide-slate-800 dark:bg-slate-900">
-                {docs.map((doc) => {
-                  const currentMetrics = metrics.get(doc.id) ?? {
-                    progress: computeProgress(doc.mapData),
-                    moduleCount: countModules(doc.mapData),
-                    highestPriority: 'P3' as AiCaseNodePriority,
-                  };
-                  const status = resolveWorkspaceStatus(doc, currentMetrics.progress);
-                  const priority = resolvePriorityDisplay(currentMetrics.highestPriority);
-
-                  return (
-                    <tr key={doc.id} className="transition-colors hover:bg-[#f8fbff] dark:hover:bg-slate-950/60">
-                      <td className="px-5 py-4">
-                        <div className="max-w-[280px]">
-                          <div className="line-clamp-1 font-semibold text-slate-900 dark:text-white">
-                            {doc.name}
-                          </div>
-                          <div className="mt-1 line-clamp-1 text-xs text-slate-500 dark:text-slate-400">
-                            {doc.requirement}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 text-slate-600 dark:text-slate-300">
-                        {formatDateTime(doc.updatedAt)}
-                      </td>
-                      <td className="px-5 py-4 text-slate-600 dark:text-slate-300">
-                        {currentMetrics.moduleCount}
-                      </td>
-                      <td className="px-5 py-4 text-slate-600 dark:text-slate-300">
-                        {currentMetrics.progress.total}
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${priority.className}`}>
-                          {priority.label}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${status.className}`}>
-                          {status.label}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="min-w-[140px]">
-                          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                            <span>
-                              {currentMetrics.progress.done}/{currentMetrics.progress.total}
-                            </span>
-                            <span>{currentMetrics.progress.completionRate}%</span>
-                          </div>
-                          <div className="mt-2 h-2 rounded-full bg-[#e8eefb] dark:bg-slate-800">
-                            <div
-                              ref={(el) => {
-                                if (el) el.style.width = `${Math.min(currentMetrics.progress.completionRate, 100)}%`;
-                              }}
-                              className="h-2 rounded-full bg-[linear-gradient(90deg,#5e73ff_0%,#3d7cff_100%)] transition-all"
-                            />
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="h-8 px-2 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-200"
-                          onClick={() => onOpen(doc.id)}
-                        >
-                          打开
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+function HeroPanel({ metrics }: { metrics: DashboardMetric[] }): JSX.Element {
+  return (
+    <section className="relative overflow-hidden rounded-2xl border border-[#dfe8fb] bg-[linear-gradient(105deg,#f8fbff_0%,#eef6ff_58%,#f6faff_100%)] px-10 py-8 shadow-[0_12px_34px_rgba(15,23,42,0.06)]">
+      <div className="pointer-events-none absolute right-8 top-2 hidden h-44 w-72 opacity-90 md:block">
+        <div className="absolute right-20 top-9 h-24 w-24 rounded-2xl bg-[linear-gradient(135deg,#4da3ff,#1d7cff)] p-1 shadow-[0_18px_40px_rgba(37,99,235,0.28)] rotate-3">
+          <div className="flex h-full w-full items-center justify-center rounded-xl border border-white/50 bg-white/15 text-3xl font-bold text-white">AI</div>
+        </div>
+        <div className="absolute right-2 top-3 h-16 w-16 rounded-xl bg-white/50 shadow-xl" />
+        <div className="absolute bottom-2 right-24 h-10 w-32 rounded-full bg-blue-200/60 blur-xl" />
+      </div>
+      <div className="relative max-w-[640px]">
+        <h1 className="text-[36px] font-bold tracking-tight text-slate-950">AI 测试用例生成工作台</h1>
+        <p className="mt-4 text-[15px] leading-7 text-slate-600">
+          通过 AI 技术，帮助您高效上传需求、智能解析、生成测试点与测试用例，全面提升测试效率与质量。
+        </p>
+      </div>
+      <div className="relative mt-9 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {metrics.map((metric) => <MetricCard key={metric.label} metric={metric} />)}
       </div>
     </section>
   );
 }
 
-export default function AICaseCreate() {
+function QuickStart({ steps }: { steps: QuickStep[] }): JSX.Element {
+  return (
+    <section className="border-t border-[#e6ecf5] bg-white px-6 py-5">
+      <h2 className="mb-5 text-lg font-bold text-slate-950">快速开始</h2>
+      <div className="grid gap-4 xl:grid-cols-5">
+        {steps.map((step, index) => {
+          const Icon = step.icon;
+          return (
+            <div key={step.title} className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={step.onClick}
+                className="relative h-[136px] w-full rounded-xl border border-[#dce5f3] bg-white px-4 py-4 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg"
+              >
+                <span className="absolute left-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-[#2c73e8] text-xs font-bold text-white">{index + 1}</span>
+                <div className="mx-auto mt-6 flex h-8 w-8 items-center justify-center text-[#1f6fff]"><Icon className="h-8 w-8" /></div>
+                <div className="mt-3 text-sm font-bold text-slate-950">{step.title}</div>
+                <div className="mt-2 text-xs leading-5 text-slate-500">{step.description}</div>
+              </button>
+              {index < steps.length - 1 ? <ChevronRight className="hidden h-5 w-5 shrink-0 text-slate-500 xl:block" /> : null}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function AbilityGrid({ abilities }: { abilities: AbilityCard[] }): JSX.Element {
+  return (
+    <section className="rounded-2xl border border-[#e4eaf3] bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+      <h2 className="mb-5 text-lg font-bold text-slate-950">系统能力</h2>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {abilities.map((ability) => {
+          const Icon = ability.icon;
+          return (
+            <button
+              key={ability.title}
+              type="button"
+              onClick={ability.onClick}
+              className="flex min-h-[100px] items-center gap-4 rounded-xl border border-[#e2e8f2] bg-white px-4 text-left transition-all hover:border-blue-300 hover:shadow-md"
+            >
+              <span className={`flex h-12 w-12 items-center justify-center rounded-xl ${ability.tone}`}><Icon className="h-6 w-6" /></span>
+              <span>
+                <span className="block text-base font-bold text-slate-950">{ability.title}</span>
+                <span className="mt-1 block text-xs text-slate-500">{ability.description}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function RecentProjects({ rows, onOpen, onViewAll }: { rows: ProjectRow[]; onOpen: (id: string) => void; onViewAll: () => void }): JSX.Element {
+  return (
+    <section className="rounded-2xl border border-[#e4eaf3] bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-lg font-bold text-slate-950">最近项目</h2>
+        <button type="button" onClick={onViewAll} className="flex items-center gap-1 text-sm font-semibold text-[#1f6fff]">查看全部 <ChevronRight className="h-4 w-4" /></button>
+      </div>
+      <div className="overflow-hidden rounded-xl border border-[#e5ebf2]">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-[#fbfcfe] text-xs font-semibold text-slate-500">
+            <tr>
+              <th className="px-4 py-3">项目名称</th>
+              <th className="px-4 py-3">需求名称</th>
+              <th className="px-4 py-3">状态</th>
+              <th className="px-4 py-3">更新时间</th>
+              <th className="px-4 py-3 text-right">操作</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#edf1f6]">
+            {rows.length > 0 ? rows.map((row) => (
+              <tr key={row.id} className="text-slate-700">
+                <td className="px-4 py-3 font-semibold text-slate-900">{row.projectName}</td>
+                <td className="px-4 py-3">{row.requirementName}</td>
+                <td className="px-4 py-3"><span className={`rounded-md px-2 py-1 text-xs font-semibold ${row.statusClassName}`}>{row.statusLabel}</span></td>
+                <td className="px-4 py-3 tabular-nums">{row.updatedAt}</td>
+                <td className="px-4 py-3 text-right">
+                  <button type="button" onClick={() => onOpen(row.id)} className="mr-3 text-[#1f6fff]"><Eye className="inline h-4 w-4" /></button>
+                  <button type="button" className="text-slate-600"><MoreVertical className="inline h-4 w-4" /></button>
+                </td>
+              </tr>
+            )) : (
+              <tr>
+                <td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-500">暂无最近项目，上传需求后将在这里展示。</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function CoveragePanel({ data, coverageRate, total }: { data: CoverageDataPoint[]; coverageRate: number; total: number }): JSX.Element {
+  return (
+    <section className="rounded-2xl border border-[#e4eaf3] bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2"><h2 className="text-lg font-bold text-slate-950">需求覆盖概览</h2><Info className="h-4 w-4 text-slate-400" /></div>
+        <span className="text-sm font-medium text-slate-600">本项目覆盖率</span>
+      </div>
+      <div className="grid items-center gap-4 md:grid-cols-[1fr_1fr]">
+        <div className="relative h-[210px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={data} dataKey="value" nameKey="name" innerRadius={64} outerRadius={86} startAngle={90} endAngle={-270} paddingAngle={2}>
+                {data.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="text-3xl font-bold text-slate-950">{coverageRate}%</div>
+            <div className="mt-1 text-sm text-slate-500">总体覆盖率</div>
+          </div>
+        </div>
+        <div className="space-y-4">
+          {data.map((item) => (
+            <div key={item.name} className="flex items-center gap-3 text-sm">
+              <span style={{ backgroundColor: item.color }} className="h-3 w-3 rounded-full" />
+              <span className="flex-1 text-slate-600">{item.name}</span>
+              <span className="font-semibold text-slate-700">{item.value} ({total > 0 ? Math.round((item.value / total) * 100) : 0}%)</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="mt-4 flex items-center justify-between border-t border-[#edf1f6] pt-4 text-sm text-slate-500">
+        <span>需求总数：{total}</span>
+        <span>更新时间：{formatDateTime(Date.now())}</span>
+      </div>
+      <button type="button" className="mt-4 flex w-full items-center justify-center gap-2 border-t border-[#edf1f6] pt-4 text-sm font-semibold text-[#1f6fff]">
+        查看覆盖率详情 <ChevronRight className="h-4 w-4" />
+      </button>
+    </section>
+  );
+}
+
+export default function AICaseCreate(): JSX.Element {
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [docs, setDocs] = useState<AiCaseWorkspaceDocument[]>([]);
   const [loading, setLoading] = useState(true);
-  const [historySearch, setHistorySearch] = useState('');
-  const [historyFilter, setHistoryFilter] = useState<HistoryFilterMode>('all');
-  const [historySort, setHistorySort] = useState<HistorySortMode>('updatedAt');
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       setDocs(await listAllWorkspaceDocuments());
     } catch {
-      toast.error('加载记录失败，请刷新重试');
+      toast.error('加载 AI 工作台数据失败，请刷新重试');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const { generatingDocId } = useAiGeneration();
-  const prevGeneratingDocIdRef = useRef<string | null>(generatingDocId);
-
-  useEffect(() => {
-    const previousDocId = prevGeneratingDocIdRef.current;
-    prevGeneratingDocIdRef.current = generatingDocId;
-
-    if (previousDocId !== null && generatingDocId === null) {
-      load();
-    }
-  }, [generatingDocId, load]);
-
   useEffect(() => {
     load();
   }, [load]);
 
-  const metricsById = useMemo(
-    () => new Map(docs.map((doc) => [doc.id, collectWorkspaceMetrics(doc)])),
-    [docs]
-  );
+  const sortedDocs = useMemo(() => [...docs].sort((left, right) => right.updatedAt - left.updatedAt), [docs]);
+  const aggregateProgress = useMemo(() => sumProgress(docs), [docs]);
+  const rows = useMemo(() => buildProjectRows(sortedDocs), [sortedDocs]);
+  const userName = user?.display_name || user?.username || '张伟';
 
-  const sortedDocs = useMemo(
-    () => [...docs].sort((left, right) => right.updatedAt - left.updatedAt),
-    [docs]
-  );
+  const handleOpen = useCallback((id: string) => setLocation(`/cases/ai?docId=${encodeURIComponent(id)}`), [setLocation]);
+  const handleViewAll = useCallback(() => setLocation('/cases/ai-history'), [setLocation]);
+  const handleReserved = useCallback((message: string) => toast.info(message), []);
 
-  const recentDocs = useMemo(() => sortedDocs.slice(0, 3), [sortedDocs]);
+  const metrics = useMemo<DashboardMetric[]>(() => [
+    { label: '本周需求数', value: docs.length.toLocaleString('zh-CN'), delta: '20%', icon: FileText, gradient: 'bg-[linear-gradient(135deg,#2475ff,#3d7cff)]' },
+    { label: '测试点数', value: aggregateProgress.total.toLocaleString('zh-CN'), delta: '18%', icon: Target, gradient: 'bg-[linear-gradient(135deg,#12c7be,#19b7b8)]' },
+    { label: '生成用例数', value: aggregateProgress.done.toLocaleString('zh-CN'), delta: '25%', icon: ClipboardList, gradient: 'bg-[linear-gradient(135deg,#7b55f2,#8a5cf6)]' },
+    { label: '导出次数', value: Math.max(0, docs.filter((doc) => doc.remoteWorkspaceId).length).toLocaleString('zh-CN'), delta: '13%', icon: Download, gradient: 'bg-[linear-gradient(135deg,#ff8a35,#ff6d2d)]' },
+  ], [aggregateProgress.done, aggregateProgress.total, docs]);
 
-  const historyPreviewDocs = useMemo(() => {
-    const keyword = historySearch.trim().toLowerCase();
-    let nextDocs = [...sortedDocs];
+  const quickSteps = useMemo<QuickStep[]>(() => [
+    { title: '上传需求', description: '支持 Word、PDF、TXT 等格式', icon: Upload, onClick: () => setSheetOpen(true) },
+    { title: '智能解析', description: 'AI 解析需求内容，提取关键信息', icon: FileQuestion, onClick: () => setSheetOpen(true) },
+    { title: '生成测试点', description: '识别测试点，覆盖功能与非功能需求', icon: Target, onClick: () => setSheetOpen(true) },
+    { title: '生成测试用例', description: 'AI 生成详细测试用例，支持编辑优化', icon: ClipboardList, onClick: () => setSheetOpen(true) },
+    { title: '导出 Excel', description: '一键导出测试用例，便于执行与管理', icon: Download, onClick: () => handleReserved('导出入口将在工作台详情中按用例维度开放') },
+  ], [handleReserved]);
 
-    if (keyword) {
-      nextDocs = nextDocs.filter((doc) =>
-        doc.name.toLowerCase().includes(keyword) || doc.requirement.toLowerCase().includes(keyword)
-      );
-    }
+  const abilities = useMemo<AbilityCard[]>(() => [
+    { title: '文档上传', description: '多格式文档上传', icon: Briefcase, tone: 'bg-blue-50 text-blue-600', onClick: () => setSheetOpen(true) },
+    { title: '文本清洗', description: '智能清洗与标准化', icon: Bot, tone: 'bg-blue-50 text-blue-600', onClick: () => handleReserved('文本清洗能力正在接入') },
+    { title: '需求疑问识别', description: '识别歧义与疑问点', icon: FileQuestion, tone: 'bg-violet-50 text-violet-600', onClick: () => handleReserved('需求疑问识别能力正在接入') },
+    { title: '风险点识别', description: '识别潜在风险点', icon: ShieldAlert, tone: 'bg-orange-50 text-orange-600', onClick: () => handleReserved('风险点识别能力正在接入') },
+    { title: '覆盖率分析', description: '多维度覆盖率分析', icon: BarChart3, tone: 'bg-blue-50 text-blue-600', onClick: handleViewAll },
+    { title: 'Excel 导出', description: '一键导出用例', icon: Download, tone: 'bg-emerald-50 text-emerald-600', onClick: () => handleReserved('Excel 导出能力将在用例生成后开放') },
+  ], [handleReserved, handleViewAll]);
 
-    if (historyFilter === 'synced') {
-      nextDocs = nextDocs.filter((doc) => doc.syncMode === 'hybrid' && !!doc.remoteWorkspaceId);
-    }
-
-    if (historyFilter === 'local-only') {
-      nextDocs = nextDocs.filter((doc) => !doc.remoteWorkspaceId);
-    }
-
-    nextDocs.sort((left, right) =>
-      historySort === 'createdAt'
-        ? right.createdAt - left.createdAt
-        : right.updatedAt - left.updatedAt
-    );
-
-    return nextDocs.slice(0, 5);
-  }, [historyFilter, historySearch, historySort, sortedDocs]);
-
-  const handleOpen = useCallback(
-    (id: string) => setLocation(`/cases/ai?docId=${encodeURIComponent(id)}`),
-    [setLocation]
-  );
-
-  const handleViewAll = useCallback(() => {
-    setLocation('/cases/ai-history');
-  }, [setLocation]);
-
-  const handleCreateFromTemplate = useCallback(() => {
-    toast.info('模板创建能力正在接入，当前可先通过新增需求创建工作台');
-  }, []);
-
-  const handleViewExample = useCallback(() => {
-    toast.info('示例工作台入口预留中，当前可先创建一条需求体验完整流程');
-  }, []);
-
-  const handleImportMaterials = useCallback(() => {
-    toast.info('资料导入入口预留中，当前可先把核心内容粘贴到新增需求中');
-  }, []);
-
-  const toggleHistoryFilter = useCallback(() => {
-    setHistoryFilter((current) => {
-      if (current === 'all') return 'synced';
-      if (current === 'synced') return 'local-only';
-      return 'all';
-    });
-  }, []);
-
-  const toggleHistorySort = useCallback(() => {
-    setHistorySort((current) => (current === 'updatedAt' ? 'createdAt' : 'updatedAt'));
-  }, []);
-
-  const quickStartItems = useMemo<QuickStartCardItem[]>(
-    () => [
-      {
-        title: '新建工作台',
-        description: '从 PRD、需求或变更创建工作台并生成测试用例',
-        actionLabel: '立即创建',
-        icon: FileText,
-        iconTone: 'bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300',
-        onClick: () => setSheetOpen(true),
-      },
-      {
-        title: '导入资料',
-        description: '上传接口文档、附件、缺陷单和代码变更',
-        actionLabel: '去导入',
-        icon: FolderUp,
-        iconTone: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300',
-        onClick: handleImportMaterials,
-      },
-      {
-        title: '查看示例',
-        description: '查看一条完整的工作台示例，快速理解流程',
-        actionLabel: '查看示例',
-        icon: BookOpen,
-        iconTone: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300',
-        onClick: handleViewExample,
-      },
-    ],
-    [handleImportMaterials, handleViewExample]
-  );
+  const coverageData = useMemo<CoverageDataPoint[]>(() => {
+    const covered = aggregateProgress.done;
+    const partial = aggregateProgress.doing + aggregateProgress.blocked;
+    const uncovered = Math.max(aggregateProgress.total - covered - partial, 0);
+    return [
+      { name: '已覆盖', value: covered, color: '#2d73ee' },
+      { name: '部分覆盖', value: partial, color: '#21bdbd' },
+      { name: '未覆盖', value: uncovered, color: '#ff6b4a' },
+    ];
+  }, [aggregateProgress]);
 
   return (
-    <div className="relative h-full overflow-y-auto bg-[linear-gradient(180deg,#f5f8ff_0%,#f7f9fd_28%,#f4f6fb_100%)] dark:bg-slate-950">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(circle_at_top_left,rgba(117,155,255,0.12),transparent_36%),radial-gradient(circle_at_top_right,rgba(101,75,255,0.10),transparent_28%)]" />
-      <div className="relative mx-auto max-w-[1360px] px-6 py-8">
-        {loading ? (
-          <div className="space-y-6">
-            <div className="rounded-[32px] border border-slate-200 bg-white px-8 py-8 shadow-[0_18px_45px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-                <div className="space-y-4">
-                  <div className="h-12 w-52 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
-                  <div className="h-6 w-[420px] max-w-full animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
-                  <div className="flex flex-wrap gap-3">
-                    {[1, 2, 3, 4].map((item) => (
-                      <div key={item} className="h-10 w-36 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
-                    ))}
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <div className="h-12 w-32 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
-                  <div className="h-12 w-36 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
+    <div className="flex min-h-full bg-[#f5f8fc] text-slate-900">
+      <DashboardSidebar />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <DashboardTopbar userName={userName} />
+        <main className="min-w-0 flex-1 overflow-y-auto p-5">
+          {loading ? (
+            <div className="flex h-[520px] items-center justify-center rounded-2xl border border-dashed border-blue-200 bg-white text-slate-500">
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" /> 正在加载 AI 工作台...
+            </div>
+          ) : (
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_408px]">
+              <div className="overflow-hidden rounded-2xl bg-white shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+                <HeroPanel metrics={metrics} />
+                <QuickStart steps={quickSteps} />
+                <div className="p-5">
+                  <RecentProjects rows={rows} onOpen={handleOpen} onViewAll={handleViewAll} />
                 </div>
               </div>
-            </div>
-
-            <div className="grid gap-4 xl:grid-cols-3">
-              {[1, 2, 3].map((item) => (
-                <div
-                  key={item}
-                  className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900"
-                >
-                  <div className="flex gap-4">
-                    <div className="h-14 w-14 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
-                    <div className="flex-1 space-y-3">
-                      <div className="h-8 w-32 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" />
-                      <div className="h-4 w-full animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
-                      <div className="h-4 w-2/3 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
-                    </div>
+              <div className="space-y-5">
+                <AbilityGrid abilities={abilities} />
+                <CoveragePanel data={coverageData} coverageRate={aggregateProgress.completionRate} total={aggregateProgress.total} />
+                {aggregateProgress.failed > 0 ? (
+                  <div className="rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 text-sm text-rose-700">
+                    <AlertTriangle className="mr-2 inline h-4 w-4" />存在 {aggregateProgress.failed} 个失败用例，请优先检查风险点。
                   </div>
-                </div>
-              ))}
+                ) : (
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
+                    <CheckCircle2 className="mr-2 inline h-4 w-4" />当前暂无失败用例，继续补充需求可提升覆盖率。
+                  </div>
+                )}
+              </div>
             </div>
-
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-              {[1, 2].map((item) => (
-                <div
-                  key={item}
-                  className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900"
-                >
-                  <div className="h-8 w-44 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" />
-                  <div className="mt-5 h-64 animate-pulse rounded-[24px] bg-slate-100 dark:bg-slate-800" />
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <HeroSection
-              onCreate={() => setSheetOpen(true)}
-              onCreateFromTemplate={handleCreateFromTemplate}
-              onViewExample={handleViewExample}
-            />
-
-            <QuickStartSection items={quickStartItems} />
-
-            <section className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-              <RecentWorkspacePanel
-                docs={recentDocs}
-                metrics={metricsById}
-                onOpen={handleOpen}
-                onCreate={() => setSheetOpen(true)}
-                onCreateFromTemplate={handleCreateFromTemplate}
-                onViewAll={handleViewAll}
-                onViewExample={handleViewExample}
-              />
-              <FirstUseTipsPanel onViewExample={handleViewExample} />
-            </section>
-
-            <HistoryPreviewSection
-              docs={historyPreviewDocs}
-              metrics={metricsById}
-              searchValue={historySearch}
-              onSearchChange={setHistorySearch}
-              historyFilter={historyFilter}
-              historySort={historySort}
-              onToggleFilter={toggleHistoryFilter}
-              onToggleSort={toggleHistorySort}
-              onOpen={handleOpen}
-              onViewAll={handleViewAll}
-            />
-          </div>
-        )}
+          )}
+        </main>
       </div>
-
       <NewRequirementSheet open={sheetOpen} onOpenChange={setSheetOpen} />
     </div>
   );
