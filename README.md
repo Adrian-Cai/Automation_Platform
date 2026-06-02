@@ -14,21 +14,18 @@
   <img src="https://img.shields.io/badge/TypeScript-5.3-3178C6?logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Vite-5.0-646CFF?logo=vite" alt="Vite" />
   <img src="https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?logo=tailwindcss" alt="TailwindCSS" />
-  <!-- Frontend UI -->
-  <img src="https://img.shields.io/badge/Radix%20UI-1.3-161618?logo=radixui" alt="Radix UI" />
-  <img src="https://img.shields.io/badge/Lucide-0.312-000000?logo=lucide" alt="Lucide" />
-  <img src="https://img.shields.io/badge/Recharts-3.8-FF6384?logo=recharts" alt="Recharts" />
+
   <!-- Frontend Utility -->
   <img src="https://img.shields.io/badge/TanStack%20Query-4.44-EF4444" alt="TanStack Query" />
   <img src="https://img.shields.io/badge/wouter-2.12-5B21B6" alt="wouter" />
-  <img src="https://img.shields.io/badge/date--fns-4.1-FF6B9D" alt="date-fns" />
+
   <img src="https://img.shields.io/badge/sonner-1.4-000000" alt="sonner" />
 </p>
 
 <p align="center">
   <!-- Backend -->
   <img src="https://img.shields.io/badge/Express-4.18-000000?logo=express" alt="Express" />
-  <img src="https://img.shields.io/badge/TypeORM-0.3-FE0803?logo=typeorm" alt="TypeORM" />
+
   <img src="https://img.shields.io/badge/Socket.IO-4.8-010101?logo=socket.io" alt="Socket.IO" />
   <img src="https://img.shields.io/badge/MariaDB-10.x-003545?logo=mariadb" alt="MariaDB" />
 </p>
@@ -36,24 +33,15 @@
 <p align="center">
   <!-- Infra & Testing -->
   <img src="https://img.shields.io/badge/Vitest-4.1-729B1B?logo=vitest" alt="Vitest" />
-  <img src="https://img.shields.io/badge/Python-3.11-3776AB?logo=python" alt="Python" />
+
   <img src="https://img.shields.io/badge/Pytest-8.x-0A9EDC?logo=pytest" alt="Pytest" />
   <img src="https://img.shields.io/badge/Selenium-4.x-43B02A?logo=selenium" alt="Selenium" />
   <img src="https://img.shields.io/badge/k6-2.0-7A64CA?logo=k6" alt="k6" />
   <img src="https://img.shields.io/badge/Jenkins-Dockerized-2D53EB?logo=jenkins" alt="Jenkins" />
   <img src="https://img.shields.io/badge/Docker-24.x-2496ED?logo=docker" alt="Docker" />
-  <img src="https://img.shields.io/badge/PM2-5.x-2B037A?logo=pm2" alt="PM2" />
+
   <img src="https://img.shields.io/badge/Node.js-20-339933?logo=node.js" alt="Node.js" />
   <img src="https://img.shields.io/badge/GitHub%20Actions-ubuntu--latest-2088FF?logo=github-actions" alt="GitHub Actions" />
-</p>
-
-<p align="center">
-  <!-- Project Status -->
-  <a href="https://github.com/acai1998/Automation_Platform/stargazers"><img src="https://img.shields.io/github/stars/acai1998/Automation_Platform?style=social" alt="GitHub Stars" /></a>
-  <img src="https://img.shields.io/github/last-commit/acai1998/Automation_Platform" alt="Last Commit" />
-  <img src="https://img.shields.io/github/license/acai1998/Automation_Platform" alt="License" />
-  <img src="https://img.shields.io/badge/PRs-Welcome-brightgreen" alt="PRs Welcome" />
-  <a href="https://github.com/acai1998/Automation_Platform"><img src="https://img.shields.io/github/languages/code-size/acai1998/Automation_Platform" alt="Code Size" /></a>
 </p>
 
 一个现代化的全栈自动化测试管理平台，用于管理测试用例、调度 Jenkins 执行任务、监控执行结果。平台专注于测试管理和调度，实际测试执行由 Jenkins 等外部系统完成。
