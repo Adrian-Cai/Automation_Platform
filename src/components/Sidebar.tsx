@@ -18,8 +18,6 @@ import {
   Monitor,
   Gauge,
   BrainCircuit,
-  FileText,
-  ShieldCheck,
   History,
   ClipboardList,
   PanelLeftClose,

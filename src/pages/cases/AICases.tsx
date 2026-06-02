@@ -979,6 +979,11 @@ const applyWorkspaceDetail = useCallback(
     }
   }, [applyWorkspaceDetail]);
 
+  const handleNewWorkspace = useCallback(() => {
+    const newDocId = `ai-ws-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    setLocation(`/cases/ai?docId=${encodeURIComponent(newDocId)}`);
+  }, [setLocation]);
+
   const handlePublishRemote = useCallback(async () => {
     if (!mindData) {
       toast.error('工作区数据尚未初始化，无法发布');
@@ -1121,6 +1126,7 @@ const applyWorkspaceDetail = useCallback(
       saveStateText={saveStateText}
       remoteStatusText={remoteStatusText}
       onOpenHistory={() => setLocation('/ai-workbench/history-export')}
+      onNewWorkspace={handleNewWorkspace}
       workspaceSummary={workspaceSummary}
       isRemoteLinked={isRemoteLinked}
       workspacePage={workspacePage}

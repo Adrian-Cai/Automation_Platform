@@ -30,6 +30,7 @@ interface AICasesWorkspaceViewProps {
   saveStateText: string;
   remoteStatusText: string;
   onOpenHistory: () => void;
+  onNewWorkspace?: () => void;
   workspaceSummary: WorkspaceSummaryViewModel;
   isRemoteLinked: boolean;
   workspacePage: AiWorkspaceRoutePage;
@@ -76,6 +77,7 @@ export function AICasesWorkspaceView({
   saveStateText,
   remoteStatusText,
   onOpenHistory,
+  onNewWorkspace,
   workspaceSummary,
   isRemoteLinked,
   workspacePage,
@@ -127,6 +129,7 @@ export function AICasesWorkspaceView({
           remoteStatusText={remoteStatusText}
           onOpenRequirement={() => setIsRequirementDialogOpen(true)}
           onOpenHistory={() => onOpenHistory()}
+          onNewWorkspace={onNewWorkspace}
         />
       
           <WorkbenchSummaryBar

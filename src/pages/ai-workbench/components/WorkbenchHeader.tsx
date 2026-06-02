@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { BrainCircuit, FileText, History } from 'lucide-react';
+import { BrainCircuit, FileText, History, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface WorkbenchHeaderProps {
@@ -8,6 +8,7 @@ interface WorkbenchHeaderProps {
   remoteStatusText: string;
   onOpenRequirement: () => void;
   onOpenHistory: () => void;
+  onNewWorkspace?: () => void;
   titleIcon?: ReactNode;
 }
 
@@ -17,6 +18,7 @@ export function WorkbenchHeader({
   remoteStatusText,
   onOpenRequirement,
   onOpenHistory,
+  onNewWorkspace,
   titleIcon,
 }: WorkbenchHeaderProps) {
   return (
@@ -28,6 +30,18 @@ export function WorkbenchHeader({
         <h1 className="text-sm font-semibold text-slate-900 dark:text-white">{title}</h1>
       </div>
       <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+        {onNewWorkspace && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs gap-1.5 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:text-indigo-300 dark:hover:bg-indigo-950/30"
+            onClick={onNewWorkspace}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>新建工作台</span>
+          </Button>
+        )}
         <Button
           type="button"
           variant="ghost"
