@@ -21,15 +21,9 @@ import Tasks from "./pages/tasks/Tasks";
 import APICases from "./pages/cases/APICases";
 import UICases from "./pages/cases/UICases";
 import PerformanceCases from "./pages/cases/PerformanceCases";
-
-import AiWorkbenchOverview from "./pages/ai-workbench/AiWorkbenchOverview";
-import AiWorkbenchRequirementInput from "./pages/ai-workbench/AiWorkbenchRequirementInput";
-import AiWorkbenchRequirementAnalysis from "./pages/ai-workbench/AiWorkbenchRequirementAnalysis";
-import AiWorkbenchCaseGeneration from "./pages/ai-workbench/AiWorkbenchCaseGeneration";
-import AiWorkbenchQualityCoverage from "./pages/ai-workbench/AiWorkbenchQualityCoverage";
-import AiWorkbenchHistoryExport from "./pages/ai-workbench/AiWorkbenchHistoryExport";
-import AiWorkbenchSettings from "./pages/ai-workbench/AiWorkbenchSettings";
-import RequirementAnalysis from "./pages/RequirementAnalysis";
+import AICases from "./pages/cases/AICases";
+import AICaseCreate from "./pages/cases/AICaseCreate";
+import AICaseHistory from "./pages/cases/AICaseHistory";
 import RequirementInputParsePage from "./pages/cases/RequirementInputParsePage";
 import Reports from "./pages/reports/Reports";
 import ReportDetail from "./pages/reports/ReportDetail";
@@ -117,65 +111,6 @@ function Router() {
             </Layout>
           </ProtectedRoute>
         </Route>
-        <Route path="/ai-workbench/index">
-          <Redirect to="/ai-workbench/overview" />
-        </Route>
-        <Route path="/ai-workbench/overview">
-          <ProtectedRoute>
-            <Layout>
-              <AiWorkbenchOverview />
-            </Layout>
-          </ProtectedRoute>
-        </Route>
-        <Route path="/ai-workbench/requirement-input">
-          <ProtectedRoute>
-            <Layout>
-              <AiWorkbenchRequirementInput />
-            </Layout>
-          </ProtectedRoute>
-        </Route>
-        <Route path="/requirement-analysis">
-          <ProtectedRoute>
-            <Layout>
-              <RequirementAnalysis />
-            </Layout>
-          </ProtectedRoute>
-        </Route>
-        <Route path="/ai-workbench/requirement-analysis">
-          <ProtectedRoute>
-            <Layout>
-              <AiWorkbenchRequirementAnalysis />
-            </Layout>
-          </ProtectedRoute>
-        </Route>
-        <Route path="/ai-workbench/case-generation">
-          <ProtectedRoute>
-            <Layout>
-              <AiWorkbenchCaseGeneration />
-            </Layout>
-          </ProtectedRoute>
-        </Route>
-        <Route path="/ai-workbench/quality-coverage">
-          <ProtectedRoute>
-            <Layout>
-              <AiWorkbenchQualityCoverage />
-            </Layout>
-          </ProtectedRoute>
-        </Route>
-        <Route path="/ai-workbench/history-export">
-          <ProtectedRoute>
-            <Layout>
-              <AiWorkbenchHistoryExport />
-            </Layout>
-          </ProtectedRoute>
-        </Route>
-        <Route path="/ai-workbench/settings">
-          <ProtectedRoute>
-            <Layout>
-              <AiWorkbenchSettings />
-            </Layout>
-          </ProtectedRoute>
-        </Route>
         {/* /cases/ai 系列路由由 KeepAliveAiCases 接管，Switch 中仅保留空占位避免 404 */}
         <Route path="/cases/ai/materials">
           {null}
@@ -190,10 +125,25 @@ function Router() {
           {null}
         </Route>
         <Route path="/cases/ai">
-          {null}
+          <ProtectedRoute>
+            <Layout>
+              <AICases />
+            </Layout>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/cases/ai-create">
+          <ProtectedRoute>
+            <Layout>
+              <AICaseCreate />
+            </Layout>
+          </ProtectedRoute>
         </Route>
         <Route path="/cases/ai-history">
-          <Redirect to="/ai-workbench/history-export" />
+          <ProtectedRoute>
+            <Layout>
+              <AICaseHistory />
+            </Layout>
+          </ProtectedRoute>
         </Route>
         <Route path="/requirements/input-parse">
           <ProtectedRoute>
