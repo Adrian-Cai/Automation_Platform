@@ -23,6 +23,7 @@ import PerformanceCases from "./pages/cases/PerformanceCases";
 import AiWorkbenchOverview from "./pages/ai-workbench/AiWorkbenchOverview";
 import AiWorkbenchRequirementInput from "./pages/ai-workbench/AiWorkbenchRequirementInput";
 import AiWorkbenchRequirementAnalysis from "./pages/ai-workbench/AiWorkbenchRequirementAnalysis";
+import RequirementAnalysis from "./pages/RequirementAnalysis";
 import AiWorkbenchCaseGeneration from "./pages/ai-workbench/AiWorkbenchCaseGeneration";
 import AiWorkbenchQualityCoverage from "./pages/ai-workbench/AiWorkbenchQualityCoverage";
 import AiWorkbenchHistoryExport from "./pages/ai-workbench/AiWorkbenchHistoryExport";
@@ -139,6 +140,11 @@ function Router() {
         <Route path="/ai-workbench/requirement-input">
           <ProtectedLayout>
             <AiWorkbenchRequirementInput />
+          </ProtectedLayout>
+        </Route>
+        <Route path="/requirement-analysis">
+          <ProtectedLayout>
+            <RequirementAnalysis />
           </ProtectedLayout>
         </Route>
         <Route path="/ai-workbench/requirement-analysis">
