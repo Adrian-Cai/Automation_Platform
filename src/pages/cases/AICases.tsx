@@ -1099,7 +1099,7 @@ const applyWorkspaceDetail = useCallback(
     <AICasesWorkspaceView
       saveStateText={saveStateText}
       remoteStatusText={remoteStatusText}
-      onOpenHistory={() => setActiveTab('results')}
+onOpenHistory={() => setLocation('/ai-workbench/history-export')}
       workspaceSummary={workspaceSummary}
       isRemoteLinked={isRemoteLinked}
       activeTab={activeTab}

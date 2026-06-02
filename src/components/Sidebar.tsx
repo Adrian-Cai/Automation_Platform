@@ -18,6 +18,11 @@ import {
   Monitor,
   Gauge,
   BrainCircuit,
+  FileText,
+  ShieldCheck,
+  History,
+  ClipboardList,
+  Target,
   PanelLeftClose,
   PanelLeftOpen
 } from "lucide-react";
@@ -52,7 +57,15 @@ const navItems: NavItem[] = [
   {
     icon: <BrainCircuit className="h-5 w-5" />,
     label: "AI 工作台",
-    href: "/cases/ai",
+children: [
+      { label: "工作台总览", href: "/ai-workbench/overview", icon: <BrainCircuit className="h-4 w-4" /> },
+      { label: "需求输入与解析", href: "/ai-workbench/requirement-input", icon: <ClipboardList className="h-4 w-4" /> },
+      { label: "需求分析与测试点", href: "/ai-workbench/requirement-analysis", icon: <Target className="h-4 w-4" /> },
+      { label: "用例生成与编辑", href: "/ai-workbench/case-generation", icon: <FileText className="h-4 w-4" /> },
+      { label: "质量检查与覆盖率", href: "/ai-workbench/quality-coverage", icon: <ShieldCheck className="h-4 w-4" /> },
+      { label: "历史记录与导出", href: "/ai-workbench/history-export", icon: <History className="h-4 w-4" /> },
+      { label: "设置", href: "/ai-workbench/settings", icon: <Settings className="h-4 w-4" /> },
+    ],
   },
   { icon: <Boxes className="h-5 w-5" />, label: "任务管理", href: "/tasks" },
   { icon: <BarChart3 className="h-5 w-5" />, label: "运行记录", href: "/reports" },
