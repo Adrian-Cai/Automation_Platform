@@ -17,14 +17,15 @@ import {
   Code,
   Monitor,
   Gauge,
-  BrainCircuit,
+BrainCircuit,
   FileText,
-  ListChecks,
-  Wand2,
   ShieldCheck,
   History,
   ClipboardList,
   Target,
+  ListTree,
+  ShieldAlert,
+  PlayCircle,
   PanelLeftClose,
   PanelLeftOpen
 } from "lucide-react";

@@ -27,8 +27,6 @@ import ReportDetail from "./pages/reports/ReportDetail";
 import SystemSettings from "./pages/settings/SystemSettings";
 import { User } from "lucide-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
-import type { ReactNode } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
