@@ -28,7 +28,6 @@ interface ModuleCoverageItem {
 interface AICasesWorkspaceViewProps {
   saveStateText: string;
   remoteStatusText: string;
-  onOpenHistory: () => void;
   workspaceSummary: WorkspaceSummaryViewModel;
   isRemoteLinked: boolean;
   activeTab: WorkspaceTab;
@@ -75,7 +74,6 @@ interface AICasesWorkspaceViewProps {
 export function AICasesWorkspaceView({
   saveStateText,
   remoteStatusText,
-  onOpenHistory,
   workspaceSummary,
   isRemoteLinked,
   activeTab,
@@ -127,7 +125,6 @@ export function AICasesWorkspaceView({
           saveStateText={saveStateText}
           remoteStatusText={remoteStatusText}
           onOpenRequirement={() => setIsRequirementDialogOpen(true)}
-          onOpenHistory={() => onOpenHistory()}
         />
       
           <AiWorkspaceSummaryBar

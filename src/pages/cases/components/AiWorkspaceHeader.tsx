@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { BrainCircuit, FileText, History } from 'lucide-react';
+import { BrainCircuit, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface AiWorkspaceHeaderProps {
@@ -7,7 +7,6 @@ interface AiWorkspaceHeaderProps {
   saveStateText: string;
   remoteStatusText: string;
   onOpenRequirement: () => void;
-  onOpenHistory: () => void;
   titleIcon?: ReactNode;
 }
 
@@ -16,7 +15,6 @@ export function AiWorkspaceHeader({
   saveStateText,
   remoteStatusText,
   onOpenRequirement,
-  onOpenHistory,
   titleIcon,
 }: AiWorkspaceHeaderProps) {
   return (
@@ -37,16 +35,6 @@ export function AiWorkspaceHeader({
         >
           <FileText className="h-3.5 w-3.5" />
           <span>需求信息</span>
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-7 px-2 text-xs gap-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
-          onClick={onOpenHistory}
-        >
-          <History className="h-3.5 w-3.5" />
-          <span>用例记录</span>
         </Button>
         <span>{saveStateText}</span>
         <span>{remoteStatusText}</span>
