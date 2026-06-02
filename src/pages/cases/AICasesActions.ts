@@ -4,7 +4,7 @@ import { aiCasesApi, type AiCaseWorkspaceDetail } from '@/api';
 import { appendNodeAttachmentId, expandImportedCaseNodesFromNote, findNodeById, generateMindDataFromRequirement, normalizeMindData, setNodeStatus } from '@/lib/aiCaseMindMap';
 import { saveNodeAttachment } from '@/lib/aiCaseStorage';
 import { createAiCaseAttachmentId, type AiCaseMindData, type AiCaseNodeStatus, type AiCaseWorkspaceDocument } from '@/types/aiCases';
-import { MAX_UPLOAD_BYTES, getFirstGeneratedCaseId, type RemoteSyncMeta, type StreamGenerateResultPayload, type WorkspaceTab } from './AICasesUtils';
+import { MAX_UPLOAD_BYTES, getFirstGeneratedCaseId, type RemoteSyncMeta, type StreamGenerateResultPayload } from './AICasesUtils';
 
 interface UploadAiCaseImageFilesOptions {
   inputFiles: File[];
@@ -118,7 +118,6 @@ interface GenerateAiCasesOptions {
   streamGenerateFromBackend: () => Promise<StreamGenerateResultPayload>;
   showNodeKindTagsRef: MutableRefObject<boolean>;
   isWorkspaceNameUserEditedRef: MutableRefObject<boolean>;
-  setActiveTab: Dispatch<SetStateAction<WorkspaceTab>>;
   setIsRequirementDialogOpen: Dispatch<SetStateAction<boolean>>;
   startGenerateProgress: () => void;
   setIsGenerating: Dispatch<SetStateAction<boolean>>;
@@ -139,7 +138,6 @@ export async function generateAiCases({
   streamGenerateFromBackend,
   showNodeKindTagsRef,
   isWorkspaceNameUserEditedRef,
-  setActiveTab,
   setIsRequirementDialogOpen,
   startGenerateProgress,
   setIsGenerating,
@@ -158,8 +156,7 @@ if (!requirementText.trim()) {
       return;
     }
 
-    setActiveTab('results');
-        setIsRequirementDialogOpen(false);
+    setIsRequirementDialogOpen(false);
     startGenerateProgress();
     setIsGenerating(true);
     try {
@@ -216,15 +213,16 @@ if (!requirementText.trim()) {
       finishGenerateProgress(generated.source === 'llm' ? 'AI 生成完成' : '模板生成完成');
 
       // 判断用户是否已离开 AI 用例页，若已离开则弹跨页面 toast
-      const isOnAiPage = window.location.pathname === '/cases/ai';
+      const isOnAiPage = window.location.pathname.startsWith('/cases/ai');
       if (isOnAiPage) {
+        setLocation(`/cases/ai/results${window.location.search}`);
         toast.success(`AI 用例生成完成（${generated.source === 'llm' ? '大模型' : '回退模板'}）`);
       } else {
         toast.success('AI 用例生成完成，点击返回查看', {
           duration: 8000,
           action: {
             label: '返回查看',
-            onClick: () => setLocation('/cases/ai'),
+            onClick: () => setLocation(`/cases/ai/results${window.location.search}`),
           },
         });
       }
@@ -256,7 +254,11 @@ if (!requirementText.trim()) {
         errMsg.includes('HTTP 401') ||
         errMsg.includes('未认证');
 
-      const isOnAiPageOnError = window.location.pathname === '/cases/ai';
+      const isOnAiPageOnError = window.location.pathname.startsWith('/cases/ai');
+      if (isOnAiPageOnError) {
+        setLocation(`/cases/ai/results${window.location.search}`);
+      }
+
       if (isAuthError) {
         toast.warning('登录状态已过期，AI 生成已切换至本地模板。请重新登录后再试', {
           duration: 6000,
@@ -270,7 +272,7 @@ if (!requirementText.trim()) {
           duration: 8000,
           action: {
             label: '返回查看',
-            onClick: () => setLocation('/cases/ai'),
+            onClick: () => setLocation(`/cases/ai/results${window.location.search}`),
           },
         });
       } else {

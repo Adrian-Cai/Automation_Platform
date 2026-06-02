@@ -77,10 +77,10 @@ function KeepAliveAiCases() {
   const { isGenerating } = useAiGeneration();
   // 用 useState 惰性初始化：如果刷新时直接落在 /cases/ai，也能立即挂载
   const [hasVisited, setHasVisited] = useState(
-    () => location === '/cases/ai' || location.startsWith('/cases/ai?')
+    () => location === '/cases/ai' || location.startsWith('/cases/ai/') || location.startsWith('/cases/ai?')
   );
 
-  const isCurrentRoute = location === '/cases/ai' || location.startsWith('/cases/ai?');
+  const isCurrentRoute = location === '/cases/ai' || location.startsWith('/cases/ai/') || location.startsWith('/cases/ai?');
 
   // 一旦用户导航到 /cases/ai，就永久标记（不会因路由变化而重置）
   useEffect(() => {
@@ -174,7 +174,19 @@ function Router() {
             </Layout>
           </ProtectedRoute>
         </Route>
-        {/* /cases/ai 路由由 KeepAliveAiCases 接管，Switch 中仅保留空占位避免 404 */}
+        {/* /cases/ai 系列路由由 KeepAliveAiCases 接管，Switch 中仅保留空占位避免 404 */}
+        <Route path="/cases/ai/materials">
+          {null}
+        </Route>
+        <Route path="/cases/ai/results">
+          {null}
+        </Route>
+        <Route path="/cases/ai/coverage">
+          {null}
+        </Route>
+        <Route path="/cases/ai/execution">
+          {null}
+        </Route>
         <Route path="/cases/ai">
           {null}
         </Route>

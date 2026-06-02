@@ -19,6 +19,10 @@ import {
   Gauge,
   BrainCircuit,
   History,
+  FileText,
+  ListTree,
+  ShieldAlert,
+  PlayCircle,
   PanelLeftClose,
   PanelLeftOpen
 } from "lucide-react";
@@ -55,6 +59,11 @@ const navItems: NavItem[] = [
     label: "AI 工作台",
     children: [
       { label: "工作台首页", href: "/cases/ai-create", icon: <BrainCircuit className="h-4 w-4" /> },
+      { label: "工作台总览", href: "/cases/ai", icon: <BarChart3 className="h-4 w-4" /> },
+      { label: "输入材料", href: "/cases/ai/materials", icon: <FileText className="h-4 w-4" /> },
+      { label: "生成结果", href: "/cases/ai/results", icon: <ListTree className="h-4 w-4" /> },
+      { label: "覆盖与风险", href: "/cases/ai/coverage", icon: <ShieldAlert className="h-4 w-4" /> },
+      { label: "执行与回流", href: "/cases/ai/execution", icon: <PlayCircle className="h-4 w-4" /> },
       { label: "全部记录", href: "/cases/ai-history", icon: <History className="h-4 w-4" /> },
     ],
   },
