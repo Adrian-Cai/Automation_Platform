@@ -18,6 +18,7 @@ import {
   Monitor,
   Gauge,
   BrainCircuit,
+  History,
   PanelLeftClose,
   PanelLeftOpen
 } from "lucide-react";
@@ -53,7 +54,8 @@ const navItems: NavItem[] = [
     icon: <BrainCircuit className="h-5 w-5" />,
     label: "AI 工作台",
     children: [
-      { label: "工作台首页", href: "/cases/ai", icon: <BrainCircuit className="h-4 w-4" /> },
+      { label: "工作台首页", href: "/ai-workbench/requirement-input", icon: <BrainCircuit className="h-4 w-4" /> },
+      { label: "全部记录", href: "/ai-workbench/history-export", icon: <History className="h-4 w-4" /> },
     ],
   },
   { icon: <Boxes className="h-5 w-5" />, label: "任务管理", href: "/tasks" },
