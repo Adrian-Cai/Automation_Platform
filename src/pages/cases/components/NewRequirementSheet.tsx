@@ -112,7 +112,7 @@ export function NewRequirementSheet({ open, onOpenChange }: NewRequirementSheetP
       params.set('autoGenerate', autoGenerate ? 'true' : 'false');
       params.set('initName', workspaceName.trim() || 'AI Testcase Workspace');
       params.set('initReq', requirementText.trim());
-      setLocation(`/cases/ai?${params.toString()}`);
+      setLocation(`/ai-workbench/case-generation?${params.toString()}`);
     } catch (error) {
       console.error('[AICaseCreate] failed to navigate', error);
       toast.error('跳转失败，请重试');

@@ -112,7 +112,7 @@ export default function AICaseHistory() {
   useEffect(() => { load(); }, [load]);
 
   const handleOpen = useCallback(
-    (id: string) => setLocation(`/cases/ai?docId=${encodeURIComponent(id)}`),
+    (id: string) => setLocation(`/ai-workbench/case-generation?docId=${encodeURIComponent(id)}`),
     [setLocation]
   );
 
