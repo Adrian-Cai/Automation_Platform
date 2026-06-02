@@ -176,6 +176,8 @@ Thumbs.db
 deepseek_*
 test_crypto.py
 node_modules
+.playwright-mcp/
+*.patch
 
 # Project specific
 tmp/
