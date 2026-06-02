@@ -6,7 +6,7 @@ import { WorkbenchSummaryBar } from '../ai-workbench/components/WorkbenchSummary
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { AiCaseAttachmentPreview, AiCaseMindData, AiCaseNode, AiCaseNodeStatus, AiCaseProgress } from '@/types/aiCases';
-import { WorkspacePanelCard, type GeneratedCaseListItem, type RemoteSyncMeta } from './AICasesUtils';
+import { WorkspacePanelCard, type GeneratedCaseListItem, type RemoteSyncMeta, type WorkspaceTab } from './AICasesUtils';
 
 interface WorkspaceSummaryViewModel {
   materialCount: number;
@@ -29,9 +29,11 @@ export type AiWorkspaceRoutePage = 'overview' | 'materials' | 'results' | 'cover
 interface AICasesWorkspaceViewProps {
   saveStateText: string;
   remoteStatusText: string;
+  onOpenHistory: () => void;
   workspaceSummary: WorkspaceSummaryViewModel;
   isRemoteLinked: boolean;
-  workspacePage: AiWorkspaceRoutePage;
+  activeTab: WorkspaceTab;
+  setActiveTab: (tab: WorkspaceTab) => void;
   requirementText: string;
   attachments: AiCaseAttachmentPreview[];
   isGenerating: boolean;
@@ -74,9 +76,11 @@ interface AICasesWorkspaceViewProps {
 export function AICasesWorkspaceView({
   saveStateText,
   remoteStatusText,
+  onOpenHistory: _onOpenHistory,
   workspaceSummary,
   isRemoteLinked,
-  workspacePage,
+  activeTab,
+  setActiveTab: _setActiveTab,
   requirementText,
   attachments,
   isGenerating,
@@ -137,7 +141,7 @@ export function AICasesWorkspaceView({
           />
 
       {/* 主体内容 */}
-      {workspacePage === 'overview' ? (
+      {activeTab === 'overview' ? (
         <section className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
           <div className="grid gap-4 grid-cols-[1.1fr_1fr]">
             <WorkspacePanelCard title="工作台总览" description="按输入、结果、风险和执行四个路由页面汇总当前工作台状态。">
@@ -181,7 +185,7 @@ export function AICasesWorkspaceView({
         </section>
       ) : null}
 
-      {workspacePage === 'materials' ? (
+      {activeTab === 'materials' ? (
         <section className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
           <div className="grid gap-4 grid-cols-[1.6fr_1fr]">
             <WorkspacePanelCard
@@ -300,7 +304,7 @@ export function AICasesWorkspaceView({
         </section>
       ) : null}
 
-      {workspacePage === 'results' ? (
+      {activeTab === 'results' ? (
         <div className="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -321,7 +325,7 @@ export function AICasesWorkspaceView({
         </div>
       ) : null}
 
-      {workspacePage === 'coverage' ? (
+      {activeTab === 'coverage' ? (
         <section className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
           <div className="grid gap-4">
             <WorkbenchSummaryBar
@@ -390,7 +394,7 @@ export function AICasesWorkspaceView({
         </section>
       ) : null}
 
-      {workspacePage === 'execution' ? (
+      {activeTab === 'execution' ? (
         <section className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
           <div className="grid gap-4 grid-cols-[1.1fr_1fr]">
             <div className="grid gap-4">
@@ -476,7 +480,7 @@ export function AICasesWorkspaceView({
       ) : null}
 
       
-      {workspacePage === 'results' ? (
+      {activeTab === 'results' ? (
         <section className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
           <div className="grid gap-4 grid-cols-[1.6fr_1fr]">
             <WorkspacePanelCard title="测试用例列表" description="从当前工作区结构中派生出的结构化列表，后续将支持更多筛选与批量操作。">

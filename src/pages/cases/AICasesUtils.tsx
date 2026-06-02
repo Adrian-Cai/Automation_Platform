@@ -26,6 +26,8 @@ export interface CleanupStaleAttachmentOptions {
   showCountToast?: boolean;
 }
 
+export type WorkspaceTab = 'overview' | 'materials' | 'results' | 'coverage' | 'execution';
+
 export type StreamGenerateResultPayload =
   | AiCaseGenerationResult
   | { generated: AiCaseGenerationResult; workspace: AiCaseWorkspaceDetail };
