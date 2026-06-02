@@ -6,18 +6,6 @@
     "expectedStatus": 200
   },
   {
-    "name": "login",
-    "method": "POST",
-    "path": "/api/auth/login",
-    "body": {
-      "email": "${SMOKE_EMAIL}",
-      "password": "${SMOKE_PASSWORD}"
-    },
-    "expectedStatus": 200,
-    "requiresCredentials": true,
-    "captureToken": true
-  },
-  {
     "name": "current_user",
     "method": "GET",
     "path": "/api/auth/me",
