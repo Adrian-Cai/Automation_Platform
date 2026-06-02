@@ -3,7 +3,7 @@ import { BrainCircuit, FileText, PlayCircle, ShieldAlert } from 'lucide-react';
 import { expandImportedCaseNodesFromNote, normalizeMindData } from '@/lib/aiCaseMindMap';
 import { createAiCaseNodeId, type AiCaseMindData, type AiCaseNode, type AiCaseNodeMetadata, type AiCaseNodeStatus, type AiCaseSyncMode, type AiCaseWorkspaceDocument, type AiCaseWorkspaceStatus } from '@/types/aiCases';
 import type { AiCaseGenerationResult, AiCaseWorkspaceDetail } from '@/api';
-import type { AiWorkspaceTabItem } from './components/AiWorkspaceTabs';
+import type { WorkbenchTabItem } from '../ai-workbench/components/WorkbenchTabs';
 
 export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
@@ -48,7 +48,7 @@ export interface GeneratedCaseListItem {
   sourceLabel: string;
 }
 
-export const WORKSPACE_TAB_ITEMS: AiWorkspaceTabItem<WorkspaceTab>[] = [
+export const WORKSPACE_TAB_ITEMS: WorkbenchTabItem<WorkspaceTab>[] = [
   {
     id: 'materials',
     label: '输入材料',

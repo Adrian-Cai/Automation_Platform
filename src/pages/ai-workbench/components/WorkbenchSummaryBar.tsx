@@ -1,15 +1,15 @@
-interface AiWorkspaceSummaryItem {
+interface WorkbenchSummaryItem {
   label: string;
   value: string;
   hint: string;
 }
 
-interface AiWorkspaceSummaryBarProps {
-  items: AiWorkspaceSummaryItem[];
+interface WorkbenchSummaryBarProps {
+  items: WorkbenchSummaryItem[];
   gridClassName?: string;
 }
 
-function SummaryCard({ label, value, hint }: AiWorkspaceSummaryItem) {
+function SummaryCard({ label, value, hint }: WorkbenchSummaryItem) {
   return (
     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3">
       <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</div>
@@ -19,10 +19,10 @@ function SummaryCard({ label, value, hint }: AiWorkspaceSummaryItem) {
   );
 }
 
-export function AiWorkspaceSummaryBar({
+export function WorkbenchSummaryBar({
   items,
   gridClassName = 'grid-cols-5',
-}: AiWorkspaceSummaryBarProps) {
+}: WorkbenchSummaryBarProps) {
   return (
     <div className="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950 px-4 py-3">
       <div className={`grid gap-3 ${gridClassName}`}>

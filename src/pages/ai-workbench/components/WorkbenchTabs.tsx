@@ -1,15 +1,15 @@
 import { type ReactNode } from 'react';
 
-export interface AiWorkspaceTabItem<TTab extends string = string> {
+export interface WorkbenchTabItem<TTab extends string = string> {
   id: TTab;
   label: string;
   description: string;
   icon: ReactNode;
 }
 
-interface AiWorkspaceTabsProps<TTab extends string> {
+interface WorkbenchTabsProps<TTab extends string> {
   activeTab: TTab;
-  items: Array<AiWorkspaceTabItem<TTab>>;
+  items: Array<WorkbenchTabItem<TTab>>;
   onChange: (tab: TTab) => void;
 }
 
@@ -47,11 +47,11 @@ function TabButton({
   );
 }
 
-export function AiWorkspaceTabs<TTab extends string>({
+export function WorkbenchTabs<TTab extends string>({
   activeTab,
   items,
   onChange,
-}: AiWorkspaceTabsProps<TTab>) {
+}: WorkbenchTabsProps<TTab>) {
   return (
     <div className="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3">
       <div className="flex gap-2 overflow-x-auto pb-1">

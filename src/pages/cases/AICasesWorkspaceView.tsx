@@ -1,9 +1,9 @@
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { Activity, Bot, Bug, CheckCircle2, GitBranch, Link2, ListTree, Loader2 } from 'lucide-react';
-import { AiCaseSidebar } from './components/AiCaseSidebar';
-import { AiWorkspaceHeader } from './components/AiWorkspaceHeader';
-import { AiWorkspaceSummaryBar } from './components/AiWorkspaceSummaryBar';
-import { AiWorkspaceTabs } from './components/AiWorkspaceTabs';
+import { WorkbenchSidebar } from '../ai-workbench/components/WorkbenchSidebar';
+import { WorkbenchHeader } from '../ai-workbench/components/WorkbenchHeader';
+import { WorkbenchSummaryBar } from '../ai-workbench/components/WorkbenchSummaryBar';
+import { WorkbenchTabs } from '../ai-workbench/components/WorkbenchTabs';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { AiCaseAttachmentPreview, AiCaseMindData, AiCaseNode, AiCaseNodeStatus, AiCaseProgress } from '@/types/aiCases';
@@ -28,7 +28,6 @@ interface ModuleCoverageItem {
 interface AICasesWorkspaceViewProps {
   saveStateText: string;
   remoteStatusText: string;
-  onOpenHistory: () => void;
   workspaceSummary: WorkspaceSummaryViewModel;
   isRemoteLinked: boolean;
   activeTab: WorkspaceTab;
@@ -75,7 +74,6 @@ interface AICasesWorkspaceViewProps {
 export function AICasesWorkspaceView({
   saveStateText,
   remoteStatusText,
-  onOpenHistory,
   workspaceSummary,
   isRemoteLinked,
   activeTab,
@@ -122,15 +120,14 @@ export function AICasesWorkspaceView({
     <div className="h-full flex flex-col bg-white dark:bg-slate-950 overflow-hidden">
 
       {/* 顶部标题栏（全屏时隐藏） */}
-      <AiWorkspaceHeader
+      <WorkbenchHeader
           title="AI 用例工作台"
           saveStateText={saveStateText}
           remoteStatusText={remoteStatusText}
           onOpenRequirement={() => setIsRequirementDialogOpen(true)}
-          onOpenHistory={() => onOpenHistory()}
         />
       
-          <AiWorkspaceSummaryBar
+          <WorkbenchSummaryBar
             items={[
               { label: '输入材料', value: `${workspaceSummary.materialCount}`, hint: '需求、附件和远端上下文' },
               { label: '生成用例', value: `${workspaceSummary.caseCount}`, hint: '当前工作台中的测试点数量' },
@@ -140,7 +137,7 @@ export function AICasesWorkspaceView({
             ]}
           />
 
-          <AiWorkspaceTabs
+          <WorkbenchTabs
             activeTab={activeTab}
             items={WORKSPACE_TAB_ITEMS}
             onChange={setActiveTab}
@@ -291,7 +288,7 @@ export function AICasesWorkspaceView({
       {activeTab === 'coverage' ? (
         <section className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
           <div className="grid gap-4">
-            <AiWorkspaceSummaryBar
+            <WorkbenchSummaryBar
               items={[
                 { label: '高风险项', value: `${highRiskCases.length}`, hint: '优先级 P0 / 失败项优先展示' },
                 { label: '待补充项', value: `${coverageGapCases.length}`, hint: '待执行、阻塞和失败项合并展示' },
@@ -491,7 +488,7 @@ export function AICasesWorkspaceView({
             </WorkspacePanelCard>
 
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-              <AiCaseSidebar
+              <WorkbenchSidebar
                 isGenerating={isGenerating}
                 generationProgress={generationProgress}
                 generationStageText={generationStageText}
