@@ -1,73 +1,76 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import type { Priority, TestPoint } from "../types";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import type { RequirementModule, RequirementRisk, TestPoint } from '@/pages/RequirementAnalysis/types';
+import styles from '@/pages/RequirementAnalysis/index.module.css';
 
 interface TestPointDetailDrawerProps {
   open: boolean;
-  testPoint: TestPoint | null;
+  testPoint?: TestPoint;
+  modules: RequirementModule[];
+  risks: RequirementRisk[];
   onOpenChange: (open: boolean) => void;
-  onEdit: (testPoint: TestPoint) => void;
+  onConfirm: (testPointId: string) => void;
 }
 
-const priorityClass: Record<Priority, string> = {
-  P0: "bg-red-50 text-red-700 border-red-100",
-  P1: "bg-orange-50 text-orange-700 border-orange-100",
-  P2: "bg-blue-50 text-blue-700 border-blue-100",
-};
+export default function TestPointDetailDrawer({
+  open,
+  testPoint,
+  modules,
+  risks,
+  onOpenChange,
+  onConfirm,
+}: TestPointDetailDrawerProps): JSX.Element {
+  const moduleName = modules.find((moduleItem) => moduleItem.id === testPoint?.moduleId)?.name ?? '未归类模块';
+  const relatedRisks = risks.filter((risk) => testPoint?.relatedRiskIds.includes(risk.id));
 
-function DetailItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-slate-50 p-3">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="mt-1 text-sm font-medium text-slate-800">{value || "-"}</p>
-    </div>
-  );
-}
-
-function TestPointDetailDrawer({ open, testPoint, onOpenChange, onEdit }: TestPointDetailDrawerProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full max-w-xl overflow-y-auto p-6">
+      <SheetContent className="w-full overflow-y-auto p-6 sm:max-w-xl" side="right">
         <SheetHeader>
-          <SheetTitle>测试点详情</SheetTitle>
-          <SheetDescription>查看测试点编号、覆盖范围、生成状态和备注信息。</SheetDescription>
+          <SheetTitle>{testPoint?.title ?? '测试点详情'}</SheetTitle>
+          <SheetDescription>{moduleName} · {testPoint?.source ?? '暂无来源'}</SheetDescription>
         </SheetHeader>
-        {testPoint ? (
-          <div className="mt-6 space-y-4">
-            <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
-              <p className="text-sm text-blue-700">{testPoint.code}</p>
-              <h3 className="mt-2 text-lg font-semibold text-slate-900">{testPoint.description}</h3>
+        {testPoint && (
+          <div className={styles.drawerBody}>
+            <div className={styles.drawerMeta}>
+              <Badge variant={testPoint.priority === 'P0' ? 'destructive' : 'outline'}>{testPoint.priority}</Badge>
+              <Badge variant={testPoint.status === 'confirmed' ? 'success' : 'secondary'}>{testPoint.status === 'confirmed' ? '已确认' : '待确认'}</Badge>
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <DetailItem label="所属模块" value={testPoint.module} />
-              <DetailItem label="测试类型" value={testPoint.type} />
-              <div className="rounded-xl bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">优先级</p>
-                <Badge variant="outline" className={`mt-2 ${priorityClass[testPoint.priority]}`}>{testPoint.priority}</Badge>
-              </div>
-              <div className="rounded-xl bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">是否生成用例</p>
-                <Badge variant="outline" className={`mt-2 ${testPoint.generated ? "bg-green-50 text-green-700 border-green-100" : "bg-slate-100 text-slate-500 border-slate-200"}`}>
-                  {testPoint.generated ? "已生成" : "未生成"}
-                </Badge>
-              </div>
-              <DetailItem label="已生成用例数" value={`${testPoint.caseCount} 条`} />
-              <DetailItem label="关联风险" value={testPoint.relatedRisk ?? ""} />
-            </div>
-            <div className="rounded-xl bg-slate-50 p-3">
-              <p className="text-xs text-slate-500">备注</p>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{testPoint.remark || "暂无备注"}</p>
-            </div>
+            <section>
+              <h3>前置条件</h3>
+              <p>{testPoint.precondition}</p>
+            </section>
+            <section>
+              <h3>操作步骤</h3>
+              <ol>
+                {testPoint.steps.map((step) => <li key={step}>{step}</li>)}
+              </ol>
+            </section>
+            <section>
+              <h3>预期结果</h3>
+              <p>{testPoint.expectedResult}</p>
+            </section>
+            <section>
+              <h3>关联风险</h3>
+              {relatedRisks.length > 0 ? relatedRisks.map((risk) => (
+                <div className={styles.drawerRisk} key={risk.id}>
+                  <strong>{risk.title}</strong>
+                  <p>{risk.mitigation}</p>
+                </div>
+              )) : <p>暂无关联风险。</p>}
+            </section>
           </div>
-        ) : null}
-        <SheetFooter className="mt-8">
-          {testPoint ? <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => onEdit(testPoint)}>编辑测试点</Button> : null}
+        )}
+        <SheetFooter className="mt-6">
           <Button variant="outline" onClick={() => onOpenChange(false)}>关闭</Button>
+          {testPoint && (
+            <Button disabled={testPoint.status === 'confirmed'} onClick={() => onConfirm(testPoint.id)}>
+              确认测试点
+            </Button>
+          )}
         </SheetFooter>
       </SheetContent>
     </Sheet>
   );
 }
-
-export default TestPointDetailDrawer;

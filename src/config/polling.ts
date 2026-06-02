@@ -224,21 +224,6 @@ export function checkStuckStatus(
 }
 
 /**
- * Calculate exponential backoff delay for retries
- *
- * @param attempt - Current attempt number (0-based)
- * @param config - Retry configuration (optional)
- * @returns Delay in milliseconds
- */
-export function calculateBackoffDelay(
-  attempt: number,
-  config: typeof RETRY_CONFIG = RETRY_CONFIG
-): number {
-  const delay = config.INITIAL_DELAY * Math.pow(config.BACKOFF_MULTIPLIER, attempt);
-  return Math.min(delay, config.MAX_DELAY);
-}
-
-/**
  * Format elapsed time as human-readable string
  *
  * @param milliseconds - Time in milliseconds
@@ -276,40 +261,6 @@ export function getStuckMessage(
     default:
       return '';
   }
-}
-
-/**
- * Configuration Summary (for debugging)
- */
-export function getConfigSummary(): string {
-  return `
-Polling Configuration Summary:
-==============================
-
-Polling Intervals:
-  - Fast: ${POLLING_INTERVALS.FAST}ms (${POLLING_INTERVALS.FAST / 1000}s)
-  - Normal: ${POLLING_INTERVALS.NORMAL}ms (${POLLING_INTERVALS.NORMAL / 1000}s)
-  - Medium: ${POLLING_INTERVALS.MEDIUM}ms (${POLLING_INTERVALS.MEDIUM / 1000}s)
-  - Slow: ${POLLING_INTERVALS.SLOW}ms (${POLLING_INTERVALS.SLOW / 1000}s)
-  - WebSocket Backup: ${POLLING_INTERVALS.WEBSOCKET_BACKUP}ms (${POLLING_INTERVALS.WEBSOCKET_BACKUP / 1000}s)
-
-Execution Windows:
-  - Pending Fast Poll: ${EXECUTION_WINDOWS.PENDING_FAST_POLL / 1000}s
-  - Early Execution: ${EXECUTION_WINDOWS.EARLY_EXECUTION / 1000}s
-  - Mid Execution: ${EXECUTION_WINDOWS.MID_EXECUTION / 1000}s
-  - Max Execution Time: ${EXECUTION_WINDOWS.MAX_EXECUTION_TIME / 1000}s
-
-Stuck Detection:
-  - Early Threshold: ${STUCK_DETECTION.EARLY_THRESHOLD / 1000}s
-  - Critical Threshold: ${STUCK_DETECTION.CRITICAL_THRESHOLD / 1000}s
-  - Alert Cooldown: ${STUCK_DETECTION.ALERT_COOLDOWN / 1000}s
-
-WebSocket:
-  - Server: ${WEBSOCKET_CONFIG.SERVER_URL}${WEBSOCKET_CONFIG.PATH}
-  - Max Reconnect Attempts: ${WEBSOCKET_CONFIG.MAX_RECONNECT_ATTEMPTS}
-  - Initial Reconnect Delay: ${WEBSOCKET_CONFIG.INITIAL_RECONNECT_DELAY}ms
-  - Max Reconnect Delay: ${WEBSOCKET_CONFIG.MAX_RECONNECT_DELAY}ms
-`;
 }
 
 // Export default for convenience

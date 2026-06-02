@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
@@ -20,20 +21,15 @@ import Tasks from "./pages/tasks/Tasks";
 import APICases from "./pages/cases/APICases";
 import UICases from "./pages/cases/UICases";
 import PerformanceCases from "./pages/cases/PerformanceCases";
-import AiWorkbenchOverview from "./pages/ai-workbench/AiWorkbenchOverview";
-import AiWorkbenchRequirementInput from "./pages/ai-workbench/AiWorkbenchRequirementInput";
-import AiWorkbenchRequirementAnalysis from "./pages/ai-workbench/AiWorkbenchRequirementAnalysis";
-import RequirementAnalysis from "./pages/RequirementAnalysis";
-import AiWorkbenchCaseGeneration from "./pages/ai-workbench/AiWorkbenchCaseGeneration";
-import AiWorkbenchQualityCoverage from "./pages/ai-workbench/AiWorkbenchQualityCoverage";
-import AiWorkbenchHistoryExport from "./pages/ai-workbench/AiWorkbenchHistoryExport";
-import AiWorkbenchSettings from "./pages/ai-workbench/AiWorkbenchSettings";
+import AICases from "./pages/cases/AICases";
+import AICaseCreate from "./pages/cases/AICaseCreate";
+import AICaseHistory from "./pages/cases/AICaseHistory";
+import RequirementInputParsePage from "./pages/cases/RequirementInputParsePage";
 import Reports from "./pages/reports/Reports";
 import ReportDetail from "./pages/reports/ReportDetail";
 import SystemSettings from "./pages/settings/SystemSettings";
 import { User } from "lucide-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { ReactNode } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,14 +63,6 @@ function ProfilePage() {
       description="个人信息编辑、密码修改和偏好设置功能正在开发中"
       icon={<User className="h-10 w-10 text-blue-500" />}
     />
-  );
-}
-
-function ProtectedLayout({ children }: { children: ReactNode }) {
-  return (
-    <ProtectedRoute>
-      <Layout>{children}</Layout>
-    </ProtectedRoute>
   );
 }
 
@@ -123,63 +111,46 @@ function Router() {
             </Layout>
           </ProtectedRoute>
         </Route>
-        <Route path="/ai-workbench/index">
-          <Redirect to="/ai-workbench/overview" />
+        {/* /cases/ai 系列路由由 KeepAliveAiCases 接管，Switch 中仅保留空占位避免 404 */}
+        <Route path="/cases/ai/materials">
+          {null}
         </Route>
-        <Route path="/ai-workbench/home">
-          <Redirect to="/ai-workbench/overview" />
+        <Route path="/cases/ai/results">
+          {null}
         </Route>
-        <Route path="/ai-workbench/records">
-          <Redirect to="/ai-workbench/history-export" />
+        <Route path="/cases/ai/coverage">
+          {null}
         </Route>
-        <Route path="/ai-workbench/overview">
-          <ProtectedLayout>
-            <AiWorkbenchOverview />
-          </ProtectedLayout>
-        </Route>
-        <Route path="/ai-workbench/requirement-input">
-          <ProtectedLayout>
-            <AiWorkbenchRequirementInput />
-          </ProtectedLayout>
-        </Route>
-        <Route path="/requirement-analysis">
-          <ProtectedLayout>
-            <RequirementAnalysis />
-          </ProtectedLayout>
-        </Route>
-        <Route path="/ai-workbench/requirement-analysis">
-          <ProtectedLayout>
-            <AiWorkbenchRequirementAnalysis />
-          </ProtectedLayout>
-        </Route>
-        <Route path="/ai-workbench/case-generation">
-          <ProtectedLayout>
-            <AiWorkbenchCaseGeneration />
-          </ProtectedLayout>
-        </Route>
-        <Route path="/ai-workbench/quality-coverage">
-          <ProtectedLayout>
-            <AiWorkbenchQualityCoverage />
-          </ProtectedLayout>
-        </Route>
-        <Route path="/ai-workbench/history-export">
-          <ProtectedLayout>
-            <AiWorkbenchHistoryExport />
-          </ProtectedLayout>
-        </Route>
-        <Route path="/ai-workbench/settings">
-          <ProtectedLayout>
-            <AiWorkbenchSettings />
-          </ProtectedLayout>
-        </Route>
-        <Route path="/cases/ai-create">
-          <Redirect to="/ai-workbench/overview" />
-        </Route>
-        <Route path="/cases/ai-history">
-          <Redirect to="/ai-workbench/history-export" />
+        <Route path="/cases/ai/execution">
+          {null}
         </Route>
         <Route path="/cases/ai">
-          <Redirect to="/ai-workbench/overview" />
+          <ProtectedRoute>
+            <Layout>
+              <AICases />
+            </Layout>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/cases/ai-create">
+          <ProtectedRoute>
+            <Layout>
+              <AICaseCreate />
+            </Layout>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/cases/ai-history">
+          <ProtectedRoute>
+            <Layout>
+              <AICaseHistory />
+            </Layout>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/requirements/input-parse">
+          <ProtectedRoute>
+            <Layout>
+              <RequirementInputParsePage />
+            </Layout>
+          </ProtectedRoute>
         </Route>
 
         <Route path="/tasks">

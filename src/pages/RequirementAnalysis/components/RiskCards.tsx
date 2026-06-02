@@ -1,38 +1,49 @@
-import { AlertTriangle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import type { RiskLevel, RiskPoint } from "../types";
+import { AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import type { RequirementRisk } from '@/pages/RequirementAnalysis/types';
+import styles from '@/pages/RequirementAnalysis/index.module.css';
 
 interface RiskCardsProps {
-  risks: RiskPoint[];
+  risks: RequirementRisk[];
 }
 
-const levelClass: Record<RiskLevel, string> = {
-  P0: "bg-red-50 text-red-700 border-red-100",
-  P1: "bg-orange-50 text-orange-700 border-orange-100",
-  P2: "bg-blue-50 text-blue-700 border-blue-100",
+const levelLabel: Record<RequirementRisk['level'], string> = {
+  high: '高风险',
+  medium: '中风险',
+  low: '低风险',
 };
 
-function RiskCards({ risks }: RiskCardsProps) {
+const categoryLabel: Record<RequirementRisk['category'], string> = {
+  business: '业务',
+  technical: '技术',
+  data: '数据',
+  integration: '集成',
+  security: '安全',
+};
+
+export default function RiskCards({ risks }: RiskCardsProps): JSX.Element {
   return (
-    <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-slate-900">风险点识别</h2>
-        <p className="text-sm text-slate-500">按优先级聚焦高风险业务规则和测试建议。</p>
+    <section className={styles.sectionCard}>
+      <div className={styles.sectionHeader}>
+        <div>
+          <p className={styles.eyebrow}>Risk Radar</p>
+          <h2 className={styles.sectionTitle}>风险点</h2>
+        </div>
       </div>
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        {risks.map((item) => (
-          <article key={item.id} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm hover:shadow-md">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="rounded-xl bg-slate-50 p-2 text-blue-700"><AlertTriangle className="h-5 w-5" /></span>
-                <h3 className="font-semibold text-slate-900">{item.title}</h3>
+      <div className={styles.riskGrid}>
+        {risks.map((risk) => (
+          <article className={styles.riskCard} key={risk.id}>
+            <div className={styles.riskIcon}>{risk.level === 'high' ? <AlertTriangle className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}</div>
+            <div>
+              <div className={styles.riskHeader}>
+                <h3>{risk.title}</h3>
+                <Badge variant={risk.level === 'high' ? 'destructive' : 'warning'}>{levelLabel[risk.level]}</Badge>
               </div>
-              <Badge variant="outline" className={levelClass[item.level]}>{item.level}</Badge>
-            </div>
-            <p className="text-sm leading-6 text-slate-600">{item.description}</p>
-            <div className="mt-4 rounded-xl bg-slate-50 p-3 text-sm">
-              <p><span className="font-medium text-slate-700">影响模块：</span><span className="text-slate-600">{item.module}</span></p>
-              <p className="mt-2"><span className="font-medium text-slate-700">建议测试方法：</span><span className="text-slate-600">{item.suggestion}</span></p>
+              <p>{risk.description}</p>
+              <div className={styles.riskFooter}>
+                <span>{categoryLabel[risk.category]}</span>
+                <span>{risk.mitigation}</span>
+              </div>
             </div>
           </article>
         ))}
@@ -40,5 +51,3 @@ function RiskCards({ risks }: RiskCardsProps) {
     </section>
   );
 }
-
-export default RiskCards;

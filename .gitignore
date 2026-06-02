@@ -176,6 +176,8 @@ Thumbs.db
 deepseek_*
 test_crypto.py
 node_modules
+.playwright-mcp/
+*.patch
 
 # Project specific
 tmp/
@@ -185,6 +187,9 @@ server/db/autotest.db
 
 # MCP config (contains credentials)
 .mcp.json
+
+# Playwright MCP snapshots
+.playwright-mcp/
 
 # Docker Secrets (contains sensitive information)
 deployment/secrets/

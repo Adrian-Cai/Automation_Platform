@@ -1,62 +1,85 @@
-export type ModuleType = "核心流程" | "业务支撑" | "数据服务" | "系统集成";
+export type ModuleStatus = 'analyzed' | 'pending' | 'confirmed';
+export type ModuleComplexity = 'low' | 'medium' | 'high';
+export type QuestionPriority = 'low' | 'medium' | 'high';
+export type QuestionStatus = 'open' | 'answered' | 'ignored';
+export type RiskLevel = 'low' | 'medium' | 'high';
+export type RiskCategory = 'business' | 'technical' | 'data' | 'integration' | 'security';
+export type TestPointPriority = 'P0' | 'P1' | 'P2';
+export type TestPointStatus = 'draft' | 'generated' | 'confirmed';
+export type TestPointType = 'functional' | 'boundary' | 'exception' | 'compatibility' | 'security';
+export type TestPointModalMode = 'create' | 'edit' | 'generate';
 
 export interface RequirementModule {
   id: string;
   name: string;
+  owner: string;
   description: string;
-  type: ModuleType;
+  coverage: number;
+  testPointCount: number;
+  questionCount: number;
+  riskCount: number;
+  status: ModuleStatus;
+  complexity: ModuleComplexity;
+  tags: string[];
 }
-
-export type QuestionStatus = "待确认" | "已确认" | "已忽略";
-export type RiskLevel = "P0" | "P1" | "P2";
-export type TestPointType = "功能测试" | "接口测试" | "边界测试" | "异常测试" | "性能测试" | "安全测试";
-export type Priority = "P0" | "P1" | "P2";
-export type GeneratedFilter = "全部" | "已生成" | "未生成";
 
 export interface RequirementQuestion {
   id: string;
-  description: string;
-  module: string;
-  riskLevel: RiskLevel;
+  moduleId: string;
+  title: string;
+  detail: string;
+  priority: QuestionPriority;
   status: QuestionStatus;
+  assignee: string;
+  suggestion: string;
 }
 
-export interface RiskPoint {
+export interface RequirementRisk {
   id: string;
-  level: RiskLevel;
+  moduleId: string;
   title: string;
   description: string;
-  module: string;
-  suggestion: string;
+  level: RiskLevel;
+  category: RiskCategory;
+  mitigation: string;
 }
 
 export interface TestPoint {
   id: string;
-  code: string;
-  module: string;
-  description: string;
+  moduleId: string;
+  title: string;
+  precondition: string;
+  steps: string[];
+  expectedResult: string;
+  priority: TestPointPriority;
   type: TestPointType;
-  priority: Priority;
-  generated: boolean;
-  caseCount: number;
-  relatedRisk?: string;
-  remark?: string;
+  status: TestPointStatus;
+  relatedRiskIds: string[];
+  source: string;
 }
 
-export interface TestPointFilters {
-  module: string;
-  type: string;
-  priority: string;
-  generated: GeneratedFilter;
+export interface RequirementAnalysisFilters {
+  moduleId: string;
   keyword: string;
+  priority: TestPointPriority | 'all';
+  status: TestPointStatus | 'all';
+  riskLevel: RiskLevel | 'all';
 }
 
 export interface TestPointFormValues {
-  module: string;
+  moduleId: string;
+  title: string;
+  precondition: string;
+  stepsText: string;
+  expectedResult: string;
+  priority: TestPointPriority;
+  type: TestPointType;
+  source: string;
+}
+
+export interface SummaryMetric {
+  label: string;
+  value: string;
   description: string;
-  type: TestPointType | "";
-  priority: Priority | "";
-  relatedRisk: string;
-  generated: boolean;
-  remark: string;
+  trend: string;
 }

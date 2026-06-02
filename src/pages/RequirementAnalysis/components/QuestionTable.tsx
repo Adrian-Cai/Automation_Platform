@@ -1,54 +1,55 @@
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import type { QuestionStatus, RequirementQuestion, RiskLevel } from "../types";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import type { RequirementQuestion } from '@/pages/RequirementAnalysis/types';
+import styles from '@/pages/RequirementAnalysis/index.module.css';
 
 interface QuestionTableProps {
   questions: RequirementQuestion[];
-  onUpdateStatus: (id: string, status: QuestionStatus) => void;
+  onResolveQuestion: (questionId: string) => void;
 }
 
-const statusClass: Record<QuestionStatus, string> = {
-  待确认: "bg-blue-50 text-blue-700 border-blue-100",
-  已确认: "bg-green-50 text-green-700 border-green-100",
-  已忽略: "bg-slate-100 text-slate-500 border-slate-200",
+const priorityLabel: Record<RequirementQuestion['priority'], string> = {
+  high: '高',
+  medium: '中',
+  low: '低',
 };
 
-const riskClass: Record<RiskLevel, string> = {
-  P0: "bg-red-50 text-red-700 border-red-100",
-  P1: "bg-orange-50 text-orange-700 border-orange-100",
-  P2: "bg-blue-50 text-blue-700 border-blue-100",
-};
-
-function QuestionTable({ questions, onUpdateStatus }: QuestionTableProps) {
+export default function QuestionTable({ questions, onResolveQuestion }: QuestionTableProps): JSX.Element {
   return (
-    <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-slate-900">需求疑问识别</h2>
-        <p className="text-sm text-slate-500">沉淀影响测试范围和验收标准的待确认问题。</p>
+    <section className={styles.sectionCard}>
+      <div className={styles.sectionHeader}>
+        <div>
+          <p className={styles.eyebrow}>Clarification</p>
+          <h2 className={styles.sectionTitle}>需求疑问</h2>
+        </div>
       </div>
-      <div className="overflow-hidden rounded-xl border border-slate-100">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-600">
+      <div className={styles.tableWrap}>
+        <table className={styles.dataTable}>
+          <thead>
             <tr>
-              <th className="px-4 py-3 font-medium">疑问描述</th>
-              <th className="px-4 py-3 font-medium">影响模块</th>
-              <th className="px-4 py-3 font-medium">风险等级</th>
-              <th className="px-4 py-3 font-medium">状态</th>
-              <th className="px-4 py-3 font-medium">操作</th>
+              <th>疑问</th>
+              <th>优先级</th>
+              <th>负责人</th>
+              <th>建议</th>
+              <th>状态</th>
+              <th>操作</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 bg-white">
-            {questions.map((item) => (
-              <tr key={item.id} className="hover:bg-slate-50">
-                <td className="max-w-xl px-4 py-3 text-slate-700">{item.description}</td>
-                <td className="px-4 py-3 text-slate-600">{item.module}</td>
-                <td className="px-4 py-3"><Badge variant="outline" className={riskClass[item.riskLevel]}>{item.riskLevel}</Badge></td>
-                <td className="px-4 py-3"><Badge variant="outline" className={statusClass[item.status]}>{item.status}</Badge></td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" disabled={item.status === "已确认"} onClick={() => onUpdateStatus(item.id, "已确认")}>标记已确认</Button>
-                    <Button variant="ghost" size="sm" disabled={item.status === "已忽略"} onClick={() => onUpdateStatus(item.id, "已忽略")}>忽略</Button>
-                  </div>
+          <tbody>
+            {questions.map((question) => (
+              <tr key={question.id}>
+                <td>
+                  <strong>{question.title}</strong>
+                  <p>{question.detail}</p>
+                </td>
+                <td><Badge variant={question.priority === 'high' ? 'destructive' : 'outline'}>{priorityLabel[question.priority]}</Badge></td>
+                <td>{question.assignee}</td>
+                <td>{question.suggestion}</td>
+                <td>{question.status === 'answered' ? '已答复' : question.status === 'ignored' ? '已忽略' : '待澄清'}</td>
+                <td>
+                  <Button size="sm" variant="outline" disabled={question.status !== 'open'} onClick={() => onResolveQuestion(question.id)}>
+                    标记答复
+                  </Button>
                 </td>
               </tr>
             ))}
@@ -58,5 +59,3 @@ function QuestionTable({ questions, onUpdateStatus }: QuestionTableProps) {
     </section>
   );
 }
-
-export default QuestionTable;

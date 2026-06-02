@@ -1,43 +1,61 @@
-import { AlertTriangle, Boxes, ClipboardCheck, HelpCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, HelpCircle, Target } from 'lucide-react';
+import type { RequirementModule, RequirementQuestion, RequirementRisk, TestPoint } from '@/pages/RequirementAnalysis/types';
+import styles from '@/pages/RequirementAnalysis/index.module.css';
 
 interface SummaryCardsProps {
-  seed: number;
-  moduleCount: number;
-  testPointCount: number;
-  questionCount: number;
-  riskCount: number;
+  modules: RequirementModule[];
+  questions: RequirementQuestion[];
+  risks: RequirementRisk[];
+  testPoints: TestPoint[];
 }
 
-const cardClass = "bg-white rounded-2xl border border-slate-100 shadow-sm p-5";
+export default function SummaryCards({ modules, questions, risks, testPoints }: SummaryCardsProps): JSX.Element {
+  const confirmedCount = testPoints.filter((point) => point.status === 'confirmed').length;
+  const highRiskCount = risks.filter((risk) => risk.level === 'high').length;
+  const openQuestionCount = questions.filter((question) => question.status === 'open').length;
+  const averageCoverage = modules.length > 0
+    ? Math.round(modules.reduce((sum, moduleItem) => sum + moduleItem.coverage, 0) / modules.length)
+    : 0;
 
-function SummaryCards({ seed, moduleCount, testPointCount, questionCount, riskCount }: SummaryCardsProps) {
-  const summaries = [
-    { label: "功能模块数", value: Math.max(7, moduleCount + (seed % 2)), icon: Boxes, color: "text-blue-700", bg: "bg-blue-50" },
-    { label: "测试点数", value: Math.max(82, testPointCount + 72 + (seed % 3)), icon: ClipboardCheck, color: "text-teal-600", bg: "bg-teal-50" },
-    { label: "需求疑问数", value: Math.max(9, questionCount + (seed % 2)), icon: HelpCircle, color: "text-blue-700", bg: "bg-blue-50" },
-    { label: "风险点数", value: Math.max(6, riskCount + (seed % 2)), icon: AlertTriangle, color: "text-teal-600", bg: "bg-teal-50" },
+  const cards = [
+    {
+      label: '需求模块',
+      value: String(modules.length),
+      description: `平均覆盖率 ${averageCoverage}%`,
+      icon: <Target className="h-5 w-5" />,
+    },
+    {
+      label: '待确认疑问',
+      value: String(openQuestionCount),
+      description: '建议优先澄清高优先级项',
+      icon: <HelpCircle className="h-5 w-5" />,
+    },
+    {
+      label: '高风险点',
+      value: String(highRiskCount),
+      description: `共识别 ${risks.length} 个风险`,
+      icon: <AlertTriangle className="h-5 w-5" />,
+    },
+    {
+      label: '已确认测试点',
+      value: `${confirmedCount}/${testPoints.length}`,
+      description: '确认后可进入用例生成',
+      icon: <CheckCircle2 className="h-5 w-5" />,
+    },
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {summaries.map((item) => {
-        const Icon = item.icon;
-        return (
-          <div key={item.label} className={cardClass}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-500">{item.label}</p>
-                <p className="mt-2 text-3xl font-bold text-slate-900">{item.value}</p>
-              </div>
-              <div className={`rounded-2xl ${item.bg} p-3 ${item.color}`}>
-                <Icon className="h-6 w-6" />
-              </div>
-            </div>
+    <section className={styles.summaryGrid} aria-label="需求分析概览">
+      {cards.map((card) => (
+        <article className={styles.summaryCard} key={card.label}>
+          <div className={styles.summaryIcon}>{card.icon}</div>
+          <div>
+            <p className={styles.summaryLabel}>{card.label}</p>
+            <strong className={styles.summaryValue}>{card.value}</strong>
+            <p className={styles.summaryDescription}>{card.description}</p>
           </div>
-        );
-      })}
-    </div>
+        </article>
+      ))}
+    </section>
   );
 }
-
-export default SummaryCards;

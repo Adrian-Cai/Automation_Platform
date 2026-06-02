@@ -1,48 +1,55 @@
-import { BrainCircuit, Database, GitBranch, ShieldCheck } from "lucide-react";
-import type { RequirementModule, ModuleType } from "../types";
+import { Badge } from '@/components/ui/badge';
+import type { RequirementModule } from '@/pages/RequirementAnalysis/types';
+import styles from '@/pages/RequirementAnalysis/index.module.css';
 
 interface ModuleCardsProps {
   modules: RequirementModule[];
-  selectedModule: string;
-  onSelectModule: (moduleName: string) => void;
+  selectedModuleId: string;
+  onSelectModule: (moduleId: string) => void;
 }
 
-const iconMap: Record<ModuleType, React.ComponentType<{ className?: string }>> = {
-  核心流程: GitBranch,
-  业务支撑: ShieldCheck,
-  数据服务: Database,
-  系统集成: BrainCircuit,
+const statusLabels: Record<RequirementModule['status'], string> = {
+  analyzed: '已分析',
+  pending: '待确认',
+  confirmed: '已确认',
 };
 
-function ModuleCards({ modules, selectedModule, onSelectModule }: ModuleCardsProps) {
+export default function ModuleCards({ modules, selectedModuleId, onSelectModule }: ModuleCardsProps): JSX.Element {
   return (
-    <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-      <div className="mb-4 flex items-center justify-between">
+    <section className={styles.sectionCard}>
+      <div className={styles.sectionHeader}>
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">功能模块识别</h2>
-          <p className="text-sm text-slate-500">点击模块可联动筛选核心测试点列表。</p>
+          <p className={styles.eyebrow}>Module Map</p>
+          <h2 className={styles.sectionTitle}>功能模块识别</h2>
         </div>
-        {selectedModule && (
-          <button type="button" className="text-sm text-blue-700 hover:text-blue-800" onClick={() => onSelectModule("")}>清除筛选</button>
-        )}
+        <span className={styles.sectionHint}>点击模块筛选疑问、风险和测试点</span>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {modules.map((item) => {
-          const Icon = iconMap[item.type];
-          const active = selectedModule === item.name;
+      <div className={styles.moduleGrid}>
+        {modules.map((moduleItem) => {
+          const isActive = selectedModuleId === moduleItem.id;
           return (
             <button
-              key={item.id}
               type="button"
-              onClick={() => onSelectModule(item.name)}
-              className={`rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${active ? "border-blue-300 bg-blue-50 shadow-sm" : "border-slate-100 bg-white"}`}
+              className={`${styles.moduleCard} ${isActive ? styles.moduleCardActive : ''}`}
+              onClick={() => onSelectModule(moduleItem.id)}
+              key={moduleItem.id}
             >
-              <div className="mb-3 flex items-center gap-3">
-                <span className="rounded-xl bg-teal-50 p-2 text-teal-600"><Icon className="h-5 w-5" /></span>
-                <span className="text-xs font-medium text-blue-700">{item.type}</span>
+              <div className={styles.moduleCardTop}>
+                <h3>{moduleItem.name}</h3>
+                <Badge variant={moduleItem.status === 'confirmed' ? 'success' : 'secondary'}>{statusLabels[moduleItem.status]}</Badge>
               </div>
-              <h3 className="font-semibold text-slate-900">{item.name}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-500">{item.description}</p>
+              <p>{moduleItem.description}</p>
+              <div className={styles.progressTrack}>
+                <span className={styles.progressBar} style={{ width: `${moduleItem.coverage}%` }} />
+              </div>
+              <div className={styles.moduleMeta}>
+                <span>覆盖率 {moduleItem.coverage}%</span>
+                <span>{moduleItem.testPointCount} 测试点</span>
+                <span>{moduleItem.riskCount} 风险</span>
+              </div>
+              <div className={styles.tagRow}>
+                {moduleItem.tags.map((tag) => <span key={tag}>{tag}</span>)}
+              </div>
             </button>
           );
         })}
@@ -50,5 +57,3 @@ function ModuleCards({ modules, selectedModule, onSelectModule }: ModuleCardsPro
     </section>
   );
 }
-
-export default ModuleCards;

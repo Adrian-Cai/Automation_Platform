@@ -36,7 +36,7 @@ import {
 } from '@/types/aiCases';
 import { changeAiCaseNodeStatus, generateAiCases, uploadAiCaseImageFiles } from './AICasesActions';
 import { runAiCaseStreamGeneration } from './AICasesStream';
-import { AICasesWorkspaceView } from './AICasesWorkspaceView';
+import { AICasesWorkspaceView, type AiWorkspaceRoutePage } from './AICasesWorkspaceView';
 import {
   DEFAULT_REMOTE_SYNC_META,
   WAIT_COPY_MAGIC,
@@ -48,7 +48,6 @@ import {
   sanitizeImportedNodes,
   type CleanupStaleAttachmentOptions,
   type RemoteSyncMeta,
-  type WorkspaceTab,
 } from './AICasesUtils';
 
 function AiCasesInner() {
@@ -118,7 +117,6 @@ function AiCasesInner() {
 // 浮动面板拖拽
   // 需求编辑弹窗
   const [isRequirementDialogOpen, setIsRequirementDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>('results');
   useEffect(() => {
     selectedNodeIdRef.current = selectedNodeId;
   }, [selectedNodeId]);
@@ -344,8 +342,8 @@ function AiCasesInner() {
           }
         } else {
           // 文档在 localStorage 中不存在（新建场景）
-          // 从 URL 参数读取 initName / initReq（由 AICaseCreate 传过来），
-          // 这里负责创建文档并写入 localStorage（不再由 AICaseCreate 提前写入）
+          // 从 URL 参数读取 initName / initReq（由新建需求入口传过来），
+          // 这里负责创建文档并写入 localStorage（不再由旧新建页提前写入）
           const searchParamsForInit = new URLSearchParams(window.location.search);
           const initName = searchParamsForInit.get('initName')?.trim() || 'AI Testcase Workspace';
           const initReq = searchParamsForInit.get('initReq')?.trim() || '';
@@ -586,13 +584,37 @@ function AiCasesInner() {
     };
   }, [attachments.length, highRiskCases.length, isRemoteLinked, progress.completionRate, progress.total, requirementText]);
 
-    const handleFocusGeneratedCase = useCallback((nodeId: string) => {
-    setActiveTab('results');
+  const workspacePage = useMemo<AiWorkspaceRoutePage>(() => {
+    const pathname = window.location.pathname;
+    if (pathname === '/cases/ai') {
+      return 'overview';
+    }
+    if (pathname.endsWith('/materials')) {
+      return 'materials';
+    }
+    if (pathname.endsWith('/coverage')) {
+      return 'coverage';
+    }
+    if (pathname.endsWith('/execution')) {
+      return 'execution';
+    }
+    return 'results';
+  }, [location]);
+
+  const navigateToWorkspacePage = useCallback((page: AiWorkspaceRoutePage) => {
+    const params = new URLSearchParams(window.location.search);
+    const query = params.toString();
+    const suffix = page === 'overview' ? '' : `/${page}`;
+    setLocation(`/cases/ai${suffix}${query ? `?${query}` : ''}`);
+  }, [setLocation]);
+
+  const handleFocusGeneratedCase = useCallback((nodeId: string) => {
+    navigateToWorkspacePage('results');
     selectedNodeIdRef.current = nodeId;
     selectedNodeIdsRef.current = [nodeId];
     setSelectedNodeId(nodeId);
     setSelectedNodeIds([nodeId]);
-  }, []);
+  }, [navigateToWorkspacePage]);
 
   const startGenerateProgress = useCallback(
     (initialStage: string = '正在连接后端流式通道...') => {
@@ -916,7 +938,6 @@ const applyWorkspaceDetail = useCallback(
     streamGenerateFromBackend,
     showNodeKindTagsRef,
     isWorkspaceNameUserEditedRef,
-    setActiveTab,
     setIsRequirementDialogOpen,
     startGenerateProgress,
     setIsGenerating,
@@ -957,6 +978,11 @@ const applyWorkspaceDetail = useCallback(
       toast.error('加载历史工作台失败，请稍后重试');
     }
   }, [applyWorkspaceDetail]);
+
+  const handleNewWorkspace = useCallback(() => {
+    const newDocId = `ai-ws-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    setLocation(`/cases/ai?docId=${encodeURIComponent(newDocId)}`);
+  }, [setLocation]);
 
   const handlePublishRemote = useCallback(async () => {
     if (!mindData) {
@@ -1100,10 +1126,10 @@ const applyWorkspaceDetail = useCallback(
       saveStateText={saveStateText}
       remoteStatusText={remoteStatusText}
       onOpenHistory={() => setLocation('/ai-workbench/history-export')}
+      onNewWorkspace={handleNewWorkspace}
       workspaceSummary={workspaceSummary}
       isRemoteLinked={isRemoteLinked}
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
+      workspacePage={workspacePage}
       requirementText={requirementText}
       attachments={attachments}
       isGenerating={isGenerating}
