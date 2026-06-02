@@ -178,6 +178,11 @@ function Router() {
             </Layout>
           </ProtectedRoute>
         </Route>
+        <Route path="/requirement-analysis">
+          <ProtectedLayout>
+            <RequirementAnalysis />
+          </ProtectedLayout>
+        </Route>
         <Route path="/ai-workbench/requirement-analysis">
           <ProtectedRoute>
             <Layout>
