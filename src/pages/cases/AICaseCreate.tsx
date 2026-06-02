@@ -458,7 +458,7 @@ export default function AICaseCreate(): JSX.Element {
   const userName = user?.display_name || user?.username || '张伟';
 
   const handleOpen = useCallback((id: string) => setLocation(`/ai-workbench/case-generation?docId=${encodeURIComponent(id)}`), [setLocation]);
-  const handleViewAll = useCallback(() => setLocation('/cases/ai-history'), [setLocation]);
+  const handleViewAll = useCallback(() => setLocation('/ai-workbench/history-export'), [setLocation]);
   const handleReserved = useCallback((message: string) => toast.info(message), []);
 
   const metrics = useMemo<DashboardMetric[]>(() => [

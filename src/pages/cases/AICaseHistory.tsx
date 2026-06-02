@@ -207,7 +207,7 @@ export default function AICaseHistory() {
               size="sm"
               variant="outline"
               className="h-8 text-xs gap-1.5"
-              onClick={() => setLocation('/cases/ai-create')}
+              onClick={() => setLocation('/ai-workbench/overview')}
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               返回首页
@@ -221,7 +221,7 @@ export default function AICaseHistory() {
             </Button>
             <Button
               size="sm" className="h-8 text-xs gap-1.5"
-              onClick={() => setLocation('/cases/ai-create')}
+              onClick={() => setLocation('/ai-workbench/overview')}
             >
               <BrainCircuit className="h-3.5 w-3.5" />
               新建生成
@@ -355,7 +355,7 @@ export default function AICaseHistory() {
               <p className="text-sm text-slate-400 dark:text-slate-500 mb-6 max-w-xs">
                 去「AI 生成用例」页面，输入需求描述来生成你的第一批测试用例
               </p>
-              <Button className="gap-1.5" onClick={() => setLocation('/cases/ai-create')}>
+              <Button className="gap-1.5" onClick={() => setLocation('/ai-workbench/overview')}>
                 <BrainCircuit className="h-4 w-4" />开始生成
               </Button>
             </div>
