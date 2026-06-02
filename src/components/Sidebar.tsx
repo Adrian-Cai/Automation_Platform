@@ -66,9 +66,13 @@ const navItems: NavItem[] = [
 // ----------------------------------------------------------------
 // Utility: check if a nav item is active
 // ----------------------------------------------------------------
+function isPathActive(location: string, href: string): boolean {
+  return location === href || location.startsWith(`${href}/`);
+}
+
 function useNavActive(item: NavItem, location: string) {
-  const isActive = item.href ? location === item.href : false;
-  const isChildActive = item.children?.some((c) => location === c.href) ?? false;
+  const isActive = item.href ? isPathActive(location, item.href) : false;
+  const isChildActive = item.children?.some((child) => isPathActive(location, child.href)) ?? false;
   return { isActive: isActive || isChildActive, isChildActive };
 }
 
@@ -134,7 +138,7 @@ function MiniDrawer({ item, anchorRect, onClose, location, onNavigate }: MiniDra
       {item.children ? (
         <div className="px-2">
           {item.children.map((child) => {
-            const isActive = location === child.href;
+            const isActive = isPathActive(location, child.href);
             return (
               <button
                 key={child.href}
@@ -169,13 +173,13 @@ function MiniDrawer({ item, anchorRect, onClose, location, onNavigate }: MiniDra
             }}
             className={`
               w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all duration-150
-              ${item.href && location === item.href
+              ${item.href && isPathActive(location, item.href)
                 ? "bg-primary text-white shadow-sm shadow-primary/25"
                 : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
               }
             `}
           >
-            <span className={item.href && location === item.href ? "text-white/80" : "text-slate-400 dark:text-slate-500"}>
+            <span className={item.href && isPathActive(location, item.href) ? "text-white/80" : "text-slate-400 dark:text-slate-500"}>
               {item.icon}
             </span>
             <span>前往 {item.label}</span>
@@ -308,7 +312,7 @@ function ExpandedNavItem({ item, location, onNavigate, defaultExpanded, badge }:
         >
           <div className="ml-3 pl-3 border-l-2 border-slate-100 dark:border-slate-800 space-y-0.5 py-1">
             {item.children?.map((child) => {
-              const childActive = location === child.href;
+              const childActive = isPathActive(location, child.href);
               return (
                 <button
                   type="button"
