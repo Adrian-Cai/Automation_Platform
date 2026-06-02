@@ -213,7 +213,8 @@ if (!requirementText.trim()) {
       finishGenerateProgress(generated.source === 'llm' ? 'AI 生成完成' : '模板生成完成');
 
       // 判断用户是否已离开 AI 用例页，若已离开则弹跨页面 toast
-      const isOnAiPage = window.location.pathname.startsWith('/cases/ai');
+      const p = window.location.pathname;
+      const isOnAiPage = p === '/cases/ai' || p.startsWith('/cases/ai/') || p.startsWith('/cases/ai?');
       if (isOnAiPage) {
         setLocation(`/cases/ai/results${window.location.search}`);
         toast.success(`AI 用例生成完成（${generated.source === 'llm' ? '大模型' : '回退模板'}）`);
@@ -254,7 +255,8 @@ if (!requirementText.trim()) {
         errMsg.includes('HTTP 401') ||
         errMsg.includes('未认证');
 
-      const isOnAiPageOnError = window.location.pathname.startsWith('/cases/ai');
+      const ep = window.location.pathname;
+      const isOnAiPageOnError = ep === '/cases/ai' || ep.startsWith('/cases/ai/') || ep.startsWith('/cases/ai?');
       if (isOnAiPageOnError) {
         setLocation(`/cases/ai/results${window.location.search}`);
       }
