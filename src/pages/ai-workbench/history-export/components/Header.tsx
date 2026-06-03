@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, CircleHelp, Search, Sparkles } from 'lucide-react';
+import { Bell, ChevronDown, HelpCircle, Search, Sparkles } from 'lucide-react';
 
 export default function Header(): JSX.Element {
   return (
@@ -27,7 +27,7 @@ export default function Header(): JSX.Element {
           <Bell className="h-5 w-5" />
         </button>
         <button className="rounded-xl border border-[#E5E7EB] p-2 text-slate-500 hover:text-[#2563EB]" type="button" aria-label="帮助">
-          <CircleHelp className="h-5 w-5" />
+          <HelpCircle className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] px-3 py-1.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-[#2563EB]">张</div>
