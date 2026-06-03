@@ -298,7 +298,7 @@ export default function QualityCoverage() {
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Tooltip formatter={(value: number, name: string) => [`${value}%`, name]} />
+                      <Tooltip formatter={(value?: string | number | readonly (string | number)[], name?: string | number) => [`${value ?? 0}%`, String(name ?? '')]} />
                       <Pie data={coverageData} dataKey="value" nameKey="name" innerRadius={70} outerRadius={105} paddingAngle={4}>
                         {coverageData.map((entry) => (
                           <Cell key={entry.name} fill={entry.color} />
