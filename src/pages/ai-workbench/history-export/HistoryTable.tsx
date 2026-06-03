@@ -6,10 +6,12 @@ import type { HistoryRecord } from './types';
 
 interface HistoryTableProps {
   records: HistoryRecord[];
+  loading?: boolean;
   onViewDetail: (record: HistoryRecord) => void;
+  onOpenRecord: (recordId: string) => void;
 }
 
-export default function HistoryTable({ records, onViewDetail }: HistoryTableProps): JSX.Element {
+export default function HistoryTable({ records, loading = false, onViewDetail, onOpenRecord }: HistoryTableProps): JSX.Element {
   return (
     <section className="rounded-xl border border-slate-100 bg-white shadow-sm shadow-slate-200/80">
       <div className="flex h-[58px] items-center justify-between px-5">
@@ -29,7 +31,21 @@ export default function HistoryTable({ records, onViewDetail }: HistoryTableProp
             </tr>
           </thead>
           <tbody>
-            {records.map((record) => (
+            {loading ? (
+              <tr>
+                <td colSpan={7} className="h-32 border-b border-slate-100 px-3 text-center text-sm text-slate-500">
+                  正在加载历史记录…
+                </td>
+              </tr>
+            ) : null}
+            {!loading && records.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="h-32 border-b border-slate-100 px-3 text-center text-sm text-slate-500">
+                  暂无已保存的 AI 工作台历史记录
+                </td>
+              </tr>
+            ) : null}
+            {!loading && records.map((record) => (
               <tr key={record.id} className="border-b border-slate-100 text-slate-700 hover:bg-blue-50/30">
                 <td className="h-12 border-b border-slate-100 px-3 font-medium text-slate-700">{record.time}</td>
                 <td className="h-12 border-b border-slate-100 px-3 font-semibold text-slate-800">{record.projectName}</td>
@@ -45,6 +61,13 @@ export default function HistoryTable({ records, onViewDetail }: HistoryTableProp
                       onClick={() => onViewDetail(record)}
                     >
                       查看详情
+                    </button>
+                    <button
+                      type="button"
+                      className="h-8 rounded-md border border-slate-200 px-4 text-xs font-semibold text-slate-600 shadow-sm hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
+                      onClick={() => onOpenRecord(record.id)}
+                    >
+                      打开
                     </button>
                     <button type="button" className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700" aria-label="更多操作">
                       <MoreVertical className="h-4 w-4" />

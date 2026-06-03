@@ -9,9 +9,10 @@ interface DetailDrawerProps {
   record: HistoryRecord | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onOpenRecord: (recordId: string) => void;
 }
 
-export default function DetailDrawer({ record, open, onOpenChange }: DetailDrawerProps): JSX.Element {
+export default function DetailDrawer({ record, open, onOpenChange, onOpenRecord }: DetailDrawerProps): JSX.Element {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-[440px] p-0">
@@ -60,7 +61,11 @@ export default function DetailDrawer({ record, open, onOpenChange }: DetailDrawe
                 <span className="text-sm text-slate-500">生成状态</span>
                 <StatusTag status={record.status} />
               </div>
-              <button type="button" className="h-10 w-full rounded-lg bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700">
+              <button
+                type="button"
+                className="h-10 w-full rounded-lg bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700"
+                onClick={() => onOpenRecord(record.id)}
+              >
                 进入记录详情
               </button>
             </div>
