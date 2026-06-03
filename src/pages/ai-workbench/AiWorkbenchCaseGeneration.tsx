@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Copy,
   Download,
@@ -12,6 +12,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLocation } from 'wouter';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,12 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  expandImportedCaseNodesFromNote,
+  generateMindDataFromRequirement,
+  normalizeMindData,
+} from '@/lib/aiCaseMindMap';
+import { getWorkspaceDocument, saveWorkspaceDocument } from '@/lib/aiCaseStorage';
 import { cn } from '@/lib/utils';
 import {
   caseGenerationMock,
@@ -34,6 +41,12 @@ import {
   type CaseType,
   type GeneratedTestCase,
 } from '@/pages/ai-workbench/caseGenerationMock';
+import {
+  AI_CASE_WORKSPACE_ID,
+  type AiCaseMindData,
+  type AiCaseNode,
+  type AiCaseWorkspaceDocument,
+} from '@/types/aiCases';
 
 interface CaseFilters {
   module: string;
@@ -53,6 +66,166 @@ const emptyFilters: CaseFilters = {
   priority: '全部优先级',
   automated: '全部',
 };
+
+interface WorkspaceRouteState {
+  docId: string;
+  initName: string;
+  initReq: string;
+  autoGenerate: boolean;
+  hasWorkspaceParams: boolean;
+}
+
+interface LoadedWorkspaceState {
+  cases: GeneratedTestCase[];
+  workspaceName: string;
+  requirementText: string;
+  sourceLabel: string;
+}
+
+function readWorkspaceRouteState(): WorkspaceRouteState {
+  const params = new URLSearchParams(window.location.search);
+  const docId = params.get('docId')?.trim() || AI_CASE_WORKSPACE_ID;
+  const initName = params.get('initName')?.trim() || 'AI Testcase Workspace';
+  const initReq = params.get('initReq')?.trim() || '';
+
+  return {
+    docId,
+    initName,
+    initReq,
+    autoGenerate: params.get('autoGenerate') === 'true',
+    hasWorkspaceParams: params.has('docId') || params.has('initReq') || params.has('autoGenerate'),
+  };
+}
+
+function normalizePriority(priority: string | undefined): CasePriority {
+  if (priority === 'P0' || priority === 'P1' || priority === 'P2') {
+    return priority;
+  }
+
+  return 'P2';
+}
+
+function inferCaseType(moduleName: string, title: string): CaseType {
+  const text = `${moduleName} ${title}`;
+
+  if (/性能|并发|压力|耗时|超发/.test(text)) {
+    return '性能并发';
+  }
+
+  if (/权限|安全|黑名单|鉴权|认证|越权/.test(text)) {
+    return '权限安全';
+  }
+
+  if (/兼容|回归|移动端|浏览器/.test(text)) {
+    return '兼容回归';
+  }
+
+  if (/边界|等价|最大|最小|缺失|为空|参数/.test(text)) {
+    return '边界值';
+  }
+
+  if (/异常|失败|错误|拦截|拒绝|未开始|结束|容错|非法/.test(text)) {
+    return '异常流程';
+  }
+
+  return '功能正向';
+}
+
+function formatTimestamp(timestamp: number | undefined): string {
+  if (typeof timestamp !== 'number' || Number.isNaN(timestamp)) {
+    return getCurrentTime();
+  }
+
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) {
+    return getCurrentTime();
+  }
+
+  const pad = (value: number) => value.toString().padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+function stripSectionPrefix(value: string | undefined): string {
+  return (value ?? '').replace(/^(前置条件|测试步骤|预期结果)[：:]\s*/, '').trim();
+}
+
+function readCaseSections(
+  node: AiCaseNode
+): Pick<GeneratedTestCase, 'precondition' | 'steps' | 'expectedResult' | 'remark'> {
+  const preconditionNode = ((node.children ?? []) as AiCaseNode[])[0];
+  const stepsNode = ((preconditionNode?.children ?? []) as AiCaseNode[])[0];
+  const expectedNode = ((stepsNode?.children ?? []) as AiCaseNode[])[0];
+
+  const note = typeof node.note === 'string' ? node.note.trim() : '';
+
+  return {
+    precondition: stripSectionPrefix(preconditionNode?.topic) || '无特殊前置条件',
+    steps: stripSectionPrefix(stepsNode?.topic) || note || '执行目标操作并记录结果',
+    expectedResult: stripSectionPrefix(expectedNode?.topic) || '功能符合预期',
+    remark: note && !stepsNode?.topic ? '由旧版备注格式迁移' : '',
+  };
+}
+
+function convertMindDataToGeneratedCases(mapData: AiCaseMindData): GeneratedTestCase[] {
+  const normalized = expandImportedCaseNodesFromNote(normalizeMindData(mapData), { showNodeKindTags: true }).data;
+  const cases: GeneratedTestCase[] = [];
+
+  const visit = (node: AiCaseNode, moduleName: string): void => {
+    const children = (node.children ?? []) as AiCaseNode[];
+    const nodeKind = node.metadata?.kind;
+    const nextModuleName = nodeKind === 'module' && node.topic.trim().length > 0 ? node.topic.trim() : moduleName;
+
+    if (nodeKind === 'testcase') {
+      const sections = readCaseSections(node);
+      const title = node.topic.trim() || '未命名测试用例';
+      const moduleValue = moduleName || '未命名模块';
+
+      cases.push({
+        id: node.id,
+        caseNo: `AI-TC-${(cases.length + 1).toString().padStart(3, '0')}`,
+        module: moduleValue,
+        title,
+        priority: normalizePriority(node.metadata?.priority),
+        caseType: inferCaseType(moduleValue, title),
+        automated: node.metadata?.aiGenerated ?? false,
+        precondition: sections.precondition,
+        steps: sections.steps,
+        testData: '',
+        expectedResult: sections.expectedResult,
+        remark: sections.remark,
+        updateTime: formatTimestamp(node.metadata?.updatedAt),
+      });
+      return;
+    }
+
+    for (const child of children) {
+      visit(child, nextModuleName);
+    }
+  };
+
+  visit(normalized.nodeData, '');
+  return cases;
+}
+
+function createWorkspaceDocument(routeState: WorkspaceRouteState, mapData: AiCaseMindData): AiCaseWorkspaceDocument {
+  const now = Date.now();
+
+  return {
+    id: routeState.docId,
+    name: routeState.initName,
+    requirement: routeState.initReq,
+    mapData,
+    version: 1,
+    createdAt: now,
+    updatedAt: now,
+    lastSelectedNodeId: mapData.nodeData.id,
+    syncMode: 'local',
+    remoteWorkspaceId: null,
+    remoteVersion: null,
+    remoteStatus: null,
+    lastRemoteSyncedAt: null,
+  };
+}
 
 function getCurrentTime(): string {
   const now = new Date();
@@ -84,7 +257,17 @@ function automatedClassName(automated: boolean): string {
 }
 
 export default function AiWorkbenchCaseGeneration(): JSX.Element {
-  const [cases, setCases] = useState<GeneratedTestCase[]>(caseGenerationMock);
+  const [location] = useLocation();
+  const [routeState, setRouteState] = useState<WorkspaceRouteState>(() => readWorkspaceRouteState());
+  const [cases, setCases] = useState<GeneratedTestCase[]>(() =>
+    routeState.hasWorkspaceParams ? [] : caseGenerationMock
+  );
+  const [workspaceName, setWorkspaceName] = useState(routeState.initName);
+  const [requirementText, setRequirementText] = useState(routeState.initReq);
+  const [workspaceSourceLabel, setWorkspaceSourceLabel] = useState(
+    routeState.hasWorkspaceParams ? '正在加载工作区...' : '示例数据，可通过 docId 打开真实工作区'
+  );
+  const [isBootstrapping, setIsBootstrapping] = useState(routeState.hasWorkspaceParams);
   const [isGenerating, setIsGenerating] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filters, setFilters] = useState<CaseFilters>(emptyFilters);
@@ -95,6 +278,94 @@ export default function AiWorkbenchCaseGeneration(): JSX.Element {
   const [granularity, setGranularity] = useState('标准粒度');
   const [template, setTemplate] = useState(templates[0]);
   const [countPerPoint, setCountPerPoint] = useState(3);
+
+  useEffect(() => {
+    setRouteState(readWorkspaceRouteState());
+  }, [location]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadWorkspace = async () => {
+      if (!routeState.hasWorkspaceParams) {
+        setCases(caseGenerationMock);
+        setWorkspaceName(routeState.initName);
+        setRequirementText(routeState.initReq);
+        setWorkspaceSourceLabel('示例数据，可通过 docId 打开真实工作区');
+        setIsBootstrapping(false);
+        return;
+      }
+
+      setIsBootstrapping(true);
+      try {
+        const savedDoc = await getWorkspaceDocument(routeState.docId);
+        if (!active) {
+          return;
+        }
+
+        if (savedDoc) {
+          const loadedState: LoadedWorkspaceState = {
+            cases: convertMindDataToGeneratedCases(savedDoc.mapData),
+            workspaceName: savedDoc.name,
+            requirementText: savedDoc.requirement,
+            sourceLabel: `已加载工作区：${savedDoc.id}`,
+          };
+          setCases(loadedState.cases);
+          setWorkspaceName(loadedState.workspaceName);
+          setRequirementText(loadedState.requirementText);
+          setWorkspaceSourceLabel(loadedState.sourceLabel);
+          setSelectedIds([]);
+          return;
+        }
+
+        if (routeState.autoGenerate && routeState.initReq.trim()) {
+          setIsGenerating(true);
+          setWorkspaceSourceLabel('正在根据新需求生成用例...');
+          const generatedData = generateMindDataFromRequirement(routeState.initReq, routeState.initName);
+          const newDoc = createWorkspaceDocument(routeState, generatedData);
+          await saveWorkspaceDocument(newDoc);
+
+          if (!active) {
+            return;
+          }
+
+          setCases(convertMindDataToGeneratedCases(generatedData));
+          setWorkspaceName(newDoc.name);
+          setRequirementText(newDoc.requirement);
+          setWorkspaceSourceLabel(`已根据需求生成并保存工作区：${newDoc.id}`);
+          toast.success('已根据需求自动生成测试用例');
+          window.history.replaceState({}, '', `${window.location.pathname}?docId=${encodeURIComponent(newDoc.id)}`);
+          return;
+        }
+
+        setCases([]);
+        setWorkspaceName(routeState.initName);
+        setRequirementText(routeState.initReq);
+        setWorkspaceSourceLabel(`未找到工作区：${routeState.docId}`);
+        setSelectedIds([]);
+      } catch (error) {
+        console.error('[AiWorkbenchCaseGeneration] failed to load workspace', error);
+        if (!active) {
+          return;
+        }
+
+        setCases([]);
+        setWorkspaceSourceLabel('工作区加载失败，请刷新后重试');
+        toast.error('加载 AI 用例工作区失败');
+      } finally {
+        if (active) {
+          setIsBootstrapping(false);
+          setIsGenerating(false);
+        }
+      }
+    };
+
+    void loadWorkspace();
+
+    return () => {
+      active = false;
+    };
+  }, [routeState]);
 
   const modules = useMemo(() => Array.from(new Set(cases.map((item) => item.module))), [cases]);
 
@@ -134,10 +405,41 @@ export default function AiWorkbenchCaseGeneration(): JSX.Element {
   };
 
   const handleGenerate = (regenerate = false) => {
+    const trimmedRequirement = requirementText.trim();
+
+    if (!trimmedRequirement) {
+      toast.error('请先输入需求描述，再执行 AI 生成');
+      return;
+    }
+
     setIsGenerating(true);
     window.setTimeout(() => {
-      setIsGenerating(false);
-      toast.success(regenerate ? '重新生成完成' : '生成测试用例完成');
+      void (async () => {
+        try {
+          const generatedData = generateMindDataFromRequirement(trimmedRequirement, workspaceName);
+          const generatedCases = convertMindDataToGeneratedCases(generatedData);
+
+          if (routeState.hasWorkspaceParams) {
+            await saveWorkspaceDocument({
+              ...createWorkspaceDocument(
+                { ...routeState, initName: workspaceName, initReq: trimmedRequirement },
+                generatedData
+              ),
+              updatedAt: Date.now(),
+            });
+          }
+
+          setCases(generatedCases);
+          setSelectedIds([]);
+          setWorkspaceSourceLabel(regenerate ? '已根据当前需求重新生成用例' : '已根据当前需求生成用例');
+          toast.success(regenerate ? '重新生成完成' : '生成测试用例完成');
+        } catch (error) {
+          console.error('[AiWorkbenchCaseGeneration] failed to generate cases', error);
+          toast.error('生成测试用例失败，请稍后重试');
+        } finally {
+          setIsGenerating(false);
+        }
+      })();
     }, 800);
   };
 
@@ -252,16 +554,18 @@ export default function AiWorkbenchCaseGeneration(): JSX.Element {
         <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:flex-row md:items-center md:justify-between">
           <div>
             <Badge className="mb-3 border-transparent bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-              已生成 86 条用例
+              {isBootstrapping ? '工作区加载中...' : `已生成 ${cases.length} 条用例`}
             </Badge>
             <h1 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">用例生成与编辑</h1>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              根据已确认的测试点自动生成测试用例，并支持人工编辑、复制、删除和导出
+              {workspaceName} · {workspaceSourceLabel}
             </p>
           </div>
           <div className="flex items-center gap-3 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
             <Sparkles className="h-5 w-5" />
-            <span>AI 已完成测试点拆解，可继续细化生成策略</span>
+            <span>
+              {requirementText.trim() ? '已载入需求上下文，可继续细化生成策略' : 'AI 已完成测试点拆解，可继续细化生成策略'}
+            </span>
           </div>
         </div>
 
