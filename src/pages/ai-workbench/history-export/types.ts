@@ -1,51 +1,56 @@
 import type { LucideIcon } from 'lucide-react';
 
-export type TabKey = 'generation' | 'versions' | 'exports';
-export type HistoryStatus = '已完成' | '部分完成' | '生成失败';
+export type HistoryStatus = 'success' | 'processing' | 'failed';
+export type WorkspaceTab = 'history' | 'versions' | 'exports';
 export type ExportFormat = 'Excel' | 'Markdown' | 'JSON' | 'PDF';
-
-export interface StatItem {
-  title: string;
-  value: string;
-  trend?: string;
-  description?: string;
-  icon: LucideIcon;
-  iconClassName: string;
-}
 
 export interface HistoryRecord {
   id: string;
   time: string;
   projectName: string;
   requirementName: string;
-  content: string;
+  generatedContent: string;
   caseCount: number;
   status: HistoryStatus;
+  owner: string;
+  duration: string;
+  coverage: string;
+  requirement?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  syncMode?: string;
 }
 
 export interface VersionRecord {
+  id: string;
   version: string;
-  isCurrent?: boolean;
+  title: string;
   time: string;
-  addedCases: number;
-  deletedCases: number;
-  changedModules: number;
+  author: string;
+  summary: string;
+  isCurrent: boolean;
 }
 
-export interface ExportOption {
+export interface ExportFormatOption {
   format: ExportFormat;
+  title: string;
   description: string;
-  buttonLabel: string;
   icon: LucideIcon;
-  iconClassName: string;
-  iconBgClassName: string;
 }
 
-export interface RecentExportRecord {
+export interface RecentExport {
   id: string;
   fileName: string;
   format: ExportFormat;
-  caseCount: number;
   time: string;
-  creator: string;
+  size: string;
+  status: '完成' | '处理中';
+}
+
+export interface StatItem {
+  id: string;
+  label: string;
+  value: string;
+  trend: string;
+  icon: LucideIcon;
 }
