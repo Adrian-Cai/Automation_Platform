@@ -14,6 +14,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAiGeneration } from '@/contexts/AiGenerationContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -185,6 +186,7 @@ function exportCases(cases: GeneratedTestCase[]) {
 }
 
 export default function AiWorkbenchCaseGeneration(): JSX.Element {
+  const { notifyStart, notifyDone } = useAiGeneration();
   const [selectedTypes, setSelectedTypes] = useState<CaseType[]>(['功能测试']);
   const [granularity, setGranularity] = useState<Granularity>('标准版');
   const [template, setTemplate] = useState(CASE_TEMPLATES[0]);
@@ -235,10 +237,12 @@ export default function AiWorkbenchCaseGeneration(): JSX.Element {
     setIsGenerating(true);
     setHasGenerated(false);
     setSelectedCaseIds([]);
+    notifyStart();
     window.setTimeout(() => {
       setCases(createMockTestCases(GENERATED_CASE_TOTAL));
       setHasGenerated(true);
       setIsGenerating(false);
+      notifyDone();
       toast.success('测试用例生成成功');
     }, 1000);
   };
