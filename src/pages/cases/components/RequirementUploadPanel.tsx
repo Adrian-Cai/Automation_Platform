@@ -28,20 +28,58 @@ export default function RequirementUploadPanel({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const createFileItems = (files: FileList): UploadedFileItem[] => Array.from(files).map((file) => ({
-    id: `${file.name}-${file.size}-${file.lastModified}`,
-    name: file.name,
-    size: formatFileSize(file.size),
-    status: file.size > 50 * 1024 * 1024 ? '上传失败' : '等待解析',
-    type: getFileType(file.name),
-  }));
+  const createFileItems = async (files: FileList): Promise<UploadedFileItem[]> => {
+    const fileItems = Array.from(files).map(async (file): Promise<UploadedFileItem> => {
+      const fileBase = {
+        id: `${file.name}-${file.size}-${file.lastModified}`,
+        name: file.name,
+        size: formatFileSize(file.size),
+        type: getFileType(file.name),
+      };
+
+      if (file.size > 50 * 1024 * 1024) {
+        return {
+          ...fileBase,
+          status: '上传失败',
+          content: '',
+          errorMessage: '文件超过 50MB，未读取内容。',
+        };
+      }
+
+      try {
+        const content = await file.text();
+        return {
+          ...fileBase,
+          status: content.trim().length > 0 ? '等待解析' : '上传失败',
+          content,
+          errorMessage: content.trim().length > 0 ? undefined : '文件内容为空，无法解析。',
+        };
+      } catch {
+        return {
+          ...fileBase,
+          status: '上传失败',
+          content: '',
+          errorMessage: '读取文件内容失败，请重新上传。',
+        };
+      }
+    });
+
+    return Promise.all(fileItems);
+  };
 
   const handleFiles = (files: FileList | null): void => {
     if (!files || files.length === 0) {
       return;
     }
 
-    onFilesAdd(createFileItems(files));
+    void (async (): Promise<void> => {
+      try {
+        const fileItems = await createFileItems(files);
+        onFilesAdd(fileItems);
+      } catch {
+        onFilesAdd([]);
+      }
+    })();
   };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>): void => {

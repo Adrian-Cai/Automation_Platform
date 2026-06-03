@@ -11,6 +11,7 @@ import RequirementUploadPanel from '@/pages/cases/components/RequirementUploadPa
 import UploadedFileList from '@/pages/cases/components/UploadedFileList';
 import type { CleanRules, GenerateTarget, RequirementInputMode, RequirementInputState, RequirementType, UploadedFileItem } from '@/lib/requirementInput';
 import {
+  buildUploadedFileContent,
   cleanRequirementText,
   defaultCleanRules,
   initialRequirementInputState,
@@ -19,20 +20,6 @@ import {
 } from '@/lib/requirementInput';
 
 const parseStepDelayMs = 650;
-const simulatedDocumentContent = `1. 项目概述
-本需求来自已上传需求文档，描述电商平台会员中心能力升级。
-
-2. 功能需求
-2.1 会员注册
-- 用户可通过手机号、邮箱进行注册。
-- 注册时需填写验证码，验证码有效期为 5 分钟。
-用户点击注册后，
-系统需要校验验证码与账号唯一性。
-
-2.2 登录与登出
-- 支持账号密码登录。
-- 支持短信验证码登录。
-- 用户可主动退出登录。`;
 
 function buildInitialState(): RequirementInputState {
   const draft = loadDraftFromStorage();
@@ -73,7 +60,19 @@ export default function RequirementInputParsePage(): JSX.Element {
   }, []);
 
   const handleFilesAdd = useCallback((files: UploadedFileItem[]): void => {
+    if (files.length === 0) {
+      toast.error('文件读取失败，请重新上传。');
+      return;
+    }
+
     setState((current) => ({ ...current, uploadedFiles: [...files, ...current.uploadedFiles] }));
+
+    const failedCount = files.filter((file) => file.status === '上传失败').length;
+    if (failedCount > 0) {
+      toast.warning(`已添加 ${files.length} 个文件，其中 ${failedCount} 个文件读取失败`);
+      return;
+    }
+
     toast.success(`已添加 ${files.length} 个文件，等待解析`);
   }, []);
 
@@ -121,8 +120,13 @@ export default function RequirementInputParsePage(): JSX.Element {
       return;
     }
 
+    const rawContent = state.requirementText.trim().length > 0 ? state.requirementText : buildUploadedFileContent(state.uploadedFiles);
+    if (rawContent.trim().length === 0) {
+      toast.error('未能读取到有效的上传文件内容，请重新上传或粘贴需求文本。');
+      return;
+    }
+
     clearTimers();
-    const rawContent = state.requirementText.trim().length > 0 ? state.requirementText : simulatedDocumentContent;
     setState((current) => ({
       ...current,
       rawContent,
@@ -153,7 +157,7 @@ export default function RequirementInputParsePage(): JSX.Element {
       toast.success('需求内容解析与清洗完成');
     }, parseStepDelayMs * 4);
     timersRef.current.push(finishTimer);
-  }, [canStartParse, clearTimers, state.requirementText]);
+  }, [canStartParse, clearTimers, state.requirementText, state.uploadedFiles]);
 
   return (
     <div className="min-h-full bg-slate-50 px-6 py-6 text-slate-900 lg:px-8">

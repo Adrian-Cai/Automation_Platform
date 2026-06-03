@@ -25,6 +25,8 @@ export interface UploadedFileItem {
   size: string;
   status: UploadedFileStatus;
   type: UploadedFileType;
+  content: string;
+  errorMessage?: string;
 }
 
 export interface CleanRules {
@@ -104,6 +106,7 @@ export const mockUploadedFiles: UploadedFileItem[] = [
     size: '1.24 MB',
     status: '上传成功',
     type: 'word',
+    content: sampleRequirementText,
   },
   {
     id: 'mock-pdf-1',
@@ -111,6 +114,7 @@ export const mockUploadedFiles: UploadedFileItem[] = [
     size: '856 KB',
     status: '上传成功',
     type: 'pdf',
+    content: sampleRequirementText,
   },
 ];
 
@@ -171,6 +175,13 @@ function mergeAbnormalLineBreaks(input: string, rules: CleanRules): string {
   }
 
   return merged.join('\n');
+}
+
+export function buildUploadedFileContent(files: UploadedFileItem[]): string {
+  return files
+    .filter((file) => file.status !== '上传失败' && file.content.trim().length > 0)
+    .map((file) => `# ${file.name}\n${file.content.trim()}`)
+    .join('\n\n');
 }
 
 export function cleanRequirementText(input: string, rules: CleanRules): string {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cleanRequirementText, defaultCleanRules, formatFileSize, getFileType } from '@/lib/requirementInput';
+import { buildUploadedFileContent, cleanRequirementText, defaultCleanRules, formatFileSize, getFileType } from '@/lib/requirementInput';
 
 describe('cleanRequirementText', () => {
   it('removes empty lines and extra spaces while preserving heading levels', () => {
@@ -43,5 +43,28 @@ describe('requirement input file utilities', () => {
     expect(formatFileSize(512)).toBe('512 B');
     expect(formatFileSize(1024)).toBe('1.0 KB');
     expect(formatFileSize(1024 * 1024)).toBe('1.00 MB');
+  });
+
+  it('combines uploaded file contents instead of using simulated requirements', () => {
+    expect(
+      buildUploadedFileContent([
+        {
+          id: 'file-1',
+          name: 'checkout.md',
+          size: '1.0 KB',
+          status: '等待解析',
+          type: 'markdown',
+          content: '用户可以提交订单。',
+        },
+        {
+          id: 'file-2',
+          name: 'empty.md',
+          size: '0 B',
+          status: '上传失败',
+          type: 'markdown',
+          content: '',
+        },
+      ])
+    ).toBe('# checkout.md\n用户可以提交订单。');
   });
 });
