@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   CheckCircle2,
   Copy,
@@ -26,6 +26,12 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  expandImportedCaseNodesFromNote,
+  generateMindDataFromRequirement,
+  normalizeMindData,
+} from '@/lib/aiCaseMindMap';
+import { getWorkspaceDocument, saveWorkspaceDocument } from '@/lib/aiCaseStorage';
 import { cn } from '@/lib/utils';
 import {
   CASE_MODULES,
@@ -380,7 +386,7 @@ export default function AiWorkbenchCaseGeneration(): JSX.Element {
               </Badge>
             </div>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              根据已确认的测试点自动生成测试用例，并支持人工编辑、复制、删除和导出
+              {workspaceName} · {workspaceSourceLabel}
             </p>
           </div>
         </header>
