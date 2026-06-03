@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch, Redirect, useLocation } from "wouter";
+import { Route, Switch, Redirect, Router as WouterRouter, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Layout } from "./components/Layout";
@@ -20,16 +20,28 @@ import Tasks from "./pages/tasks/Tasks";
 import APICases from "./pages/cases/APICases";
 import UICases from "./pages/cases/UICases";
 import PerformanceCases from "./pages/cases/PerformanceCases";
-import AICases from "./pages/cases/AICases";
-import AICaseCreate from "./pages/cases/AICaseCreate";
+import AiWorkbenchOverview from "./pages/ai-workbench/AiWorkbenchOverview";
+import AiWorkbenchRequirementInput from "./pages/ai-workbench/AiWorkbenchRequirementInput";
+import AiWorkbenchRequirementAnalysis from "./pages/ai-workbench/AiWorkbenchRequirementAnalysis";
+import AiWorkbenchCaseGeneration from "./pages/ai-workbench/AiWorkbenchCaseGeneration";
+import AiWorkbenchQualityCoverage from "./pages/ai-workbench/AiWorkbenchQualityCoverage";
 import AiWorkbenchHistoryExport from "./pages/ai-workbench/AiWorkbenchHistoryExport";
-import QualityCoverage from "./pages/ai-workbench/QualityCoverage";
+import AiWorkbenchSettings from "./pages/ai-workbench/AiWorkbenchSettings";
 import Reports from "./pages/reports/Reports";
 import ReportDetail from "./pages/reports/ReportDetail";
 import SystemSettings from "./pages/settings/SystemSettings";
 import { User } from "lucide-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+
+const AI_WORKBENCH_CASE_GENERATION_ROUTE = "/ai-workbench/case-generation";
+
+function isAiWorkbenchCaseGenerationRoute(location: string): boolean {
+  return (
+    location === AI_WORKBENCH_CASE_GENERATION_ROUTE ||
+    location.startsWith(`${AI_WORKBENCH_CASE_GENERATION_ROUTE}?`)
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,21 +51,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-const AI_REQUIREMENT_INPUT_PATH = '/ai-workbench/requirement-input';
-const AI_CASE_GENERATION_PATH = '/ai-workbench/case-generation';
-const AI_HISTORY_EXPORT_PATH = '/ai-workbench/history-export';
-const AI_QUALITY_COVERAGE_PATH = '/ai-workbench/quality-coverage';
-
-function RedirectWithSearch({ to }: { to: string }) {
-  const [, setLocation] = useLocation();
-
-  useEffect(() => {
-    setLocation(`${to}${window.location.search}`);
-  }, [setLocation, to]);
-
-  return null;
-}
 
 function TasksPage() {
   return <Tasks />;
@@ -81,59 +78,54 @@ function ProfilePage() {
   );
 }
 
+function ProtectedLayout({ children }: { children: ReactNode }) {
+  return (
+    <ProtectedRoute>
+      <Layout>{children}</Layout>
+    </ProtectedRoute>
+  );
+}
+
 /**
- * AI 用例保活组件：
- * - 只要曾经访问过生成结果页就会挂载
- * - AI 生成中切换到其他路由时：用 visibility:hidden + 绝对定位保留 DOM 状态
- * - 当前路由是生成结果页：fixed inset-0 覆盖全屏，正常显示
- * - 非当前路由且未在生成：display:none（节省资源，但保活已挂载）
+ * AI case generation keep-alive layer:
+ * - /ai-workbench/case-generation is rendered outside the Switch so route changes do not unmount AICases.
+ * - While generation is running, navigating away hides this tree instead of aborting its stream controller.
+ * - Hidden generation keeps the last AI workbench URL in a nested router so AICases does not
+ *   re-read unrelated page query strings and switch docRef to the default workspace mid-stream.
+ * - Direct visits still mount immediately and render as the active page.
  */
-function KeepAliveAiCases() {
-  const [location] = useLocation();
+function KeepAliveAiWorkbenchCaseGeneration() {
+  const [location, setLocation] = useLocation();
   const { isGenerating } = useAiGeneration();
-  // 用 useState 惰性初始化：如果刷新时直接落在生成结果页，也能立即挂载
-  const [hasVisited, setHasVisited] = useState(
-    () => location === AI_CASE_GENERATION_PATH || location.startsWith(`${AI_CASE_GENERATION_PATH}?`)
+  const isCurrentRoute = isAiWorkbenchCaseGenerationRoute(location);
+  const [hasVisited, setHasVisited] = useState(() => isCurrentRoute);
+  const [keptAliveLocation, setKeptAliveLocation] = useState(() =>
+    isCurrentRoute ? location : AI_WORKBENCH_CASE_GENERATION_ROUTE
   );
 
-  const isCurrentRoute = location === AI_CASE_GENERATION_PATH || location.startsWith(`${AI_CASE_GENERATION_PATH}?`);
-
-  // 一旦用户导航到生成结果页，就永久标记（不会因路由变化而重置）
   useEffect(() => {
-    if (isCurrentRoute && !hasVisited) {
+    if (isCurrentRoute) {
       setHasVisited(true);
+      setKeptAliveLocation(location);
     }
-  }, [isCurrentRoute, hasVisited]);
+  }, [isCurrentRoute, location]);
 
-  // 未访问过 且 不在生成中 → 无需挂载
-  const shouldMount = hasVisited || isGenerating;
-  if (!shouldMount) {
+  const useKeptAliveLocation = useCallback(() => [keptAliveLocation, setLocation] as [string, typeof setLocation], [
+    keptAliveLocation,
+    setLocation,
+  ]);
+
+  if (!hasVisited && !isGenerating) {
     return null;
   }
 
-  if (isCurrentRoute) {
-    // 当前路由：用 fixed inset-0 覆盖全屏，与 Switch 内容互斥展示
-    // z-index 设置较高确保覆盖在 Switch 渲染的空占位之上
-    return (
-      <div className="fixed inset-0 z-10">
-        <ProtectedRoute>
-          <Layout>
-            <AICases />
-          </Layout>
-        </ProtectedRoute>
-      </div>
-    );
-  }
-
-  // 不在当前路由：隐藏但保留 DOM（保活核心）
-  // display:none 会让浏览器跳过渲染，但 React 组件树和状态完整保留
   return (
-    <div style={{ display: 'none' }}>
-      <ProtectedRoute>
-        <Layout>
-          <AICases />
-        </Layout>
-      </ProtectedRoute>
+    <div className={isCurrentRoute ? "fixed inset-0 z-10" : "hidden"}>
+      <WouterRouter hook={useKeptAliveLocation}>
+        <ProtectedLayout>
+          <AiWorkbenchCaseGeneration />
+        </ProtectedLayout>
+      </WouterRouter>
     </div>
   );
 }
@@ -183,37 +175,51 @@ function Router() {
             </Layout>
           </ProtectedRoute>
         </Route>
-        <Route path={AI_REQUIREMENT_INPUT_PATH}>
-          <ProtectedRoute>
-            <Layout>
-              <AICaseCreate />
-            </Layout>
-          </ProtectedRoute>
-        </Route>
-        {/* 生成结果页由 KeepAliveAiCases 接管，Switch 中仅保留空占位避免 404 */}
-        <Route path={AI_CASE_GENERATION_PATH}>
+        {/* Rendered by KeepAliveAiWorkbenchCaseGeneration outside Switch to avoid aborting active streams. */}
+        <Route path="/ai-workbench/case-generation">
           {null}
         </Route>
-        <Route path={AI_HISTORY_EXPORT_PATH}>
-          <ProtectedRoute>
-            <AiWorkbenchHistoryExport />
-          </ProtectedRoute>
+        <Route path="/ai-workbench/records">
+          <Redirect to="/ai-workbench/history-export" />
         </Route>
-        <Route path={AI_QUALITY_COVERAGE_PATH}>
-          <ProtectedRoute>
-            <Layout>
-              <QualityCoverage />
-            </Layout>
-          </ProtectedRoute>
+        <Route path="/ai-workbench/overview">
+          <ProtectedLayout>
+            <AiWorkbenchOverview />
+          </ProtectedLayout>
+        </Route>
+        <Route path="/ai-workbench/requirement-input">
+          <ProtectedLayout>
+            <AiWorkbenchRequirementInput />
+          </ProtectedLayout>
+        </Route>
+        <Route path="/ai-workbench/requirement-analysis">
+          <ProtectedLayout>
+            <AiWorkbenchRequirementAnalysis />
+          </ProtectedLayout>
+        </Route>
+        <Route path="/ai-workbench/quality-coverage">
+          <ProtectedLayout>
+            <AiWorkbenchQualityCoverage />
+          </ProtectedLayout>
+        </Route>
+        <Route path="/ai-workbench/history-export">
+          <ProtectedLayout>
+            <AiWorkbenchHistoryExport />
+          </ProtectedLayout>
+        </Route>
+        <Route path="/ai-workbench/settings">
+          <ProtectedLayout>
+            <AiWorkbenchSettings />
+          </ProtectedLayout>
         </Route>
         <Route path="/cases/ai-create">
-          <RedirectWithSearch to={AI_REQUIREMENT_INPUT_PATH} />
+          <Redirect to="/ai-workbench/overview" />
         </Route>
         <Route path="/cases/ai-history">
-          <RedirectWithSearch to={AI_HISTORY_EXPORT_PATH} />
+          <Redirect to="/ai-workbench/history-export" />
         </Route>
         <Route path="/cases/ai">
-          <RedirectWithSearch to={AI_CASE_GENERATION_PATH} />
+          <Redirect to="/ai-workbench/overview" />
         </Route>
 
         <Route path="/tasks">
@@ -256,8 +262,7 @@ function Router() {
         <Route component={NotFound} />
       </Switch>
 
-      {/* 保活层：永久挂载在 Switch 外部，不受路由切换影响 */}
-      <KeepAliveAiCases />
+      <KeepAliveAiWorkbenchCaseGeneration />
     </>
   );
 }
