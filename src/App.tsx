@@ -1,14 +1,14 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch, Redirect } from "wouter";
+import { Route, Switch, Redirect, Router as WouterRouter, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Layout } from "./components/Layout";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { NavCollapseProvider } from "./contexts/NavCollapseContext";
-import { AiGenerationProvider } from "./contexts/AiGenerationContext";
+import { AiGenerationProvider, useAiGeneration } from "./contexts/AiGenerationContext";
 import Home from "./pages/Home";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -32,7 +32,16 @@ import ReportDetail from "./pages/reports/ReportDetail";
 import SystemSettings from "./pages/settings/SystemSettings";
 import { User } from "lucide-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+
+const AI_WORKBENCH_CASE_GENERATION_ROUTE = "/ai-workbench/case-generation";
+
+function isAiWorkbenchCaseGenerationRoute(location: string): boolean {
+  return (
+    location === AI_WORKBENCH_CASE_GENERATION_ROUTE ||
+    location.startsWith(`${AI_WORKBENCH_CASE_GENERATION_ROUTE}?`)
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -74,6 +83,50 @@ function ProtectedLayout({ children }: { children: ReactNode }) {
     <ProtectedRoute>
       <Layout>{children}</Layout>
     </ProtectedRoute>
+  );
+}
+
+/**
+ * AI case generation keep-alive layer:
+ * - /ai-workbench/case-generation is rendered outside the Switch so route changes do not unmount AICases.
+ * - While generation is running, navigating away hides this tree instead of aborting its stream controller.
+ * - Hidden generation keeps the last AI workbench URL in a nested router so AICases does not
+ *   re-read unrelated page query strings and switch docRef to the default workspace mid-stream.
+ * - Direct visits still mount immediately and render as the active page.
+ */
+function KeepAliveAiWorkbenchCaseGeneration() {
+  const [location, setLocation] = useLocation();
+  const { isGenerating } = useAiGeneration();
+  const isCurrentRoute = isAiWorkbenchCaseGenerationRoute(location);
+  const [hasVisited, setHasVisited] = useState(() => isCurrentRoute);
+  const [keptAliveLocation, setKeptAliveLocation] = useState(() =>
+    isCurrentRoute ? location : AI_WORKBENCH_CASE_GENERATION_ROUTE
+  );
+
+  useEffect(() => {
+    if (isCurrentRoute) {
+      setHasVisited(true);
+      setKeptAliveLocation(location);
+    }
+  }, [isCurrentRoute, location]);
+
+  const useKeptAliveLocation = useCallback(() => [keptAliveLocation, setLocation] as const, [
+    keptAliveLocation,
+    setLocation,
+  ]);
+
+  if (!hasVisited && !isGenerating) {
+    return null;
+  }
+
+  return (
+    <div className={isCurrentRoute ? "fixed inset-0 z-10" : "hidden"}>
+      <WouterRouter hook={useKeptAliveLocation}>
+        <ProtectedLayout>
+          <AiWorkbenchCaseGeneration />
+        </ProtectedLayout>
+      </WouterRouter>
+    </div>
   );
 }
 
@@ -146,10 +199,9 @@ function Router() {
             <AiWorkbenchRequirementAnalysis />
           </ProtectedLayout>
         </Route>
+        {/* Rendered by KeepAliveAiWorkbenchCaseGeneration outside Switch to avoid aborting active streams. */}
         <Route path="/ai-workbench/case-generation">
-          <ProtectedLayout>
-            <AiWorkbenchCaseGeneration />
-          </ProtectedLayout>
+          {null}
         </Route>
         <Route path="/ai-workbench/quality-coverage">
           <ProtectedLayout>
@@ -216,6 +268,7 @@ function Router() {
         <Route component={NotFound} />
       </Switch>
 
+      <KeepAliveAiWorkbenchCaseGeneration />
     </>
   );
 }
