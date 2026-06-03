@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch, Redirect, useLocation } from "wouter";
+import { Route, Switch, Redirect, Router as WouterRouter, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Layout } from "./components/Layout";
@@ -32,7 +32,7 @@ import ReportDetail from "./pages/reports/ReportDetail";
 import SystemSettings from "./pages/settings/SystemSettings";
 import { User } from "lucide-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 const AI_WORKBENCH_CASE_GENERATION_ROUTE = "/ai-workbench/case-generation";
 
@@ -90,19 +90,30 @@ function ProtectedLayout({ children }: { children: ReactNode }) {
  * AI case generation keep-alive layer:
  * - /ai-workbench/case-generation is rendered outside the Switch so route changes do not unmount AICases.
  * - While generation is running, navigating away hides this tree instead of aborting its stream controller.
+ * - Hidden generation keeps the last AI workbench URL in a nested router so AICases does not
+ *   re-read unrelated page query strings and switch docRef to the default workspace mid-stream.
  * - Direct visits still mount immediately and render as the active page.
  */
 function KeepAliveAiWorkbenchCaseGeneration() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { isGenerating } = useAiGeneration();
   const isCurrentRoute = isAiWorkbenchCaseGenerationRoute(location);
   const [hasVisited, setHasVisited] = useState(() => isCurrentRoute);
+  const [keptAliveLocation, setKeptAliveLocation] = useState(() =>
+    isCurrentRoute ? location : AI_WORKBENCH_CASE_GENERATION_ROUTE
+  );
 
   useEffect(() => {
-    if (isCurrentRoute && !hasVisited) {
+    if (isCurrentRoute) {
       setHasVisited(true);
+      setKeptAliveLocation(location);
     }
-  }, [hasVisited, isCurrentRoute]);
+  }, [isCurrentRoute, location]);
+
+  const useKeptAliveLocation = useCallback(() => [keptAliveLocation, setLocation] as const, [
+    keptAliveLocation,
+    setLocation,
+  ]);
 
   if (!hasVisited && !isGenerating) {
     return null;
@@ -110,9 +121,11 @@ function KeepAliveAiWorkbenchCaseGeneration() {
 
   return (
     <div className={isCurrentRoute ? "fixed inset-0 z-10" : "hidden"}>
-      <ProtectedLayout>
-        <AiWorkbenchCaseGeneration />
-      </ProtectedLayout>
+      <WouterRouter hook={useKeptAliveLocation}>
+        <ProtectedLayout>
+          <AiWorkbenchCaseGeneration />
+        </ProtectedLayout>
+      </WouterRouter>
     </div>
   );
 }
