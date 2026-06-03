@@ -39,6 +39,20 @@ const queryClient = new QueryClient({
   },
 });
 
+const AI_REQUIREMENT_INPUT_PATH = '/ai-workbench/requirement-input';
+const AI_CASE_GENERATION_PATH = '/ai-workbench/case-generation';
+const AI_HISTORY_EXPORT_PATH = '/ai-workbench/history-export';
+
+function RedirectWithSearch({ to }: { to: string }) {
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    setLocation(`${to}${window.location.search}`);
+  }, [setLocation, to]);
+
+  return null;
+}
+
 function TasksPage() {
   return <Tasks />;
 }
@@ -67,22 +81,22 @@ function ProfilePage() {
 
 /**
  * AI 用例保活组件：
- * - 只要曾经访问过 /cases/ai 就会挂载
+ * - 只要曾经访问过生成结果页就会挂载
  * - AI 生成中切换到其他路由时：用 visibility:hidden + 绝对定位保留 DOM 状态
- * - 当前路由是 /cases/ai：fixed inset-0 覆盖全屏，正常显示
+ * - 当前路由是生成结果页：fixed inset-0 覆盖全屏，正常显示
  * - 非当前路由且未在生成：display:none（节省资源，但保活已挂载）
  */
 function KeepAliveAiCases() {
   const [location] = useLocation();
   const { isGenerating } = useAiGeneration();
-  // 用 useState 惰性初始化：如果刷新时直接落在 /cases/ai，也能立即挂载
+  // 用 useState 惰性初始化：如果刷新时直接落在生成结果页，也能立即挂载
   const [hasVisited, setHasVisited] = useState(
-    () => location === '/cases/ai' || location.startsWith('/cases/ai?')
+    () => location === AI_CASE_GENERATION_PATH || location.startsWith(`${AI_CASE_GENERATION_PATH}?`)
   );
 
-  const isCurrentRoute = location === '/cases/ai' || location.startsWith('/cases/ai?');
+  const isCurrentRoute = location === AI_CASE_GENERATION_PATH || location.startsWith(`${AI_CASE_GENERATION_PATH}?`);
 
-  // 一旦用户导航到 /cases/ai，就永久标记（不会因路由变化而重置）
+  // 一旦用户导航到生成结果页，就永久标记（不会因路由变化而重置）
   useEffect(() => {
     if (isCurrentRoute && !hasVisited) {
       setHasVisited(true);
@@ -167,23 +181,32 @@ function Router() {
             </Layout>
           </ProtectedRoute>
         </Route>
-        <Route path="/cases/ai-create">
+        <Route path={AI_REQUIREMENT_INPUT_PATH}>
           <ProtectedRoute>
             <Layout>
               <AICaseCreate />
             </Layout>
           </ProtectedRoute>
         </Route>
-        {/* /cases/ai 路由由 KeepAliveAiCases 接管，Switch 中仅保留空占位避免 404 */}
-        <Route path="/cases/ai">
+        {/* 生成结果页由 KeepAliveAiCases 接管，Switch 中仅保留空占位避免 404 */}
+        <Route path={AI_CASE_GENERATION_PATH}>
           {null}
         </Route>
-        <Route path="/cases/ai-history">
+        <Route path={AI_HISTORY_EXPORT_PATH}>
           <ProtectedRoute>
             <Layout>
               <AICaseHistory />
             </Layout>
           </ProtectedRoute>
+        </Route>
+        <Route path="/cases/ai-create">
+          <RedirectWithSearch to={AI_REQUIREMENT_INPUT_PATH} />
+        </Route>
+        <Route path="/cases/ai-history">
+          <RedirectWithSearch to={AI_HISTORY_EXPORT_PATH} />
+        </Route>
+        <Route path="/cases/ai">
+          <RedirectWithSearch to={AI_CASE_GENERATION_PATH} />
         </Route>
 
         <Route path="/tasks">

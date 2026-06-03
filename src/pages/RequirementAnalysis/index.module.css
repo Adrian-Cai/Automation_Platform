@@ -1,0 +1,383 @@
+.pageShell {
+  min-height: 100%;
+  padding: 28px;
+  background: linear-gradient(180deg, #f7fbff 0%, #ffffff 34%);
+  color: #0f2742;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px;
+  border: 1px solid #dbeafe;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(15, 39, 66, 0.08);
+}
+
+.hero h1 {
+  margin: 6px 0 10px;
+  color: #0b2a4a;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.hero p {
+  max-width: 760px;
+  color: #64748b;
+  line-height: 1.7;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.summaryCard,
+.sectionCard,
+.filterBar {
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 39, 66, 0.06);
+}
+
+.summaryCard {
+  display: flex;
+  gap: 14px;
+  padding: 20px;
+}
+
+.summaryIcon,
+.riskIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  background: #e0f2fe;
+  color: #0b4a7a;
+}
+
+.summaryLabel,
+.summaryDescription {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.summaryValue {
+  display: block;
+  margin: 4px 0;
+  color: #0b2a4a;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.sectionCard {
+  padding: 22px;
+  margin-bottom: 20px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.sectionTitle {
+  margin: 4px 0 0;
+  color: #0b2a4a;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.sectionHint {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.moduleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.moduleCard {
+  width: 100%;
+  padding: 18px;
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  background: #f8fbff;
+  text-align: left;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.moduleCard:hover,
+.moduleCardActive {
+  border-color: #0f766e;
+  box-shadow: 0 12px 28px rgba(15, 118, 110, 0.14);
+  transform: translateY(-1px);
+}
+
+.moduleCardTop,
+.riskHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.moduleCard h3,
+.riskHeader h3 {
+  margin: 0;
+  color: #0b2a4a;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.moduleCard p,
+.riskCard p,
+.dataTable p,
+.drawerBody p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.progressTrack {
+  position: relative;
+  height: 8px;
+  margin: 16px 0 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dbeafe;
+}
+
+.progressBar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0b4a7a, #14b8a6);
+}
+
+.moduleMeta,
+.tagRow,
+.riskFooter,
+.drawerMeta,
+.actionGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.moduleMeta span,
+.tagRow span,
+.riskFooter span {
+  color: #475569;
+  font-size: 12px;
+}
+
+.tagRow {
+  margin-top: 12px;
+}
+
+.tagRow span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #ccfbf1;
+  color: #0f766e;
+  font-weight: 700;
+}
+
+.filterBar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) repeat(4, 150px);
+  gap: 12px;
+  padding: 16px;
+  margin: 20px 0;
+}
+
+.filterBar select,
+.formGrid select {
+  height: 40px;
+  width: 100%;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0 12px;
+  color: #0f2742;
+  font-size: 14px;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+  gap: 20px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.dataTable th {
+  padding: 12px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.dataTable td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #edf2f7;
+  color: #334155;
+  font-size: 13px;
+  vertical-align: top;
+}
+
+.dataTable strong {
+  color: #0b2a4a;
+}
+
+.linkButton {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #0b4a7a;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.riskGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.riskCard {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  background: #fbfdff;
+}
+
+.riskFooter {
+  margin-top: 12px;
+}
+
+.riskFooter span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.formGrid label {
+  display: grid;
+  gap: 6px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.formWide {
+  grid-column: 1 / -1;
+}
+
+.drawerBody {
+  display: grid;
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.drawerBody h3 {
+  margin: 0 0 8px;
+  color: #0b2a4a;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.drawerBody ol {
+  margin: 0;
+  padding-left: 20px;
+  color: #475569;
+  line-height: 1.8;
+}
+
+.drawerRisk {
+  padding: 12px;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+@media (max-width: 1180px) {
+  .summaryGrid,
+  .moduleGrid,
+  .contentGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filterBar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .pageShell {
+    padding: 16px;
+  }
+
+  .hero,
+  .sectionHeader {
+    flex-direction: column;
+  }
+
+  .summaryGrid,
+  .moduleGrid,
+  .contentGrid,
+  .filterBar,
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}

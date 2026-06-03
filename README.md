@@ -1,15 +1,23 @@
 # AutoTest - 自动化测试平台
 
 <p align="center">
+  <!-- CI / Workflow -->
+  <a href="https://github.com/acai1998/Automation_Platform/actions/workflows/github-ci.yml"><img src="https://github.com/acai1998/Automation_Platform/actions/workflows/github-ci.yml/badge.svg" alt="CI Pipeline" /></a>
+  <a href="https://github.com/acai1998/Automation_Platform/actions/workflows/k6-smoke.yml"><img src="https://github.com/acai1998/Automation_Platform/actions/workflows/k6-smoke.yml/badge.svg" alt="k6 Smoke" /></a>
+  <a href="https://github.com/acai1998/Automation_Platform/actions/workflows/deploy.yml"><img src="https://github.com/acai1998/Automation_Platform/actions/workflows/deploy.yml/badge.svg" alt="Deploy" /></a>
+  <a href="https://github.com/acai1998/Automation_Platform/actions/workflows/ci.yml"><img src="https://github.com/acai1998/Automation_Platform/actions/workflows/ci.yml/badge.svg" alt="Sync Test Cases" /></a>
+  <!-- Frontend Core -->
   <img src="https://img.shields.io/badge/React-18.2-61DAFB?logo=react" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5.3-3178C6?logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Vite-5.0-646CFF?logo=vite" alt="Vite" />
-  <img src="https://img.shields.io/badge/Express-4.18-000000?logo=express" alt="Express" />
+  <!-- Backend -->
   <img src="https://img.shields.io/badge/MariaDB-10.x-003545?logo=mariadb" alt="MariaDB" />
-  <img src="https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?logo=tailwindcss" alt="TailwindCSS" />
-  <img src="https://img.shields.io/badge/PM2-5.x-2B037A?logo=pm2" alt="PM2" />
-  <img src="https://img.shields.io/badge/Socket.IO-4.x-010101?logo=socket.io" alt="Socket.IO" />
-  <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/acai1998/ce72e9e3551850f329e4ee3b20bc80ea/raw/coverage.json" alt="Test Coverage" />
+  <!-- Infra & Testing -->
+  <img src="https://img.shields.io/badge/Vitest-4.1-729B1B?logo=vitest" alt="Vitest" />
+  <img src="https://img.shields.io/badge/Pytest-8.x-0A9EDC?logo=pytest" alt="Pytest" />
+  <img src="https://img.shields.io/badge/Jenkins-Dockerized-2D53EB?logo=jenkins" alt="Jenkins" />
+  <img src="https://img.shields.io/badge/Node.js-20-339933?logo=node.js" alt="Node.js" />
+  <img src="https://img.shields.io/badge/GitHub%20Actions-ubuntu--latest-2088FF?logo=github-actions" alt="GitHub Actions" />
 </p>
 
 一个现代化的全栈自动化测试管理平台，用于管理测试用例、调度 Jenkins 执行任务、监控执行结果。平台专注于测试管理和调度，实际测试执行由 Jenkins 等外部系统完成。
@@ -28,6 +36,8 @@
 - 📧 **邮件通知** - 测试执行结果邮件推送
 - 🔍 **审计日志** - 任务全生命周期 10 种操作行为追踪
 - 🔄 **实时推送** - 基于 Socket.IO 的 WebSocket 实时状态更新
+- ⚡ **性能压测** - 集成 k6，每日定时 API 烟雾测试，自动归档性能报告
+- 🚀 **CI/CD** - GitHub Actions 自动化类型检查、测试、覆盖率上报与生产部署
 - 🌙 **深色模式** - 支持浅色/深色主题切换
 
 ## 🛠️ 技术栈
@@ -55,25 +65,37 @@
 | MariaDB + mysql2 | 企业级关系数据库 |
 | TypeORM | ORM 与实体管理 |
 | Socket.IO | WebSocket 实时通信 |
-| node-cron | 定时任务调度 |
+| croner | 定时任务调度 |
 | simple-git | Git 仓库集成 |
 | nodemailer | 邮件发送服务 |
 | express-rate-limit | API 限流 |
 | jsonwebtoken + bcrypt | 认证与加密 |
 
-### 部署
+### CI / CD 与测试
 | 技术 | 说明 |
 |------|------|
-| PM2 | Node.js 进程管理（生产环境） |
-| Docker + Nginx | 容器化部署（可选） |
-| tsconfig-paths | TypeScript 路径别名解析 |
+| GitHub Actions | CI 流水线（Lint + 类型检查 + 测试 + 覆盖率） |
+| Vitest | 单元 / 集成测试框架 |
+| k6 | API 性能压测（每日定时烟雾测试） |
+| Jenkins | 测试用例调度执行（Docker 容器化） |
+| Docker | 多阶段构建生产镜像 |
+| PM2 | 生产进程管理（零停机重载） |
+
+### CI/CD 流水线
+
+| 流水线 | 触发条件 | 说明 |
+|--------|---------|------|
+| **CI Pipeline** | push / PR to main | TypeScript 前后端类型检查 → Vitest 测试 → 覆盖率上报 Gist |
+| **k6 Smoke** | 每日 09:00 (UTC+8) + 手动 | API 性能烟雾测试，结果归档为 Artifact |
+| **Deploy** | 仅手动触发 | SSH 部署到生产服务器（零停机 PM2 reload） |
+| **Sync Test Cases** | push to main (Python 文件) + 每 6h | 解析 Python 测试脚本并同步用例到数据库 |
 
 ## 🚀 快速开始
 
 ### 环境要求
 
-- Node.js >= 18
-- npm >= 9
+- Node.js >= 20
+- npm >= 10
 
 ### 快速部署（推荐）
 

@@ -62,7 +62,7 @@ export async function query<T>(sql: string, params?: unknown[]): Promise<T> {
       paramsCount: params?.length || 0,
     }, LOG_CONTEXTS.DATABASE);
 
-    const [rows] = await pool.execute(sql, params);
+    const [rows] = await pool.execute(sql, params as any[]);
     const duration = timer();
     const rowCount = Array.isArray(rows) ? rows.length : 1;
 

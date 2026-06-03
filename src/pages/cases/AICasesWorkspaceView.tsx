@@ -1,13 +1,12 @@
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { Activity, Bot, Bug, CheckCircle2, GitBranch, Link2, ListTree, Loader2 } from 'lucide-react';
-import { AiCaseSidebar } from './components/AiCaseSidebar';
-import { AiWorkspaceHeader } from './components/AiWorkspaceHeader';
-import { AiWorkspaceSummaryBar } from './components/AiWorkspaceSummaryBar';
-import { AiWorkspaceTabs } from './components/AiWorkspaceTabs';
+import { WorkbenchSidebar } from '../ai-workbench/components/WorkbenchSidebar';
+import { WorkbenchHeader } from '../ai-workbench/components/WorkbenchHeader';
+import { WorkbenchSummaryBar } from '../ai-workbench/components/WorkbenchSummaryBar';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { AiCaseAttachmentPreview, AiCaseMindData, AiCaseNode, AiCaseNodeStatus, AiCaseProgress } from '@/types/aiCases';
-import { WORKSPACE_TAB_ITEMS, WorkspacePanelCard, type GeneratedCaseListItem, type RemoteSyncMeta, type WorkspaceTab } from './AICasesUtils';
+import { WorkspacePanelCard, type GeneratedCaseListItem, type RemoteSyncMeta, type WorkspaceTab } from './AICasesUtils';
 
 interface WorkspaceSummaryViewModel {
   materialCount: number;
@@ -25,6 +24,8 @@ interface ModuleCoverageItem {
   completionRate: number;
 }
 
+export type AiWorkspaceRoutePage = 'overview' | 'materials' | 'results' | 'coverage' | 'execution';
+
 interface AICasesWorkspaceViewProps {
   saveStateText: string;
   remoteStatusText: string;
@@ -32,7 +33,7 @@ interface AICasesWorkspaceViewProps {
   workspaceSummary: WorkspaceSummaryViewModel;
   isRemoteLinked: boolean;
   activeTab: WorkspaceTab;
-  setActiveTab: Dispatch<SetStateAction<WorkspaceTab>>;
+  setActiveTab: (tab: WorkspaceTab) => void;
   requirementText: string;
   attachments: AiCaseAttachmentPreview[];
   isGenerating: boolean;
@@ -75,11 +76,11 @@ interface AICasesWorkspaceViewProps {
 export function AICasesWorkspaceView({
   saveStateText,
   remoteStatusText,
-  onOpenHistory,
+  onOpenHistory: _onOpenHistory,
   workspaceSummary,
   isRemoteLinked,
   activeTab,
-  setActiveTab,
+  setActiveTab: _setActiveTab,
   requirementText,
   attachments,
   isGenerating,
@@ -122,15 +123,14 @@ export function AICasesWorkspaceView({
     <div className="h-full flex flex-col bg-white dark:bg-slate-950 overflow-hidden">
 
       {/* 顶部标题栏（全屏时隐藏） */}
-      <AiWorkspaceHeader
+      <WorkbenchHeader
           title="AI 用例工作台"
           saveStateText={saveStateText}
           remoteStatusText={remoteStatusText}
           onOpenRequirement={() => setIsRequirementDialogOpen(true)}
-          onOpenHistory={() => onOpenHistory()}
         />
       
-          <AiWorkspaceSummaryBar
+          <WorkbenchSummaryBar
             items={[
               { label: '输入材料', value: `${workspaceSummary.materialCount}`, hint: '需求、附件和远端上下文' },
               { label: '生成用例', value: `${workspaceSummary.caseCount}`, hint: '当前工作台中的测试点数量' },
@@ -140,14 +140,51 @@ export function AICasesWorkspaceView({
             ]}
           />
 
-          <AiWorkspaceTabs
-            activeTab={activeTab}
-            items={WORKSPACE_TAB_ITEMS}
-            onChange={setActiveTab}
-          />
-      
-
       {/* 主体内容 */}
+      {activeTab === 'overview' ? (
+        <section className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
+          <div className="grid gap-4 grid-cols-[1.1fr_1fr]">
+            <WorkspacePanelCard title="工作台总览" description="按输入、结果、风险和执行四个路由页面汇总当前工作台状态。">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-950 px-4 py-3">
+                  <div className="text-xs text-slate-500 dark:text-slate-400">当前工作台</div>
+                  <div className="mt-1 font-medium text-slate-900 dark:text-white">{workspaceName}</div>
+                </div>
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-950 px-4 py-3">
+                  <div className="text-xs text-slate-500 dark:text-slate-400">需求状态</div>
+                  <div className="mt-1 font-medium text-slate-900 dark:text-white">{requirementText.trim() ? '已准备' : '待补充'}</div>
+                </div>
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-950 px-4 py-3">
+                  <div className="text-xs text-slate-500 dark:text-slate-400">生成结果</div>
+                  <div className="mt-1 font-medium text-slate-900 dark:text-white">{generatedCases.length} 条测试点</div>
+                </div>
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-950 px-4 py-3">
+                  <div className="text-xs text-slate-500 dark:text-slate-400">风险与覆盖</div>
+                  <div className="mt-1 font-medium text-slate-900 dark:text-white">{highRiskCases.length} 个高风险 · {progress.completionRate}%</div>
+                </div>
+              </div>
+            </WorkspacePanelCard>
+
+            <WorkspacePanelCard title="当前同步与执行" description="总览页只展示聚合状态，细分模块由左侧路由菜单进入。">
+              <div className="grid gap-3 text-sm">
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-950 px-4 py-3">
+                  <div className="text-xs text-slate-500 dark:text-slate-400">远端状态</div>
+                  <div className="mt-1 font-medium text-slate-900 dark:text-white">{remoteStatusText}</div>
+                </div>
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-950 px-4 py-3">
+                  <div className="text-xs text-slate-500 dark:text-slate-400">本地保存</div>
+                  <div className="mt-1 font-medium text-slate-900 dark:text-white">{saveStateText}</div>
+                </div>
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-950 px-4 py-3">
+                  <div className="text-xs text-slate-500 dark:text-slate-400">最近执行状态</div>
+                  <div className="mt-1 font-medium text-slate-900 dark:text-white">{workspaceSummary.executionState}</div>
+                </div>
+              </div>
+            </WorkspacePanelCard>
+          </div>
+        </section>
+      ) : null}
+
       {activeTab === 'materials' ? (
         <section className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
           <div className="grid gap-4 grid-cols-[1.6fr_1fr]">
@@ -291,7 +328,7 @@ export function AICasesWorkspaceView({
       {activeTab === 'coverage' ? (
         <section className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
           <div className="grid gap-4">
-            <AiWorkspaceSummaryBar
+            <WorkbenchSummaryBar
               items={[
                 { label: '高风险项', value: `${highRiskCases.length}`, hint: '优先级 P0 / 失败项优先展示' },
                 { label: '待补充项', value: `${coverageGapCases.length}`, hint: '待执行、阻塞和失败项合并展示' },
@@ -491,7 +528,7 @@ export function AICasesWorkspaceView({
             </WorkspacePanelCard>
 
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-              <AiCaseSidebar
+              <WorkbenchSidebar
                 isGenerating={isGenerating}
                 generationProgress={generationProgress}
                 generationStageText={generationStageText}

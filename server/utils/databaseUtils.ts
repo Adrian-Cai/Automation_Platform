@@ -73,7 +73,7 @@ export async function batchInsert<T extends Record<string, unknown>>(
         VALUES ${placeholders}
       `;
 
-      const [result] = await connection.execute(sql, values);
+      const [result] = await connection.execute(sql, values as any[]);
 
       if (isMySQLMetadata(result)) {
         totalAffected += result.affectedRows;
@@ -168,7 +168,7 @@ export async function batchUpdate<T extends Record<string, unknown>>(
         WHERE ${whereClause}
       `;
 
-      const [result] = await connection.execute(sql, values);
+      const [result] = await connection.execute(sql, values as any[]);
 
       if (isMySQLMetadata(result)) {
         totalAffected += result.affectedRows;

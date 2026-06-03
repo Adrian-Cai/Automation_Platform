@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react';
-import { BrainCircuit, FileText, PlayCircle, ShieldAlert } from 'lucide-react';
 import { expandImportedCaseNodesFromNote, normalizeMindData } from '@/lib/aiCaseMindMap';
 import { createAiCaseNodeId, type AiCaseMindData, type AiCaseNode, type AiCaseNodeMetadata, type AiCaseNodeStatus, type AiCaseSyncMode, type AiCaseWorkspaceDocument, type AiCaseWorkspaceStatus } from '@/types/aiCases';
 import type { AiCaseGenerationResult, AiCaseWorkspaceDetail } from '@/api';
-import type { AiWorkspaceTabItem } from './components/AiWorkspaceTabs';
 
 export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
@@ -28,6 +26,8 @@ export interface CleanupStaleAttachmentOptions {
   showCountToast?: boolean;
 }
 
+export type WorkspaceTab = 'overview' | 'materials' | 'results' | 'coverage' | 'execution';
+
 export type StreamGenerateResultPayload =
   | AiCaseGenerationResult
   | { generated: AiCaseGenerationResult; workspace: AiCaseWorkspaceDetail };
@@ -35,7 +35,6 @@ export type StreamGenerateResultPayload =
 export const NODE_TAG_VISIBILITY_STORAGE_KEY = 'ai-case-node-tags-visible';
 export const WAIT_COPY_MAGIC = 'MIND-ELIXIR-WAIT-COPY';
 
-export type WorkspaceTab = 'materials' | 'results' | 'coverage' | 'execution';
 type RiskLevel = 'high' | 'medium' | 'low';
 
 export interface GeneratedCaseListItem {
@@ -47,33 +46,6 @@ export interface GeneratedCaseListItem {
   riskLevel: RiskLevel;
   sourceLabel: string;
 }
-
-export const WORKSPACE_TAB_ITEMS: AiWorkspaceTabItem<WorkspaceTab>[] = [
-  {
-    id: 'materials',
-    label: '输入材料',
-    description: '准备 PRD、附件和外部来源',
-    icon: <FileText className="h-4 w-4" />,
-  },
-  {
-    id: 'results',
-    label: '生成结果',
-    description: '查看结构化结果与详情',
-    icon: <BrainCircuit className="h-4 w-4" />,
-  },
-  {
-    id: 'coverage',
-    label: '覆盖与风险',
-    description: '评估高风险点与覆盖缺口',
-    icon: <ShieldAlert className="h-4 w-4" />,
-  },
-  {
-    id: 'execution',
-    label: '执行与回流',
-    description: '发布、执行与质量沉淀',
-    icon: <PlayCircle className="h-4 w-4" />,
-  },
-];
 
 function inferRiskLevel(priority: string | undefined, status: AiCaseNodeStatus): RiskLevel {
   if (status === 'failed' || priority === 'P0') {

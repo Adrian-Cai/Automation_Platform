@@ -216,7 +216,7 @@ if (!requirementText.trim()) {
       finishGenerateProgress(generated.source === 'llm' ? 'AI 生成完成' : '模板生成完成');
 
       // 判断用户是否已离开 AI 用例页，若已离开则弹跨页面 toast
-      const isOnAiPage = window.location.pathname === '/cases/ai';
+      const isOnAiPage = window.location.pathname === '/ai-workbench/case-generation';
       if (isOnAiPage) {
         toast.success(`AI 用例生成完成（${generated.source === 'llm' ? '大模型' : '回退模板'}）`);
       } else {
@@ -224,7 +224,7 @@ if (!requirementText.trim()) {
           duration: 8000,
           action: {
             label: '返回查看',
-            onClick: () => setLocation('/cases/ai'),
+            onClick: () => setLocation('/ai-workbench/case-generation'),
           },
         });
       }
@@ -256,7 +256,7 @@ if (!requirementText.trim()) {
         errMsg.includes('HTTP 401') ||
         errMsg.includes('未认证');
 
-      const isOnAiPageOnError = window.location.pathname === '/cases/ai';
+      const isOnAiPageOnError = window.location.pathname === '/ai-workbench/case-generation';
       if (isAuthError) {
         toast.warning('登录状态已过期，AI 生成已切换至本地模板。请重新登录后再试', {
           duration: 6000,
@@ -270,7 +270,7 @@ if (!requirementText.trim()) {
           duration: 8000,
           action: {
             label: '返回查看',
-            onClick: () => setLocation('/cases/ai'),
+            onClick: () => setLocation('/ai-workbench/case-generation'),
           },
         });
       } else {
