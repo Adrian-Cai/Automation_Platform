@@ -15,6 +15,10 @@ export interface HistoryRecord {
   owner: string;
   duration: string;
   coverage: string;
+  requirement?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  syncMode?: string;
 }
 
 export interface VersionRecord {

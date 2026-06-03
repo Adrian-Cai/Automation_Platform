@@ -16,13 +16,15 @@ export default function DetailDrawer({ record, onClose }: DetailDrawerProps): JS
   const detailRows = [
     { label: '记录编号', value: record.id },
     { label: '生成时间', value: record.time },
+    { label: '创建时间', value: record.createdAt ?? record.time },
     { label: '项目名称', value: record.projectName },
     { label: '需求名称', value: record.requirementName },
     { label: '生成内容', value: record.generatedContent },
     { label: '用例数量', value: `${record.caseCount} 条` },
-    { label: '负责人', value: record.owner },
+    { label: '保存位置', value: record.owner },
     { label: '生成耗时', value: record.duration },
-    { label: '覆盖率', value: record.coverage },
+    { label: '完成率', value: record.coverage },
+    { label: '同步状态', value: record.syncMode ?? '仅本地' },
   ];
 
   return (
@@ -44,6 +46,10 @@ export default function DetailDrawer({ record, onClose }: DetailDrawerProps): JS
               <div className="mt-1 text-sm font-semibold text-slate-900">{row.value}</div>
             </div>
           ))}
+          <div className="rounded-xl border border-[#E5E7EB] p-3">
+            <div className="text-xs font-semibold text-slate-400">需求原文</div>
+            <div className="mt-1 max-h-32 overflow-y-auto whitespace-pre-wrap text-sm font-medium text-slate-700">{record.requirement ?? '暂无需求原文'}</div>
+          </div>
           <div className="rounded-xl border border-[#E5E7EB] p-3">
             <div className="text-xs font-semibold text-slate-400">状态</div>
             <div className="mt-2"><StatusTag status={record.status} /></div>
