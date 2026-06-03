@@ -1,4 +1,4 @@
-import { Bell, BriefcaseBusiness, ChevronDown, CircleHelp, Search } from 'lucide-react';
+import { Bell, Briefcase, ChevronDown, HelpCircle, Search } from 'lucide-react';
 
 export default function Header(): JSX.Element {
   return (
@@ -12,7 +12,7 @@ export default function Header(): JSX.Element {
 
       <button type="button" className="ml-8 flex h-10 w-[210px] items-center justify-between rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm hover:border-blue-200 hover:bg-blue-50/40">
         <span className="flex items-center gap-2">
-          <BriefcaseBusiness className="h-4 w-4 text-blue-600" />
+          <Briefcase className="h-4 w-4 text-blue-600" />
           示例项目
         </span>
         <ChevronDown className="h-4 w-4 text-slate-400" />
@@ -36,7 +36,7 @@ export default function Header(): JSX.Element {
           <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-semibold text-white">8</span>
         </button>
         <button type="button" className="rounded-full p-2 text-slate-700 hover:bg-slate-100">
-          <CircleHelp className="h-5 w-5" />
+          <HelpCircle className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-slate-200 to-slate-400 text-sm font-bold text-slate-800 ring-2 ring-white">
