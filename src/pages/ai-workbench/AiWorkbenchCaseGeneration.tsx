@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   CheckCircle2,
   Copy,
@@ -26,12 +26,6 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  expandImportedCaseNodesFromNote,
-  generateMindDataFromRequirement,
-  normalizeMindData,
-} from '@/lib/aiCaseMindMap';
-import { getWorkspaceDocument, saveWorkspaceDocument } from '@/lib/aiCaseStorage';
 import { cn } from '@/lib/utils';
 import {
   CASE_MODULES,
@@ -385,9 +379,6 @@ export default function AiWorkbenchCaseGeneration(): JSX.Element {
                 <span className="mr-1 h-2 w-2 rounded-full bg-emerald-500" /> 已生成 {generatedCount} 条用例
               </Badge>
             </div>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              {workspaceName} · {workspaceSourceLabel}
-            </p>
           </div>
         </header>
 
