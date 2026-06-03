@@ -22,7 +22,7 @@ import UICases from "./pages/cases/UICases";
 import PerformanceCases from "./pages/cases/PerformanceCases";
 import AICases from "./pages/cases/AICases";
 import AICaseCreate from "./pages/cases/AICaseCreate";
-import AICaseHistory from "./pages/cases/AICaseHistory";
+import AiWorkbenchHistoryExport from "./pages/ai-workbench/AiWorkbenchHistoryExport";
 import QualityCoverage from "./pages/ai-workbench/QualityCoverage";
 import Reports from "./pages/reports/Reports";
 import ReportDetail from "./pages/reports/ReportDetail";
@@ -196,9 +196,7 @@ function Router() {
         </Route>
         <Route path={AI_HISTORY_EXPORT_PATH}>
           <ProtectedRoute>
-            <Layout>
-              <AICaseHistory />
-            </Layout>
+            <AiWorkbenchHistoryExport />
           </ProtectedRoute>
         </Route>
         <Route path={AI_QUALITY_COVERAGE_PATH}>
