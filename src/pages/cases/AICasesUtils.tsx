@@ -90,8 +90,6 @@ export function getFirstGeneratedCaseId(mapData: AiCaseMindData): string | null 
   return collectGeneratedCases(mapData)[0]?.id ?? null;
 }
 
-export type WorkspaceTab = 'overview' | 'materials' | 'results' | 'coverage' | 'execution';
-
 export function WorkspacePanelCard({
   title,
   description,
