@@ -1,14 +1,14 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch, Redirect } from "wouter";
+import { Route, Switch, Redirect, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Layout } from "./components/Layout";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { NavCollapseProvider } from "./contexts/NavCollapseContext";
-import { AiGenerationProvider } from "./contexts/AiGenerationContext";
+import { AiGenerationProvider, useAiGeneration } from "./contexts/AiGenerationContext";
 import Home from "./pages/Home";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -32,7 +32,7 @@ import ReportDetail from "./pages/reports/ReportDetail";
 import SystemSettings from "./pages/settings/SystemSettings";
 import { User } from "lucide-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +75,45 @@ function ProtectedLayout({ children }: { children: ReactNode }) {
       <Layout>{children}</Layout>
     </ProtectedRoute>
   );
+}
+
+const AI_CASE_GENERATION_PATH = '/ai-workbench/case-generation';
+
+function isAiCaseGenerationRoute(location: string): boolean {
+  return location === AI_CASE_GENERATION_PATH || location.startsWith(`${AI_CASE_GENERATION_PATH}?`);
+}
+
+/**
+ * Keeps the AI case generator mounted outside of Switch routing so in-flight
+ * streaming requests are not aborted when users navigate to another page.
+ */
+function KeepAliveAiCaseGeneration() {
+  const [location] = useLocation();
+  const { isGenerating } = useAiGeneration();
+  const isCurrentRoute = isAiCaseGenerationRoute(location);
+  const [hasVisited, setHasVisited] = useState(() => isCurrentRoute);
+
+  useEffect(() => {
+    if (isCurrentRoute && !hasVisited) {
+      setHasVisited(true);
+    }
+  }, [isCurrentRoute, hasVisited]);
+
+  if (!hasVisited && !isCurrentRoute && !isGenerating) {
+    return null;
+  }
+
+  const page = (
+    <ProtectedLayout>
+      <AiWorkbenchCaseGeneration />
+    </ProtectedLayout>
+  );
+
+  if (isCurrentRoute) {
+    return <div className="fixed inset-0 z-10">{page}</div>;
+  }
+
+  return <div style={{ display: 'none' }}>{page}</div>;
 }
 
 function Router() {
@@ -147,9 +186,7 @@ function Router() {
           </ProtectedLayout>
         </Route>
         <Route path="/ai-workbench/case-generation">
-          <ProtectedLayout>
-            <AiWorkbenchCaseGeneration />
-          </ProtectedLayout>
+          {null}
         </Route>
         <Route path="/ai-workbench/quality-coverage">
           <ProtectedLayout>
@@ -216,6 +253,7 @@ function Router() {
         <Route component={NotFound} />
       </Switch>
 
+      <KeepAliveAiCaseGeneration />
     </>
   );
 }
