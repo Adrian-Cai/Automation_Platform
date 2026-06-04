@@ -20,10 +20,10 @@ import Tasks from "./pages/tasks/Tasks";
 import APICases from "./pages/cases/APICases";
 import UICases from "./pages/cases/UICases";
 import PerformanceCases from "./pages/cases/PerformanceCases";
+import AICases from "./pages/cases/AICases";
+import AICaseCreate from "./pages/cases/AICaseCreate";
 import AiWorkbenchOverview from "./pages/ai-workbench/AiWorkbenchOverview";
-import AiWorkbenchRequirementInput from "./pages/ai-workbench/AiWorkbenchRequirementInput";
 import AiWorkbenchRequirementAnalysis from "./pages/ai-workbench/AiWorkbenchRequirementAnalysis";
-import AiWorkbenchCaseGeneration from "./pages/ai-workbench/AiWorkbenchCaseGeneration";
 import AiWorkbenchQualityCoverage from "./pages/ai-workbench/AiWorkbenchQualityCoverage";
 import AiWorkbenchHistoryExport from "./pages/ai-workbench/AiWorkbenchHistoryExport";
 import AiWorkbenchSettings from "./pages/ai-workbench/AiWorkbenchSettings";
@@ -124,7 +124,7 @@ function KeepAliveAiWorkbenchCaseGeneration() {
     <div className={isCurrentRoute ? "fixed inset-0 z-10" : "hidden"}>
       <WouterRouter hook={useKeptAliveLocation}>
         <ProtectedLayout>
-          <AiWorkbenchCaseGeneration />
+          <AICases />
         </ProtectedLayout>
       </WouterRouter>
     </div>
@@ -190,7 +190,7 @@ function Router() {
         </Route>
         <Route path="/ai-workbench/requirement-input">
           <ProtectedLayout>
-            <AiWorkbenchRequirementInput />
+            <AICaseCreate />
           </ProtectedLayout>
         </Route>
         <Route path="/ai-workbench/requirement-analysis">
