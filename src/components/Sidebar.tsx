@@ -19,6 +19,11 @@ import {
   Gauge,
   BrainCircuit,
   History,
+  ClipboardList,
+  FileInput,
+  FileText,
+  ShieldCheck,
+  BookOpen,
   PanelLeftClose,
   PanelLeftOpen
 } from "lucide-react";
@@ -54,9 +59,13 @@ const navItems: NavItem[] = [
     icon: <BrainCircuit className="h-5 w-5" />,
     label: "AI 工作台",
     children: [
-      { label: "工作台首页", href: "/ai-workbench/requirement-input", icon: <BrainCircuit className="h-4 w-4" /> },
-      { label: "全部记录", href: "/ai-workbench/history-export", icon: <History className="h-4 w-4" /> },
-      { label: "质量检查与覆盖率", href: "/ai-workbench/quality-coverage", icon: <BarChart3 className="h-4 w-4" /> },
+      { label: "工作台首页", href: "/ai-workbench/overview", icon: <BrainCircuit className="h-4 w-4" /> },
+      { label: "全部记录", href: "/ai-workbench/records", icon: <History className="h-4 w-4" /> },
+      { label: "需求输入与解析", href: "/ai-workbench/requirement-input", icon: <FileInput className="h-4 w-4" /> },
+      { label: "需求分析与测试点", href: "/ai-workbench/requirement-analysis", icon: <ClipboardList className="h-4 w-4" /> },
+      { label: "用例生成与编辑", href: "/ai-workbench/case-generation", icon: <FileText className="h-4 w-4" /> },
+      { label: "质量检查与覆盖率", href: "/ai-workbench/quality-coverage", icon: <ShieldCheck className="h-4 w-4" /> },
+      { label: "历史记录与导出", href: "/ai-workbench/history-export", icon: <BookOpen className="h-4 w-4" /> },
     ],
   },
   { icon: <Boxes className="h-5 w-5" />, label: "任务管理", href: "/tasks" },
@@ -67,8 +76,15 @@ const navItems: NavItem[] = [
 // ----------------------------------------------------------------
 // Utility: check if a nav item is active
 // ----------------------------------------------------------------
+function normalizePath(path: string): string {
+  return path.split(/[?#]/)[0] || "/";
+}
+
 function isPathActive(location: string, href: string): boolean {
-  return location === href || location.startsWith(`${href}/`);
+  const currentPath = normalizePath(location);
+  const targetPath = normalizePath(href);
+
+  return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`);
 }
 
 function useNavActive(item: NavItem, location: string) {
@@ -448,7 +464,7 @@ function SidebarContent({ location, onNavigate, mode, onToggle }: SidebarContent
                 item={item}
                 location={location}
                 onNavigate={onNavigate}
-                defaultExpanded={item.children?.some((c) => location === c.href)}
+                defaultExpanded={item.children?.some((child) => isPathActive(location, child.href))}
                 badge={badge}
               />
             ) : (

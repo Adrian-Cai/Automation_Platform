@@ -26,6 +26,7 @@ import AiWorkbenchRequirementAnalysis from "./pages/ai-workbench/AiWorkbenchRequ
 import AiWorkbenchCaseGeneration from "./pages/ai-workbench/AiWorkbenchCaseGeneration";
 import AiWorkbenchQualityCoverage from "./pages/ai-workbench/AiWorkbenchQualityCoverage";
 import AiWorkbenchHistoryExport from "./pages/ai-workbench/AiWorkbenchHistoryExport";
+import AICaseHistory from "./pages/cases/AICaseHistory";
 import AiWorkbenchSettings from "./pages/ai-workbench/AiWorkbenchSettings";
 import Reports from "./pages/reports/Reports";
 import ReportDetail from "./pages/reports/ReportDetail";
@@ -175,12 +176,17 @@ function Router() {
             </Layout>
           </ProtectedRoute>
         </Route>
+        <Route path="/ai-workbench">
+          <Redirect to="/ai-workbench/overview" />
+        </Route>
         {/* Rendered by KeepAliveAiWorkbenchCaseGeneration outside Switch to avoid aborting active streams. */}
         <Route path="/ai-workbench/case-generation">
           {null}
         </Route>
         <Route path="/ai-workbench/records">
-          <Redirect to="/ai-workbench/history-export" />
+          <ProtectedLayout>
+            <AICaseHistory />
+          </ProtectedLayout>
         </Route>
         <Route path="/ai-workbench/overview">
           <ProtectedLayout>
