@@ -26,7 +26,7 @@ import AiWorkbenchRequirementAnalysis from "./pages/ai-workbench/AiWorkbenchRequ
 import AiWorkbenchCaseGeneration from "./pages/ai-workbench/AiWorkbenchCaseGeneration";
 import AiWorkbenchQualityCoverage from "./pages/ai-workbench/AiWorkbenchQualityCoverage";
 import AiWorkbenchHistoryExport from "./pages/ai-workbench/AiWorkbenchHistoryExport";
-import AiWorkbenchSettings from "./pages/ai-workbench/AiWorkbenchSettings";
+import AiWorkbenchRecords from "./pages/ai-workbench/AiWorkbenchRecords";
 import Reports from "./pages/reports/Reports";
 import ReportDetail from "./pages/reports/ReportDetail";
 import SystemSettings from "./pages/settings/SystemSettings";
@@ -37,9 +37,10 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 const AI_WORKBENCH_CASE_GENERATION_ROUTE = "/ai-workbench/case-generation";
 
 function isAiWorkbenchCaseGenerationRoute(location: string): boolean {
+  const normalized = location.endsWith('/') ? location.slice(0, -1) : location;
   return (
-    location === AI_WORKBENCH_CASE_GENERATION_ROUTE ||
-    location.startsWith(`${AI_WORKBENCH_CASE_GENERATION_ROUTE}?`)
+    normalized === AI_WORKBENCH_CASE_GENERATION_ROUTE ||
+    normalized.startsWith(`${AI_WORKBENCH_CASE_GENERATION_ROUTE}?`)
   );
 }
 
@@ -93,6 +94,7 @@ function ProtectedLayout({ children }: { children: ReactNode }) {
  * - Hidden generation keeps the last AI workbench URL in a nested router so AICases does not
  *   re-read unrelated page query strings and switch docRef to the default workspace mid-stream.
  * - Direct visits still mount immediately and render as the active page.
+ * - Component unmounts when generation completes and user is not on the route (prevents memory leak).
  */
 function KeepAliveAiWorkbenchCaseGeneration() {
   const [location, setLocation] = useLocation();
@@ -180,7 +182,9 @@ function Router() {
           {null}
         </Route>
         <Route path="/ai-workbench/records">
-          <Redirect to="/ai-workbench/history-export" />
+          <ProtectedLayout>
+            <AiWorkbenchRecords />
+          </ProtectedLayout>
         </Route>
         <Route path="/ai-workbench/overview">
           <ProtectedLayout>
@@ -207,18 +211,7 @@ function Router() {
             <AiWorkbenchHistoryExport />
           </ProtectedLayout>
         </Route>
-        <Route path="/ai-workbench/settings">
-          <ProtectedLayout>
-            <AiWorkbenchSettings />
-          </ProtectedLayout>
-        </Route>
-        <Route path="/cases/ai-create">
-          <Redirect to="/ai-workbench/overview" />
-        </Route>
-        <Route path="/cases/ai-history">
-          <Redirect to="/ai-workbench/history-export" />
-        </Route>
-        <Route path="/cases/ai">
+        <Route path="/ai-workbench">
           <Redirect to="/ai-workbench/overview" />
         </Route>
 

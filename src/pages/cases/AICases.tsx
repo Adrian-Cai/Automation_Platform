@@ -330,8 +330,7 @@ function AiCasesInner() {
           const searchParams = new URLSearchParams(window.location.search);
           if (searchParams.get('autoGenerate') === 'true') {
             // 移除 URL 参数避免刷新重复触发
-            const newUrl = window.location.pathname;
-            window.history.replaceState({}, '', newUrl);
+            setLocation(location, { replace: true });
             // 立即进入"生成中"状态，避免短暂闪出默认模板
             setIsGenerating(true);
             setGenerationProgress(2);
@@ -344,8 +343,8 @@ function AiCasesInner() {
           }
         } else {
           // 文档在 localStorage 中不存在（新建场景）
-          // 从 URL 参数读取 initName / initReq（由 AICaseCreate 传过来），
-          // 这里负责创建文档并写入 localStorage（不再由 AICaseCreate 提前写入）
+          // 从 URL 参数读取 initName / initReq，
+          // 这里负责创建文档并写入 localStorage。
           const searchParamsForInit = new URLSearchParams(window.location.search);
           const initName = searchParamsForInit.get('initName')?.trim() || 'AI Testcase Workspace';
           const initReq = searchParamsForInit.get('initReq')?.trim() || '';
@@ -392,7 +391,7 @@ function AiCasesInner() {
           const searchParamsAutoGen = new URLSearchParams(window.location.search);
           if (searchParamsAutoGen.get('autoGenerate') === 'true') {
             // 移除 URL 参数避免刷新重复触发
-            window.history.replaceState({}, '', window.location.pathname);
+            setLocation(location, { replace: true });
             // 立即进入"生成中"状态，避免短暂闪出默认模板
             setIsGenerating(true);
             setGenerationProgress(2);

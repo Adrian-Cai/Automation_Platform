@@ -10,7 +10,6 @@ import type { AiCaseWorkspaceDocument } from '@/types/aiCases';
 import DetailDrawer from './history-export/components/DetailDrawer';
 import ExportCenter from './history-export/components/ExportCenter';
 import HistoryTable from './history-export/components/HistoryTable';
-import Layout from './history-export/components/Layout';
 import RecentExportList from './history-export/components/RecentExportList';
 import StatCard from './history-export/components/StatCard';
 import SyncPanel from './history-export/components/SyncPanel';
@@ -172,8 +171,8 @@ export default function AiWorkbenchHistoryExport(): JSX.Element {
   };
 
   return (
-    <Layout>
-      <div className="mx-auto max-w-[1480px] space-y-6">
+    <>
+      <div className="mx-auto max-w-[1480px] space-y-6 px-6 py-6">
         <div className="flex items-end justify-between">
           <div>
             <p className="text-sm font-semibold text-[#2563EB]">页面 6 / 6 · 历史记录与导出</p>
@@ -227,6 +226,6 @@ export default function AiWorkbenchHistoryExport(): JSX.Element {
       </div>
       <DetailDrawer record={selectedRecord} onClose={() => setSelectedRecord(null)} />
       <VersionDiffModal open={diffOpen} onClose={() => setDiffOpen(false)} />
-    </Layout>
+    </>
   );
 }
