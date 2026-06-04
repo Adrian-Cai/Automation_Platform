@@ -21,7 +21,7 @@ import APICases from "./pages/cases/APICases";
 import UICases from "./pages/cases/UICases";
 import PerformanceCases from "./pages/cases/PerformanceCases";
 import AICases from "./pages/cases/AICases";
-import AICaseCreate from "./pages/cases/AICaseCreate";
+import AiWorkbenchRequirementInput from "./pages/ai-workbench/AiWorkbenchRequirementInput";
 import AiWorkbenchOverview from "./pages/ai-workbench/AiWorkbenchOverview";
 import AiWorkbenchRequirementAnalysis from "./pages/ai-workbench/AiWorkbenchRequirementAnalysis";
 import AiWorkbenchQualityCoverage from "./pages/ai-workbench/AiWorkbenchQualityCoverage";
@@ -193,7 +193,7 @@ function Router() {
         </Route>
         <Route path="/ai-workbench/requirement-input">
           <ProtectedLayout>
-            <AICaseCreate />
+            <AiWorkbenchRequirementInput />
           </ProtectedLayout>
         </Route>
         <Route path="/ai-workbench/requirement-analysis">
