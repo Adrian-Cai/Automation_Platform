@@ -1,30 +1,125 @@
-import { Download, Lightbulb, PieChart, ShieldCheck, Sparkles } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Download,
+  Lightbulb,
+  PieChart as PieChartIcon,
+  ShieldCheck,
+  Sparkles,
+  TrendingDown,
+  TrendingUp,
+  type LucideIcon,
+} from 'lucide-react';
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 
-const qualityChecks = [
+interface KpiCardItem {
+  title: string;
+  value: string;
+  trend: string;
+  trendDirection: 'up' | 'down';
+  icon: LucideIcon;
+  tone: string;
+}
+
+interface QualityIssue {
+  type: string;
+  description: string;
+  relatedCase: string;
+  suggestion: string;
+  action: '处理' | '采纳';
+  severity: '高' | '中' | '低';
+}
+
+interface AiSuggestion {
+  title: string;
+  description: string;
+  action: string;
+}
+
+interface CoverageDatum {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface ModuleCoverage {
+  name: string;
+  total: number;
+  done: number;
+  risk: number;
+}
+
+type QualityResult = '通过' | '需优化' | '需补充';
+
+interface QualityCheck {
+  label: string;
+  value: number;
+  result: QualityResult;
+}
+
+const qualityResultVariant: Record<QualityResult, 'success' | 'warning'> = {
+  '通过': 'success',
+  '需优化': 'warning',
+  '需补充': 'warning',
+};
+
+const qualityChecks: QualityCheck[] = [
   { label: '步骤完整性', value: 92, result: '通过' },
   { label: '断言明确性', value: 84, result: '需优化' },
   { label: '数据可执行性', value: 78, result: '需补充' },
   { label: '重复用例检测', value: 96, result: '通过' },
 ];
-const suggestions = ['为支付超时场景补充订单状态断言。', '将库存不足和库存锁定失败拆分为两个独立用例。', '补充优惠券叠加规则的边界数据。'];
-const coverage = [
-  { name: '功能路径', value: 93 },
-  { name: '异常路径', value: 81 },
-  { name: '边界条件', value: 76 },
-  { name: '兼容回归', value: 68 },
-];
-const priorities = [
-  { label: 'P0', count: 28, className: 'bg-rose-500' },
-  { label: 'P1', count: 46, className: 'bg-blue-500' },
-  { label: 'P2', count: 31, className: 'bg-slate-400' },
+
+const suggestions: string[] = [
+  '为支付超时场景补充订单状态断言。',
+  '将库存不足和库存锁定失败拆分为两个独立用例。',
+  '补充优惠券叠加规则的边界数据。',
 ];
 
-export default function QualityCoverage() {
+const coverageData: CoverageDatum[] = [
+  { name: '功能路径', value: 93, color: '#22c55e' },
+  { name: '异常路径', value: 81, color: '#f97316' },
+  { name: '边界条件', value: 76, color: '#3b82f6' },
+  { name: '兼容回归', value: 68, color: '#8b5cf6' },
+];
+
+const kpiCards: KpiCardItem[] = [
+  { title: '用例通过率', value: '94.2%', trend: '+2.1%', trendDirection: 'up', icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-600' },
+  { title: '缺陷密度', value: '0.8%', trend: '-0.3%', trendDirection: 'down', icon: AlertTriangle, tone: 'bg-amber-50 text-amber-600' },
+  { title: '覆盖率', value: '87.5%', trend: '+5.2%', trendDirection: 'up', icon: PieChartIcon, tone: 'bg-blue-50 text-blue-600' },
+  { title: '风险项', value: '12', trend: '-3', trendDirection: 'down', icon: ShieldCheck, tone: 'bg-violet-50 text-violet-600' },
+];
+
+const qualityIssues: QualityIssue[] = [
+  { type: '断言缺失', description: '支付成功后未验证订单状态变更', relatedCase: 'TC-PAY-001', suggestion: '补充订单状态断言', action: '采纳', severity: '高' },
+  { type: '步骤冗余', description: '登录步骤重复执行三次', relatedCase: 'TC-LOGIN-012', suggestion: '合并重复步骤', action: '处理', severity: '中' },
+  { type: '数据不完整', description: '边界值未覆盖最大最小值', relatedCase: 'TC-BOUND-005', suggestion: '补充边界数据', action: '采纳', severity: '低' },
+];
+
+const aiSuggestions: AiSuggestion[] = [
+  { title: '优化支付超时场景', description: '建议增加订单状态轮询和超时重试机制的测试用例', action: '采纳建议' },
+  { title: '补充权限测试', description: '建议增加管理员、普通用户、访客三种角色的权限边界测试', action: '采纳建议' },
+];
+
+const moduleCoverage: ModuleCoverage[] = [
+  { name: '用户管理', total: 45, done: 42, risk: 2 },
+  { name: '支付流程', total: 38, done: 35, risk: 5 },
+  { name: '订单处理', total: 52, done: 48, risk: 3 },
+  { name: '数据报表', total: 28, done: 25, risk: 1 },
+];
+
+function getSeverityVariant(severity: string): 'destructive' | 'warning' | 'default' {
+  if (severity === '高') return 'destructive';
+  if (severity === '中') return 'warning';
+  return 'default';
+}
+
+export default function QualityCoverage(): JSX.Element {
   return (
     <div className="max-w-full overflow-hidden p-6">
       <div className="space-y-6">
@@ -40,69 +135,194 @@ export default function QualityCoverage() {
           </div>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {kpiCards.map((kpi) => (
+            <Card key={kpi.title}>
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className={`rounded-xl p-3 ${kpi.tone}`}>
+                  <kpi.icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-sm text-slate-500">{kpi.title}</div>
+                  <div className="text-2xl font-bold">{kpi.value}</div>
+                  <div className={`flex items-center gap-1 text-xs ${kpi.trendDirection === 'up' ? 'text-emerald-600' : 'text-red-600'}`}>
+                    {kpi.trendDirection === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                    {kpi.trend}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-[1.35fr_0.85fr]">
           <Card>
             <CardHeader>
               <CardTitle>用例质量检查结果</CardTitle>
-              <CardDescription>基于规则库和大模型交叉评估。</CardDescription>
+              <CardDescription>基于规则库和大模型交叉评估，优先处理高风险问题。</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {qualityChecks.map((check) => (
-                <div key={check.label} className="space-y-2 rounded-xl border p-4">
-                  <div className="flex items-center justify-between text-sm"><span className="font-semibold">{check.label}</span><Badge variant={check.result === '通过' ? 'success' : 'warning'}>{check.result}</Badge></div>
-                  <Progress value={check.value} />
+            <CardContent>
+              <div className="overflow-x-auto rounded-xl border">
+                <div className="min-w-[980px]">
+                  <div className="grid grid-cols-[0.9fr_1.7fr_1.1fr_1.5fr_0.8fr] gap-4 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-500 dark:bg-slate-900/60">
+                    <span>问题类型</span>
+                    <span>问题描述</span>
+                    <span>关联用例</span>
+                    <span>建议修改</span>
+                    <span className="text-right">操作</span>
+                  </div>
+                  {qualityIssues.map((issue) => (
+                    <div key={`${issue.type}-${issue.relatedCase}`} className="grid grid-cols-[0.9fr_1.7fr_1.1fr_1.5fr_0.8fr] gap-4 border-t px-4 py-4 text-sm">
+                      <div className="space-y-2">
+                        <div className="font-semibold text-slate-900 dark:text-slate-100">{issue.type}</div>
+                        <Badge variant={getSeverityVariant(issue.severity)}>{issue.severity}风险</Badge>
+                      </div>
+                      <div className="leading-6 text-slate-600 dark:text-slate-300">{issue.description}</div>
+                      <div className="font-medium text-slate-700 dark:text-slate-200">{issue.relatedCase}</div>
+                      <div className="leading-6 text-slate-600 dark:text-slate-300">{issue.suggestion}</div>
+                      <div className="flex justify-end">
+                        <Button size="sm" variant={issue.action === '采纳' ? 'default' : 'outline'}>{issue.action}</Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>AI 优化建议</CardTitle>
+                <CardDescription>基于质量分析自动生成的改进建议。</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {aiSuggestions.map((suggestion) => (
+                  <div key={suggestion.title} className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 p-4">
+                    <div className="flex items-start gap-3">
+                      <Lightbulb className="mt-0.5 h-5 w-5 text-amber-500" />
+                      <div className="flex-1">
+                        <div className="font-semibold text-slate-900 dark:text-white">{suggestion.title}</div>
+                        <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">{suggestion.description}</div>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex justify-end">
+                      <Button size="sm" variant="outline">{suggestion.action}</Button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>质量检查项</CardTitle>
+                <CardDescription>各项检查指标的完成情况。</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {qualityChecks.map((check) => (
+                  <div key={check.label} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-slate-700 dark:text-slate-300">{check.label}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500">{check.value}%</span>
+                        <Badge variant={qualityResultVariant[check.result]}>{check.result}</Badge>
+                      </div>
+                    </div>
+                    <Progress value={check.value} />
+                  </div>
+                ))}
+              </CardContent>
+              <CardFooter>
+                <div className="text-xs text-slate-500">上次检查时间：2024-05-20 14:30</div>
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+          <Card>
+            <CardHeader>
+              <CardTitle>覆盖率分布</CardTitle>
+              <CardDescription>按测试类型统计覆盖率。</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Tooltip formatter={(value?: string | number | readonly (string | number)[], name?: string | number) => [`${value ?? 0}%`, String(name ?? '')]} />
+                    <Pie data={coverageData} dataKey="value" nameKey="name" innerRadius={70} outerRadius={105} paddingAngle={4}>
+                      {coverageData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {coverageData.map((item) => (
+                  <div key={item.name} className="flex items-center gap-3">
+                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      {item.name} <span className="font-semibold text-slate-900 dark:text-white">{item.value}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Lightbulb className="h-5 w-5 text-amber-500" />AI 优化建议</CardTitle>
-              <CardDescription>建议可一键应用到用例草稿。</CardDescription>
+              <CardTitle>模块覆盖详情</CardTitle>
+              <CardDescription>各模块的测试完成情况和风险分布。</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {suggestions.map((suggestion) => (
-                <div key={suggestion} className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-100">
-                  <Sparkles className="mb-2 h-4 w-4" />{suggestion}
-                </div>
-              ))}
+            <CardContent>
+              <div className="space-y-4">
+                {moduleCoverage.map((mod) => (
+                  <div key={mod.name} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-slate-700 dark:text-slate-300">{mod.name}</span>
+                      <span className="text-slate-500">{mod.done}/{mod.total}</span>
+                    </div>
+                    <div className="relative h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                      <div
+                        className="absolute inset-y-0 left-0 bg-emerald-500"
+                        style={{ width: `${(mod.done / mod.total) * 100}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-slate-500">
+                      <span>完成率 {Math.round((mod.done / mod.total) * 100)}%</span>
+                      {mod.risk > 0 && (
+                        <span className="flex items-center gap-1 text-amber-600">
+                          <AlertTriangle className="h-3 w-3" />
+                          {mod.risk} 个风险项
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><PieChart className="h-5 w-5 text-blue-600" />覆盖率分析</CardTitle>
-              <CardDescription>定位生成结果中的覆盖薄弱点。</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {coverage.map((item) => (
-                <div key={item.name} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm"><span>{item.name}</span><span className="font-semibold">{item.value}%</span></div>
-                  <Progress value={item.value} />
+        <Card>
+          <CardHeader>
+            <CardTitle>改进建议</CardTitle>
+            <CardDescription>基于质量检查结果的待处理事项。</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {suggestions.map((suggestion, index) => (
+                <div key={index} className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+                  <Sparkles className="mt-0.5 h-5 w-5 text-blue-500" />
+                  <span className="text-sm text-slate-700 dark:text-slate-300">{suggestion}</span>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>优先级分布</CardTitle>
-              <CardDescription>确保高风险需求有足够测试密度。</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {priorities.map((priority) => (
-                <div key={priority.label} className="flex items-center gap-4 rounded-xl border p-4">
-                  <div className={`h-3 w-3 rounded-full ${priority.className}`} />
-                  <div className="flex-1"><div className="font-semibold">{priority.label}</div><div className="text-sm text-slate-500">{priority.count} 条用例</div></div>
-                  <Badge variant="outline">{Math.round((priority.count / 105) * 100)}%</Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
