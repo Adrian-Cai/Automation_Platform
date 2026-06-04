@@ -14,6 +14,8 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSearch } from 'wouter/use-location';
+import AICases from '@/pages/cases/AICases';
 import { useAiGeneration } from '@/contexts/AiGenerationContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -116,7 +118,8 @@ function FieldLabel({ children, required = false }: { children: string; required
 function priorityClass(priority: CasePriority): string {
   if (priority === 'P0') return 'border-red-200 bg-red-50 text-red-600 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300';
   if (priority === 'P1') return 'border-orange-200 bg-orange-50 text-orange-600 dark:border-orange-900/60 dark:bg-orange-950/40 dark:text-orange-300';
-  return 'border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300';
+  if (priority === 'P2') return 'border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300';
+  return 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300';
 }
 
 function typeClass(caseType: CaseType): string {
@@ -160,6 +163,12 @@ function toFormState(testCase: GeneratedTestCase): CaseFormState {
   };
 }
 
+function hasWorkspaceParams(search: string): boolean {
+  const query = search.startsWith('?') ? search.slice(1) : search;
+  const params = new URLSearchParams(query);
+  return Boolean(params.get('docId') || params.get('autoGenerate') || params.get('initName') || params.get('initReq'));
+}
+
 function exportCases(cases: GeneratedTestCase[]) {
   const payload = cases.map((item) => ({
     用例编号: item.caseNo,
@@ -185,7 +194,7 @@ function exportCases(cases: GeneratedTestCase[]) {
   URL.revokeObjectURL(url);
 }
 
-export default function AiWorkbenchCaseGeneration(): JSX.Element {
+function StandaloneAiWorkbenchCaseGeneration(): JSX.Element {
   const { notifyStart, notifyDone } = useAiGeneration();
   const [selectedTypes, setSelectedTypes] = useState<CaseType[]>(['功能测试']);
   const [granularity, setGranularity] = useState<Granularity>('标准版');
@@ -702,4 +711,14 @@ export default function AiWorkbenchCaseGeneration(): JSX.Element {
       </Sheet>
     </div>
   );
+}
+
+export default function AiWorkbenchCaseGeneration(): JSX.Element {
+  const search = useSearch();
+
+  if (hasWorkspaceParams(search)) {
+    return <AICases />;
+  }
+
+  return <StandaloneAiWorkbenchCaseGeneration />;
 }

@@ -1,4 +1,6 @@
-export type CasePriority = 'P0' | 'P1' | 'P2';
+import type { AiCaseNodePriority } from '@/types/aiCases';
+
+export type CasePriority = AiCaseNodePriority;
 export type CaseType = '功能测试' | '异常测试' | '边界值' | '并发测试';
 export type CaseModule = '领取中心' | '库存扣减' | '领取资格' | '库存回流' | '异常提示';
 
@@ -20,7 +22,7 @@ export interface GeneratedTestCase {
 
 export const CASE_MODULES: CaseModule[] = ['领取中心', '库存扣减', '领取资格', '库存回流', '异常提示'];
 export const CASE_TYPES: CaseType[] = ['功能测试', '异常测试', '边界值', '并发测试'];
-export const CASE_PRIORITIES: CasePriority[] = ['P0', 'P1', 'P2'];
+export const CASE_PRIORITIES: CasePriority[] = ['P0', 'P1', 'P2', 'P3'];
 
 export const BASE_TEST_CASES: GeneratedTestCase[] = [
   {
