@@ -51,23 +51,47 @@ import {
   type WorkspaceTab,
 } from './AICasesUtils';
 
+const AI_CASE_GENERATION_PATH = '/ai-workbench/case-generation';
+
+interface AiCaseRouteState {
+  docId: string;
+  search: string;
+}
+
+function isCurrentAiCaseGenerationPath(location: string): boolean {
+  return location === AI_CASE_GENERATION_PATH && window.location.pathname === AI_CASE_GENERATION_PATH;
+}
+
+function readCurrentAiCaseRouteState(): AiCaseRouteState {
+  const search = window.location.search;
+  const params = new URLSearchParams(search);
+
+  return {
+    docId: params.get('docId') || AI_CASE_WORKSPACE_ID,
+    search,
+  };
+}
+
 function AiCasesInner() {
   const [location, setLocation] = useLocation();
   // 全局 AI 生成状态：用于切换页面后仍能显示进度角标、弹跨页通知
   const { notifyStart, notifyProgress, notifyDone } = useAiGeneration();
 
-  // 从 URL 参数读取要打开的文档 ID；未指定时回退到固定的默认工作区
-  // 使用 state 而非 useMemo，确保 URL 变化时能响应式更新
-  const [activeDocId, setActiveDocId] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('docId') || AI_CASE_WORKSPACE_ID;
-  });
+  // 从用例生成路由参数读取要打开的文档 ID；未指定时回退到固定的默认工作区。
+  // 保活隐藏挂载时会继续收到全局路由变化，因此只在当前路由仍是用例生成页时同步参数，
+  // 避免导航到其它页面后把正在生成的工作区切回默认文档。
+  const [activeRouteState, setActiveRouteState] = useState<AiCaseRouteState>(() => readCurrentAiCaseRouteState());
+  const activeDocId = activeRouteState.docId;
 
-  // 监听 wouter location 变化（同路径下 search 参数变化时同步 activeDocId）
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const newDocId = params.get('docId') || AI_CASE_WORKSPACE_ID;
-    setActiveDocId((prev) => (prev !== newDocId ? newDocId : prev));
+    if (!isCurrentAiCaseGenerationPath(location)) {
+      return;
+    }
+
+    const nextRouteState = readCurrentAiCaseRouteState();
+    setActiveRouteState((prev) => (
+      prev.docId === nextRouteState.docId && prev.search === nextRouteState.search ? prev : nextRouteState
+    ));
   }, [location]);
 
   const docRef = useRef<AiCaseWorkspaceDocument | null>(null);
@@ -327,7 +351,7 @@ function AiCasesInner() {
           setSaveState('saved');
 
           // 检查是否需要自动生成
-          const searchParams = new URLSearchParams(window.location.search);
+          const searchParams = new URLSearchParams(activeRouteState.search);
           if (searchParams.get('autoGenerate') === 'true') {
             // 移除 URL 参数避免刷新重复触发
             setLocation(location, { replace: true });
@@ -345,7 +369,7 @@ function AiCasesInner() {
           // 文档在 localStorage 中不存在（新建场景）
           // 从 URL 参数读取 initName / initReq（由 AICaseCreate 传过来），
           // 这里负责创建文档并写入 localStorage（不再由 AICaseCreate 提前写入）
-          const searchParamsForInit = new URLSearchParams(window.location.search);
+          const searchParamsForInit = new URLSearchParams(activeRouteState.search);
           const initName = searchParamsForInit.get('initName')?.trim() || 'AI Testcase Workspace';
           const initReq = searchParamsForInit.get('initReq')?.trim() || '';
 
@@ -388,7 +412,7 @@ function AiCasesInner() {
           setSaveState('saved');
 
           // 新文档也需要检查是否需要自动生成
-          const searchParamsAutoGen = new URLSearchParams(window.location.search);
+          const searchParamsAutoGen = new URLSearchParams(activeRouteState.search);
           if (searchParamsAutoGen.get('autoGenerate') === 'true') {
             // 移除 URL 参数避免刷新重复触发
             setLocation(location, { replace: true });
@@ -455,7 +479,7 @@ function AiCasesInner() {
         autoGenerateTimerRef.current = null;
       }
     };
-  }, [activeDocId]);
+  }, [activeDocId, activeRouteState.search]);
 
 
   const selectedNode = useMemo(() => {
