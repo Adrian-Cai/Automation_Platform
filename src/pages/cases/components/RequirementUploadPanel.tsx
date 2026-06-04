@@ -1,9 +1,9 @@
 import { ChangeEvent, DragEvent, useRef, useState } from 'react';
-import { FileSpreadsheet, FileText, FileType2, UploadCloud } from 'lucide-react';
+import { FileText, FileType2, UploadCloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import type { RequirementInputMode, UploadedFileItem } from '@/lib/requirementInput';
-import { formatFileSize, getFileType } from '@/lib/requirementInput';
+import { formatFileSize, getFileType, getReadableUploadErrorMessage, isReadableUploadedFileType } from '@/lib/requirementInput';
 
 interface RequirementUploadPanelProps {
   inputMode: RequirementInputMode;
@@ -11,13 +11,11 @@ interface RequirementUploadPanelProps {
   onFilesAdd: (files: UploadedFileItem[]) => void;
 }
 
-const acceptedFileExtensions = '.doc,.docx,.pdf,.md,.txt,.xls,.xlsx';
+const acceptedFileExtensions = '.md,.txt';
 
 const formatTags = [
-  { label: 'Word', suffix: '.docx', icon: FileText, className: 'bg-blue-50 text-blue-700 border-blue-100' },
-  { label: 'PDF', suffix: '.pdf', icon: FileType2, className: 'bg-red-50 text-red-700 border-red-100' },
   { label: 'Markdown', suffix: '.md', icon: FileText, className: 'bg-slate-50 text-slate-700 border-slate-200' },
-  { label: 'Excel', suffix: '.xlsx', icon: FileSpreadsheet, className: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+  { label: 'TXT', suffix: '.txt', icon: FileType2, className: 'bg-blue-50 text-blue-700 border-blue-100' },
 ] as const;
 
 export default function RequirementUploadPanel({
@@ -36,6 +34,15 @@ export default function RequirementUploadPanel({
         size: formatFileSize(file.size),
         type: getFileType(file.name),
       };
+
+      if (!isReadableUploadedFileType(fileBase.type)) {
+        return {
+          ...fileBase,
+          status: '上传失败',
+          content: '',
+          errorMessage: getReadableUploadErrorMessage(fileBase.type),
+        };
+      }
 
       if (file.size > 50 * 1024 * 1024) {
         return {
@@ -59,7 +66,7 @@ export default function RequirementUploadPanel({
           ...fileBase,
           status: '上传失败',
           content: '',
-          errorMessage: '读取文件内容失败，请重新上传。',
+          errorMessage: '读取文本内容失败，请重新上传。',
         };
       }
     });
@@ -167,7 +174,7 @@ export default function RequirementUploadPanel({
               点击上传
             </Button>
           </p>
-          <p className="mt-2 text-sm text-slate-500">支持 Word、PDF、Markdown、Excel 格式，单个文件不超过 50MB</p>
+          <p className="mt-2 text-sm text-slate-500">支持 Markdown、TXT 文本格式，单个文件不超过 50MB；Word、PDF、Excel 请先转换为可读文本后上传</p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             {formatTags.map((tag) => {
               const Icon = tag.icon;

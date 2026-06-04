@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { buildUploadedFileContent, cleanRequirementText, defaultCleanRules, formatFileSize, getFileType } from '@/lib/requirementInput';
+import {
+  buildUploadedFileContent,
+  cleanRequirementText,
+  defaultCleanRules,
+  formatFileSize,
+  getFileType,
+  getReadableUploadErrorMessage,
+  isReadableUploadedFileType,
+} from '@/lib/requirementInput';
 
 describe('cleanRequirementText', () => {
   it('removes empty lines and extra spaces while preserving heading levels', () => {
@@ -45,7 +53,7 @@ describe('requirement input file utilities', () => {
     expect(formatFileSize(1024 * 1024)).toBe('1.00 MB');
   });
 
-  it('combines uploaded file contents instead of using simulated requirements', () => {
+  it('combines uploaded readable text file contents instead of using simulated requirements', () => {
     expect(
       buildUploadedFileContent([
         {
@@ -66,5 +74,26 @@ describe('requirement input file utilities', () => {
         },
       ])
     ).toBe('# checkout.md\n用户可以提交订单。');
+  });
+
+  it('rejects binary document types instead of treating raw bytes as readable content', () => {
+    expect(isReadableUploadedFileType('markdown')).toBe(true);
+    expect(isReadableUploadedFileType('txt')).toBe(true);
+    expect(isReadableUploadedFileType('word')).toBe(false);
+    expect(isReadableUploadedFileType('pdf')).toBe(false);
+    expect(isReadableUploadedFileType('excel')).toBe(false);
+    expect(getReadableUploadErrorMessage('pdf')).toContain('Word/PDF/Excel');
+    expect(
+      buildUploadedFileContent([
+        {
+          id: 'file-1',
+          name: 'requirements.pdf',
+          size: '1.0 MB',
+          status: '等待解析',
+          type: 'pdf',
+          content: '%PDF-1.7 raw internals',
+        },
+      ])
+    ).toBe('');
   });
 });

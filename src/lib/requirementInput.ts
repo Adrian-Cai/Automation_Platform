@@ -16,6 +16,7 @@ export type GenerateTarget =
 
 export type UploadedFileStatus = '上传成功' | '上传失败' | '等待解析';
 export type UploadedFileType = 'word' | 'pdf' | 'markdown' | 'excel' | 'txt' | 'unknown';
+export type ReadableUploadedFileType = Extract<UploadedFileType, 'markdown' | 'txt'>;
 export type RequirementInputMode = 'upload' | 'text';
 export type ParseStatus = 'idle' | 'parsing' | 'success' | 'error';
 
@@ -101,19 +102,19 @@ export const sampleRequirementText = `1. 项目概述
 
 export const mockUploadedFiles: UploadedFileItem[] = [
   {
-    id: 'mock-docx-1',
-    name: '电商平台需求规格说明书_v2.1.docx',
-    size: '1.24 MB',
+    id: 'mock-md-1',
+    name: '电商平台需求规格说明书_v2.1.md',
+    size: '24 KB',
     status: '上传成功',
-    type: 'word',
+    type: 'markdown',
     content: sampleRequirementText,
   },
   {
-    id: 'mock-pdf-1',
-    name: '会员中心功能需求补充说明.pdf',
-    size: '856 KB',
+    id: 'mock-txt-1',
+    name: '会员中心功能需求补充说明.txt',
+    size: '12 KB',
     status: '上传成功',
-    type: 'pdf',
+    type: 'txt',
     content: sampleRequirementText,
   },
 ];
@@ -177,9 +178,23 @@ function mergeAbnormalLineBreaks(input: string, rules: CleanRules): string {
   return merged.join('\n');
 }
 
+export function isReadableUploadedFileType(type: UploadedFileType): type is ReadableUploadedFileType {
+  return type === 'markdown' || type === 'txt';
+}
+
+export function getReadableUploadErrorMessage(type: UploadedFileType): string {
+  if (type === 'word' || type === 'pdf' || type === 'excel') {
+    return '当前仅支持读取 Markdown/TXT 文本内容，Word/PDF/Excel 文件需要先转换为可读文本后再上传。';
+  }
+
+  return '不支持的文件格式，请上传 Markdown 或 TXT 文本文件。';
+}
+
 export function buildUploadedFileContent(files: UploadedFileItem[]): string {
   return files
-    .filter((file) => file.status !== '上传失败' && file.content.trim().length > 0)
+    .filter(
+      (file) => file.status !== '上传失败' && isReadableUploadedFileType(file.type) && file.content.trim().length > 0
+    )
     .map((file) => `# ${file.name}\n${file.content.trim()}`)
     .join('\n\n');
 }
