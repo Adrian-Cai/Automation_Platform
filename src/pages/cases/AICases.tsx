@@ -330,8 +330,7 @@ function AiCasesInner() {
           const searchParams = new URLSearchParams(window.location.search);
           if (searchParams.get('autoGenerate') === 'true') {
             // 移除 URL 参数避免刷新重复触发
-            const newUrl = window.location.pathname;
-            window.history.replaceState({}, '', newUrl);
+            setLocation(location, { replace: true });
             // 立即进入"生成中"状态，避免短暂闪出默认模板
             setIsGenerating(true);
             setGenerationProgress(2);
@@ -392,7 +391,7 @@ function AiCasesInner() {
           const searchParamsAutoGen = new URLSearchParams(window.location.search);
           if (searchParamsAutoGen.get('autoGenerate') === 'true') {
             // 移除 URL 参数避免刷新重复触发
-            window.history.replaceState({}, '', window.location.pathname);
+            setLocation(location, { replace: true });
             // 立即进入"生成中"状态，避免短暂闪出默认模板
             setIsGenerating(true);
             setGenerationProgress(2);

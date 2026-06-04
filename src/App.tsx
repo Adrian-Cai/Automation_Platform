@@ -93,6 +93,7 @@ function ProtectedLayout({ children }: { children: ReactNode }) {
  * - Hidden generation keeps the last AI workbench URL in a nested router so AICases does not
  *   re-read unrelated page query strings and switch docRef to the default workspace mid-stream.
  * - Direct visits still mount immediately and render as the active page.
+ * - Component unmounts when generation completes and user is not on the route (prevents memory leak).
  */
 function KeepAliveAiWorkbenchCaseGeneration() {
   const [location, setLocation] = useLocation();
