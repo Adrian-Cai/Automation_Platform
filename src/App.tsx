@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch, Redirect, useLocation } from "wouter";
+import { Route, Switch, Redirect, Router as WouterRouter, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Layout } from "./components/Layout";
@@ -32,7 +32,16 @@ import ReportDetail from "./pages/reports/ReportDetail";
 import SystemSettings from "./pages/settings/SystemSettings";
 import { User } from "lucide-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+
+const AI_WORKBENCH_CASE_GENERATION_ROUTE = "/ai-workbench/case-generation";
+
+function isAiWorkbenchCaseGenerationRoute(location: string): boolean {
+  return (
+    location === AI_WORKBENCH_CASE_GENERATION_ROUTE ||
+    location.startsWith(`${AI_WORKBENCH_CASE_GENERATION_ROUTE}?`)
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,36 +86,48 @@ function ProtectedLayout({ children }: { children: ReactNode }) {
   );
 }
 
-const AI_CASE_GENERATION_PATH = '/ai-workbench/case-generation';
-
-function isAiCaseGenerationRoute(location: string): boolean {
-  return location === AI_CASE_GENERATION_PATH || location.startsWith(`${AI_CASE_GENERATION_PATH}?`);
-}
-
 /**
- * Keeps the AI case generator mounted outside of Switch routing so in-flight
- * streaming requests are not aborted when users navigate to another page.
+ * AI case generation keep-alive layer:
+ * - /ai-workbench/case-generation is rendered outside the Switch so route changes do not unmount AICases.
+ * - While generation is running, navigating away hides this tree instead of aborting its stream controller.
+ * - Hidden generation keeps the last AI workbench URL in a nested router so AICases does not
+ *   re-read unrelated page query strings and switch docRef to the default workspace mid-stream.
+ * - Direct visits still mount immediately and render as the active page.
  */
-function KeepAliveAiCaseGeneration() {
-  const [location] = useLocation();
+function KeepAliveAiWorkbenchCaseGeneration() {
+  const [location, setLocation] = useLocation();
   const { isGenerating } = useAiGeneration();
-  const isCurrentRoute = isAiCaseGenerationRoute(location);
+  const isCurrentRoute = isAiWorkbenchCaseGenerationRoute(location);
+  const [hasVisited, setHasVisited] = useState(() => isCurrentRoute);
+  const [keptAliveLocation, setKeptAliveLocation] = useState(() =>
+    isCurrentRoute ? location : AI_WORKBENCH_CASE_GENERATION_ROUTE
+  );
 
-  if (!isCurrentRoute && !isGenerating) {
+  useEffect(() => {
+    if (isCurrentRoute) {
+      setHasVisited(true);
+      setKeptAliveLocation(location);
+    }
+  }, [isCurrentRoute, location]);
+
+  const useKeptAliveLocation = useCallback(() => [keptAliveLocation, setLocation] as const, [
+    keptAliveLocation,
+    setLocation,
+  ]);
+
+  if (!hasVisited && !isGenerating) {
     return null;
   }
 
-  const page = (
-    <ProtectedLayout>
-      <AiWorkbenchCaseGeneration />
-    </ProtectedLayout>
+  return (
+    <div className={isCurrentRoute ? "fixed inset-0 z-10" : "hidden"}>
+      <WouterRouter hook={useKeptAliveLocation}>
+        <ProtectedLayout>
+          <AiWorkbenchCaseGeneration />
+        </ProtectedLayout>
+      </WouterRouter>
+    </div>
   );
-
-  if (isCurrentRoute) {
-    return <div className="fixed inset-0 z-10">{page}</div>;
-  }
-
-  return <div style={{ display: 'none' }}>{page}</div>;
 }
 
 function Router() {
@@ -178,6 +199,7 @@ function Router() {
             <AiWorkbenchRequirementAnalysis />
           </ProtectedLayout>
         </Route>
+        {/* Rendered by KeepAliveAiWorkbenchCaseGeneration outside Switch to avoid aborting active streams. */}
         <Route path="/ai-workbench/case-generation">
           {null}
         </Route>
@@ -246,7 +268,7 @@ function Router() {
         <Route component={NotFound} />
       </Switch>
 
-      <KeepAliveAiCaseGeneration />
+      <KeepAliveAiWorkbenchCaseGeneration />
     </>
   );
 }
