@@ -35,6 +35,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 const AI_WORKBENCH_CASE_GENERATION_ROUTE = "/ai-workbench/case-generation";
+const AI_WORKBENCH_OVERVIEW_ROUTE = "/ai-workbench/overview";
+const AI_WORKBENCH_HISTORY_EXPORT_ROUTE = "/ai-workbench/history-export";
 
 function isAiWorkbenchCaseGenerationRoute(location: string): boolean {
   return (
@@ -181,7 +183,7 @@ function Router() {
           {null}
         </Route>
         <Route path="/ai-workbench/records">
-          <Redirect to="/ai-workbench/history-export" />
+          <Redirect to={AI_WORKBENCH_HISTORY_EXPORT_ROUTE} />
         </Route>
         <Route path="/ai-workbench/overview">
           <ProtectedLayout>
@@ -213,14 +215,15 @@ function Router() {
             <AiWorkbenchSettings />
           </ProtectedLayout>
         </Route>
+        {/* Legacy AI case URLs now redirect to AI Workbench routes instead of importing the retired create page. */}
         <Route path="/cases/ai-create">
-          <Redirect to="/ai-workbench/overview" />
+          <Redirect to={AI_WORKBENCH_OVERVIEW_ROUTE} />
         </Route>
         <Route path="/cases/ai-history">
-          <Redirect to="/ai-workbench/history-export" />
+          <Redirect to={AI_WORKBENCH_HISTORY_EXPORT_ROUTE} />
         </Route>
         <Route path="/cases/ai">
-          <Redirect to="/ai-workbench/overview" />
+          <Redirect to={AI_WORKBENCH_OVERVIEW_ROUTE} />
         </Route>
 
         <Route path="/tasks">

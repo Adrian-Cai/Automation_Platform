@@ -46,6 +46,7 @@ const DEFAULT_CASE_COUNT_PER_POINT = 2;
 const GENERATED_CASE_TOTAL = TEST_POINT_COUNT * DEFAULT_CASE_COUNT_PER_POINT;
 const CASE_TEMPLATES = ['标准功能用例模板（推荐）', '接口测试用例模板', '并发测试用例模板', '简版测试点模板'];
 const GRANULARITIES = ['简单版', '标准版', '详细版'] as const;
+const WORKSPACE_QUERY_PARAMS = ['docId', 'autoGenerate', 'initName', 'initReq'] as const;
 type Granularity = (typeof GRANULARITIES)[number];
 type AutomationFilter = '全部' | '是' | '否';
 type SelectAllState = boolean | 'indeterminate';
@@ -166,7 +167,7 @@ function toFormState(testCase: GeneratedTestCase): CaseFormState {
 function hasWorkspaceParams(search: string): boolean {
   const query = search.startsWith('?') ? search.slice(1) : search;
   const params = new URLSearchParams(query);
-  return Boolean(params.get('docId') || params.get('autoGenerate') || params.get('initName') || params.get('initReq'));
+  return WORKSPACE_QUERY_PARAMS.some((paramName) => params.has(paramName));
 }
 
 function exportCases(cases: GeneratedTestCase[]) {
@@ -716,6 +717,7 @@ function StandaloneAiWorkbenchCaseGeneration(): JSX.Element {
 export default function AiWorkbenchCaseGeneration(): JSX.Element {
   const search = useSearch();
 
+  // wouter's useLocation only exposes the pathname, so workspace routing must read location.search.
   if (hasWorkspaceParams(search)) {
     return <AICases />;
   }
