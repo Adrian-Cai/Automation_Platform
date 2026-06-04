@@ -1,0 +1,71 @@
+name: Mirror GitHub to CNB
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-github-to-cnb-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mirror-to-cnb:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout GitHub repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git identity
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Validate CNB token
+        env:
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+        run: |
+          if [ -z "$CNB_TOKEN" ]; then
+            echo "CNB_TOKEN is empty. Please add CNB_TOKEN in GitHub Actions secrets."
+            exit 1
+          fi
+
+      - name: Push master to CNB
+        env:
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+        run: |
+          echo "Syncing GitHub master to CNB master..."
+
+          git config --global http.lowSpeedLimit 1000
+          git config --global http.lowSpeedTime 60
+          git config --global http.postBuffer 524288000
+
+          CNB_REPO_URL="https://cnb:${CNB_TOKEN}@cnb.cool/ImAcaiy/Automation_Platform.git"
+
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "Attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
+
+            if git push "$CNB_REPO_URL" HEAD:master --force; then
+              echo "CNB sync completed successfully."
+              exit 0
+            fi
+
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Sync failed, retrying in 10 seconds..."
+              sleep 10
+            fi
+          done
+
+          echo "CNB sync failed after $MAX_RETRIES attempts."
+          exit 1
