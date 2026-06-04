@@ -26,7 +26,7 @@ import AiWorkbenchRequirementAnalysis from "./pages/ai-workbench/AiWorkbenchRequ
 import AiWorkbenchCaseGeneration from "./pages/ai-workbench/AiWorkbenchCaseGeneration";
 import AiWorkbenchQualityCoverage from "./pages/ai-workbench/AiWorkbenchQualityCoverage";
 import AiWorkbenchHistoryExport from "./pages/ai-workbench/AiWorkbenchHistoryExport";
-import AiWorkbenchSettings from "./pages/ai-workbench/AiWorkbenchSettings";
+import AiWorkbenchRecords from "./pages/ai-workbench/AiWorkbenchRecords";
 import Reports from "./pages/reports/Reports";
 import ReportDetail from "./pages/reports/ReportDetail";
 import SystemSettings from "./pages/settings/SystemSettings";
@@ -181,7 +181,9 @@ function Router() {
           {null}
         </Route>
         <Route path="/ai-workbench/records">
-          <Redirect to="/ai-workbench/history-export" />
+          <ProtectedLayout>
+            <AiWorkbenchRecords />
+          </ProtectedLayout>
         </Route>
         <Route path="/ai-workbench/overview">
           <ProtectedLayout>
@@ -208,18 +210,7 @@ function Router() {
             <AiWorkbenchHistoryExport />
           </ProtectedLayout>
         </Route>
-        <Route path="/ai-workbench/settings">
-          <ProtectedLayout>
-            <AiWorkbenchSettings />
-          </ProtectedLayout>
-        </Route>
-        <Route path="/cases/ai-create">
-          <Redirect to="/ai-workbench/overview" />
-        </Route>
-        <Route path="/cases/ai-history">
-          <Redirect to="/ai-workbench/history-export" />
-        </Route>
-        <Route path="/cases/ai">
+        <Route path="/ai-workbench">
           <Redirect to="/ai-workbench/overview" />
         </Route>
 
