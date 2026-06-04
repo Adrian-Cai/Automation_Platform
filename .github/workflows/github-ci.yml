@@ -57,3 +57,53 @@ jobs:
 
       - name: Run tests
         run: npx vitest run
+
+  coverage:
+    name: Test Coverage
+    needs: lint
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npx vitest run --coverage
+        timeout-minutes: 10
+
+      - name: Extract coverage percentage
+        id: coverage
+        run: |
+          PCT=$(node -e "
+            const fs = require('fs');
+            const p = require('path');
+            const dir = 'coverage';
+            const files = fs.readdirSync(dir).filter(f => f === 'coverage-summary.json');
+            if (!files.length) { console.error('No coverage-summary.json found'); process.exit(1); }
+            const data = JSON.parse(fs.readFileSync(p.join(dir, files[0]), 'utf8'));
+            console.log(data.total.lines.pct);
+          ")
+          echo "percentage=$PCT" >> "$GITHUB_OUTPUT"
+          echo "Coverage: $PCT%"
+
+      - name: Upload coverage to Gist
+        if: github.event_name != 'pull_request'
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: ${{ secrets.COVERAGE_GIST_ID }}
+          filename: coverage.json
+          label: coverage
+          message: ${{ steps.coverage.outputs.percentage }}%
+          valColorRange: ${{ steps.coverage.outputs.percentage }}
+          minColorRange: 60
+          maxColorRange: 90
+          isError: ${{ steps.coverage.outputs.percentage < 60 }}
