@@ -53,6 +53,11 @@ export default function UploadedFileList({ files, onPreview, onDelete }: Uploade
                       {getFileIcon(file.type)}
                       <span className="max-w-[260px] truncate" title={file.name}>{file.name}</span>
                     </div>
+                    {file.errorMessage ? (
+                      <p className="mt-1 max-w-[360px] text-xs leading-5 text-rose-600" title={file.errorMessage}>
+                        {file.errorMessage}
+                      </p>
+                    ) : null}
                   </td>
                   <td className="px-4 py-3 text-slate-600">{file.size}</td>
                   <td className="px-4 py-3">{getStatusBadge(file.status)}</td>

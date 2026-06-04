@@ -67,9 +67,15 @@ export default function RequirementInputParsePage(): JSX.Element {
 
     setState((current) => ({ ...current, uploadedFiles: [...files, ...current.uploadedFiles] }));
 
-    const failedCount = files.filter((file) => file.status === '上传失败').length;
-    if (failedCount > 0) {
-      toast.warning(`已添加 ${files.length} 个文件，其中 ${failedCount} 个文件读取失败`);
+    const failedFiles = files.filter((file) => file.status === '上传失败');
+    if (failedFiles.length > 0) {
+      const failureDescription = Array.from(
+        new Set(failedFiles.map((file) => file.errorMessage).filter((message): message is string => Boolean(message)))
+      ).join('；');
+
+      toast.warning(`已添加 ${files.length} 个文件，其中 ${failedFiles.length} 个文件读取失败`, {
+        description: failureDescription || '请查看上传列表中的失败原因。',
+      });
       return;
     }
 
