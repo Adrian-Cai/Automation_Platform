@@ -14,7 +14,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useLocation } from 'wouter';
+import { useSearch } from 'wouter/use-location';
 import AICases from '@/pages/cases/AICases';
 import { useAiGeneration } from '@/contexts/AiGenerationContext';
 import { Badge } from '@/components/ui/badge';
@@ -163,8 +163,8 @@ function toFormState(testCase: GeneratedTestCase): CaseFormState {
   };
 }
 
-function hasWorkspaceParams(location: string): boolean {
-  const query = location.split('?')[1] ?? '';
+function hasWorkspaceParams(search: string): boolean {
+  const query = search.startsWith('?') ? search.slice(1) : search;
   const params = new URLSearchParams(query);
   return Boolean(params.get('docId') || params.get('autoGenerate') || params.get('initName') || params.get('initReq'));
 }
@@ -714,9 +714,9 @@ function StandaloneAiWorkbenchCaseGeneration(): JSX.Element {
 }
 
 export default function AiWorkbenchCaseGeneration(): JSX.Element {
-  const [location] = useLocation();
+  const search = useSearch();
 
-  if (hasWorkspaceParams(location)) {
+  if (hasWorkspaceParams(search)) {
     return <AICases />;
   }
 
