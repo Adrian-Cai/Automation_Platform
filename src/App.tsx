@@ -26,8 +26,7 @@ import AiWorkbenchRequirementAnalysis from "./pages/ai-workbench/AiWorkbenchRequ
 import AiWorkbenchCaseGeneration from "./pages/ai-workbench/AiWorkbenchCaseGeneration";
 import AiWorkbenchQualityCoverage from "./pages/ai-workbench/AiWorkbenchQualityCoverage";
 import AiWorkbenchHistoryExport from "./pages/ai-workbench/AiWorkbenchHistoryExport";
-import AICaseHistory from "./pages/cases/AICaseHistory";
-import AiWorkbenchSettings from "./pages/ai-workbench/AiWorkbenchSettings";
+import AiWorkbenchRecords from "./pages/ai-workbench/AiWorkbenchRecords";
 import Reports from "./pages/reports/Reports";
 import ReportDetail from "./pages/reports/ReportDetail";
 import SystemSettings from "./pages/settings/SystemSettings";
@@ -176,16 +175,13 @@ function Router() {
             </Layout>
           </ProtectedRoute>
         </Route>
-        <Route path="/ai-workbench">
-          <Redirect to="/ai-workbench/overview" />
-        </Route>
         {/* Rendered by KeepAliveAiWorkbenchCaseGeneration outside Switch to avoid aborting active streams. */}
         <Route path="/ai-workbench/case-generation">
           {null}
         </Route>
         <Route path="/ai-workbench/records">
           <ProtectedLayout>
-            <AICaseHistory />
+            <AiWorkbenchRecords />
           </ProtectedLayout>
         </Route>
         <Route path="/ai-workbench/overview">
@@ -213,18 +209,7 @@ function Router() {
             <AiWorkbenchHistoryExport />
           </ProtectedLayout>
         </Route>
-        <Route path="/ai-workbench/settings">
-          <ProtectedLayout>
-            <AiWorkbenchSettings />
-          </ProtectedLayout>
-        </Route>
-        <Route path="/cases/ai-create">
-          <Redirect to="/ai-workbench/overview" />
-        </Route>
-        <Route path="/cases/ai-history">
-          <Redirect to="/ai-workbench/history-export" />
-        </Route>
-        <Route path="/cases/ai">
+        <Route path="/ai-workbench">
           <Redirect to="/ai-workbench/overview" />
         </Route>
 

@@ -292,6 +292,12 @@ function ExpandedNavItem({ item, location, onNavigate, defaultExpanded, badge }:
   const { isActive } = useNavActive(item, location);
   const [expanded, setExpanded] = useState(() => defaultExpanded ?? isActive);
 
+  useEffect(() => {
+    if (isActive) {
+      setExpanded(true);
+    }
+  }, [isActive]);
+
   const hasChildren = item.children && item.children.length > 0;
 
   if (hasChildren) {
@@ -324,7 +330,7 @@ function ExpandedNavItem({ item, location, onNavigate, defaultExpanded, badge }:
         {/* Children */}
         <div
           className={`overflow-hidden transition-all duration-200 ease-out ${
-            expanded ? "max-h-48 opacity-100" : "max-h-0 opacity-0"
+            expanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
           }`}
         >
           <div className="ml-3 pl-3 border-l-2 border-slate-100 dark:border-slate-800 space-y-0.5 py-1">

@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { listAllWorkspaceDocuments } from '@/lib/aiCaseStorage';
 import { computeProgress } from '@/lib/aiCaseMindMap';
 import type { AiCaseWorkspaceDocument } from '@/types/aiCases';
-import { AiCaseHistoryCard } from './components/AiCaseHistoryCard';
+import { AiCaseHistoryCard } from '@/pages/cases/components/AiCaseHistoryCard';
 
 // ── Types ─────────────────────────────────────────────────────────
 
@@ -72,7 +72,7 @@ function SummaryStats({ docs }: { docs: AiCaseWorkspaceDocument[] }) {
 
 // ── Main Page ─────────────────────────────────────────────────────
 
-export default function AICaseHistory() {
+export default function AiWorkbenchRecords() {
   const [, setLocation] = useLocation();
   const [docs, setDocs] = useState<AiCaseWorkspaceDocument[]>([]);
   const [loading, setLoading] = useState(true);
