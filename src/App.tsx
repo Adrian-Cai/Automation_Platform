@@ -37,9 +37,10 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 const AI_WORKBENCH_CASE_GENERATION_ROUTE = "/ai-workbench/case-generation";
 
 function isAiWorkbenchCaseGenerationRoute(location: string): boolean {
+  const normalized = location.endsWith('/') ? location.slice(0, -1) : location;
   return (
-    location === AI_WORKBENCH_CASE_GENERATION_ROUTE ||
-    location.startsWith(`${AI_WORKBENCH_CASE_GENERATION_ROUTE}?`)
+    normalized === AI_WORKBENCH_CASE_GENERATION_ROUTE ||
+    normalized.startsWith(`${AI_WORKBENCH_CASE_GENERATION_ROUTE}?`)
   );
 }
 
