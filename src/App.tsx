@@ -32,7 +32,7 @@ import ReportDetail from "./pages/reports/ReportDetail";
 import SystemSettings from "./pages/settings/SystemSettings";
 import { User } from "lucide-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,15 +91,8 @@ function KeepAliveAiCaseGeneration() {
   const [location] = useLocation();
   const { isGenerating } = useAiGeneration();
   const isCurrentRoute = isAiCaseGenerationRoute(location);
-  const [hasVisited, setHasVisited] = useState(() => isCurrentRoute);
 
-  useEffect(() => {
-    if (isCurrentRoute && !hasVisited) {
-      setHasVisited(true);
-    }
-  }, [isCurrentRoute, hasVisited]);
-
-  if (!hasVisited && !isCurrentRoute && !isGenerating) {
+  if (!isCurrentRoute && !isGenerating) {
     return null;
   }
 

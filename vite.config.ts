@@ -19,22 +19,28 @@ export default defineConfig({
     // 代码分割：将大型第三方库单独打包，利用浏览器缓存
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'ui-vendor': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-tooltip',
-            '@radix-ui/react-checkbox',
-            '@radix-ui/react-label',
-            '@radix-ui/react-progress',
-          ],
-          'chart-vendor': ['recharts'],
-          'redux-vendor': ['@reduxjs/toolkit', 'react-redux'],
-          'icon-vendor': ['lucide-react'],
-          'date-vendor': ['date-fns'],
-          'query-vendor': ['@tanstack/react-query'],
+        manualChunks(id) {
+          if (id.includes('node_modules/react-dom') || (id.includes('node_modules/react') && !id.includes('node_modules/react-dom'))) {
+            return 'react-vendor';
+          }
+          if (id.includes('node_modules/@radix-ui/')) {
+            return 'ui-vendor';
+          }
+          if (id.includes('node_modules/recharts')) {
+            return 'chart-vendor';
+          }
+          if (id.includes('node_modules/@reduxjs/toolkit') || id.includes('node_modules/react-redux')) {
+            return 'redux-vendor';
+          }
+          if (id.includes('node_modules/lucide-react')) {
+            return 'icon-vendor';
+          }
+          if (id.includes('node_modules/date-fns')) {
+            return 'date-vendor';
+          }
+          if (id.includes('node_modules/@tanstack/react-query')) {
+            return 'query-vendor';
+          }
         },
       },
     },
