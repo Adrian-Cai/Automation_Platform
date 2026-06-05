@@ -26,7 +26,6 @@ import AiWorkbenchOverview from "./pages/ai-workbench/AiWorkbenchOverview";
 import AiWorkbenchRequirementAnalysis from "./pages/ai-workbench/AiWorkbenchRequirementAnalysis";
 import AiWorkbenchQualityCoverage from "./pages/ai-workbench/AiWorkbenchQualityCoverage";
 import AiWorkbenchHistoryExport from "./pages/ai-workbench/AiWorkbenchHistoryExport";
-import AiWorkbenchRecords from "./pages/ai-workbench/AiWorkbenchRecords";
 import Reports from "./pages/reports/Reports";
 import ReportDetail from "./pages/reports/ReportDetail";
 import SystemSettings from "./pages/settings/SystemSettings";
@@ -34,7 +33,7 @@ import { User } from "lucide-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
-const AI_WORKBENCH_CASE_GENERATION_ROUTE = "/ai-workbench/case-generation";
+const AI_WORKBENCH_CASE_GENERATION_ROUTE = "/ai-workbench/test-cases";
 
 function isAiWorkbenchCaseGenerationRoute(location: string): boolean {
   const normalized = location.endsWith('/') ? location.slice(0, -1) : location;
@@ -89,7 +88,7 @@ function ProtectedLayout({ children }: { children: ReactNode }) {
 
 /**
  * AI case generation keep-alive layer:
- * - /ai-workbench/case-generation is rendered outside the Switch so route changes do not unmount AICases.
+ * - /ai-workbench/test-cases is rendered outside the Switch so route changes do not unmount AICases.
  * - While generation is running, navigating away hides this tree instead of aborting its stream controller.
  * - Hidden generation keeps the last AI workbench URL in a nested router so AICases does not
  *   re-read unrelated page query strings and switch docRef to the default workspace mid-stream.
@@ -178,41 +177,57 @@ function Router() {
           </ProtectedRoute>
         </Route>
         {/* Rendered by KeepAliveAiWorkbenchCaseGeneration outside Switch to avoid aborting active streams. */}
-        <Route path="/ai-workbench/case-generation">
+        <Route path="/ai-workbench/test-cases">
           {null}
         </Route>
-        <Route path="/ai-workbench/records">
-          <ProtectedLayout>
-            <AiWorkbenchRecords />
-          </ProtectedLayout>
-        </Route>
-        <Route path="/ai-workbench/overview">
+        <Route path="/ai-workbench/home">
           <ProtectedLayout>
             <AiWorkbenchOverview />
           </ProtectedLayout>
         </Route>
-        <Route path="/ai-workbench/requirement-input">
+        <Route path="/ai-workbench/overview">
+          <Redirect to="/ai-workbench/home" />
+        </Route>
+        <Route path="/ai-workbench/requirements">
           <ProtectedLayout>
             <AiWorkbenchRequirementInput />
           </ProtectedLayout>
         </Route>
-        <Route path="/ai-workbench/requirement-analysis">
+        <Route path="/ai-workbench/test-points">
           <ProtectedLayout>
             <AiWorkbenchRequirementAnalysis />
           </ProtectedLayout>
         </Route>
-        <Route path="/ai-workbench/quality-coverage">
+        <Route path="/ai-workbench/quality">
           <ProtectedLayout>
             <AiWorkbenchQualityCoverage />
           </ProtectedLayout>
         </Route>
-        <Route path="/ai-workbench/history-export">
+        <Route path="/ai-workbench/exports">
           <ProtectedLayout>
             <AiWorkbenchHistoryExport />
           </ProtectedLayout>
         </Route>
+        <Route path="/ai-workbench/overview">
+          <Redirect to="/ai-workbench/home" />
+        </Route>
+        <Route path="/ai-workbench/requirement-input">
+          <Redirect to="/ai-workbench/requirements" />
+        </Route>
+        <Route path="/ai-workbench/requirement-analysis">
+          <Redirect to="/ai-workbench/test-points" />
+        </Route>
+        <Route path="/ai-workbench/case-generation">
+          <Redirect to="/ai-workbench/test-cases" />
+        </Route>
+        <Route path="/ai-workbench/quality-coverage">
+          <Redirect to="/ai-workbench/quality" />
+        </Route>
+        <Route path="/ai-workbench/history-export">
+          <Redirect to="/ai-workbench/exports" />
+        </Route>
         <Route path="/ai-workbench">
-          <Redirect to="/ai-workbench/overview" />
+          <Redirect to="/ai-workbench/home" />
         </Route>
 
         <Route path="/tasks">

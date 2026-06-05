@@ -762,7 +762,7 @@ export class TaskSchedulerService {
         caseIds,
         scriptPaths,
         callbackUrl,
-        async (buildNumber: number, buildUrl: string) => {
+        async (buildNumber: number, buildUrl: string, queueWaitMs: number) => {
           const buildId = String(buildNumber);
           logger.debug(`[dev-10] Task ${taskId} build resolved via queueId poll`, {
             event: LOG_EVENTS.SCHEDULER_JENKINS_BUILD_RESOLVED,
@@ -770,9 +770,14 @@ export class TaskSchedulerService {
             runId: capturedRunId,
             buildId,
             buildUrl,
+            queueWaitMs,
             traceId,
           }, LOG_CONTEXTS.EXECUTION);
           await executionService.updateBatchJenkinsInfo(capturedRunId, { buildId, buildUrl });
+          // [bug-fix] 槽位计时基准改为“构建真正开始执行”时。
+          // 否则 Jenkins 队列等待接近 SLOT_HOLD_TIMEOUT_MS 时，构建刚出队列槽位就到期，
+          // 会在 scheduleJenkinsFallbackSync 之后立即释放槽位并 drainQueue，触发并发超限。
+          this.resetSlotTimerForBuildStart(capturedRunId, taskId, queueWaitMs, traceId);
           this.scheduleJenkinsFallbackSync(capturedRunId, taskId, traceId);
         },
         async (reason: 'cancelled' | 'timeout') => {
@@ -863,9 +868,9 @@ export class TaskSchedulerService {
    * [P1] 注册运行中槽位，并设置超时自动释放
    */
   private scheduleJenkinsFallbackSync(runId: number, taskId: number, traceId: string): void {
-    const delayMs = parseInt(process.env.JENKINS_CALLBACK_FALLBACK_DELAY_MS || '30000', 10);
-    const intervalMs = parseInt(process.env.JENKINS_CALLBACK_FALLBACK_INTERVAL_MS || '30000', 10);
-    const maxAttempts = parseInt(process.env.JENKINS_CALLBACK_FALLBACK_ATTEMPTS || '10', 10);
+    const delayMs = parseInt(process.env.JENKINS_CALLBACK_FALLBACK_DELAY_MS || '30000', 10) || 30000;
+    const intervalMs = parseInt(process.env.JENKINS_CALLBACK_FALLBACK_INTERVAL_MS || '30000', 10) || 30000;
+    const maxAttempts = parseInt(process.env.JENKINS_CALLBACK_FALLBACK_ATTEMPTS || '10', 10) || 10;
     const terminalStatuses = new Set(['success', 'failed', 'aborted']);
 
     const syncOnce = async (attempt: number): Promise<void> => {
@@ -943,6 +948,87 @@ export class TaskSchedulerService {
       slotsUsed: this.runningSlots.size,
       slotsLimit: CONCURRENCY_LIMIT,
     }, LOG_CONTEXTS.EXECUTION);
+  }
+
+  /**
+   * [bug-fix] 构建真正离开 Jenkins 队列时，重置槽位超时计时器。
+   *
+   * 背景：registerRunningSlot 在触发瞬间就启动了 SLOT_HOLD_TIMEOUT_MS 计时器。
+   * 若 Jenkins 队列等待时间接近 SLOT_HOLD_TIMEOUT_MS（如 30 分钟），构建刚出队列
+   * 计时器就到期，scheduleJenkinsFallbackSync 之后立即释放槽位并 drainQueue，
+   * 会在 Jenkins 仍在运行时再派发新任务，突破 CONCURRENCY_LIMIT。
+   *
+   * 修复：以“构建实际开始执行”为计时起点，再给完整 SLOT_HOLD_TIMEOUT_MS。
+   * - 若槽位仍在：清理旧 timer，按新起点重新计时。
+   * - 若槽位已不存在（队列等待 > SLOT_HOLD_TIMEOUT_MS）：记录 critical 日志，
+   *   不强制 abort（callback 处理器对不存在的槽位是幂等的，资源最终通过 db_reconcile 回收）。
+   */
+  private resetSlotTimerForBuildStart(
+    runId: number,
+    taskId: number,
+    queueWaitMs: number,
+    traceId: string,
+  ): void {
+    const slot = this.runningSlots.get(runId);
+    if (!slot) {
+      logger.error(
+        `[bug-fix] Slot for runId=${runId} (taskId=${taskId}) already released during Jenkins queue wait (queueWaitMs=${queueWaitMs}). Jenkins build is now running without a tracked slot; db_reconcile will be the only safety net.`,
+        {
+          event: LOG_EVENTS.SCHEDULER_SLOT_TIMEOUT,
+          runId,
+          taskId,
+          queueWaitMs,
+          traceId,
+        },
+        LOG_CONTEXTS.EXECUTION,
+      );
+      return;
+    }
+
+    clearTimeout(slot.timeoutTimer);
+
+    const newTimeoutTimer = setTimeout(() => {
+      const currentSlot = this.runningSlots.get(runId);
+      if (currentSlot) {
+        this.runningSlots.delete(runId);
+        logger.warn(
+          `[bug-fix] Slot for runId=${runId} (taskId=${taskId}) auto-released ${SLOT_HOLD_TIMEOUT_MS}ms after Jenkins build started (queueWaitMs=${queueWaitMs})`,
+          {
+            event: LOG_EVENTS.SCHEDULER_SLOT_TIMEOUT,
+            runId,
+            taskId,
+            heldMs: SLOT_HOLD_TIMEOUT_MS,
+            queueWaitMs,
+            traceId,
+          },
+          LOG_CONTEXTS.EXECUTION,
+        );
+        this.drainQueue();
+      }
+    }, SLOT_HOLD_TIMEOUT_MS);
+
+    if (newTimeoutTimer.unref) newTimeoutTimer.unref();
+
+    this.runningSlots.set(runId, {
+      taskId: slot.taskId,
+      runId,
+      startedAt: Date.now(),
+      timeoutTimer: newTimeoutTimer,
+      label: slot.label,
+    });
+
+    logger.info(
+      `[bug-fix] Slot timer reset for runId=${runId} (taskId=${taskId}); build started after ${queueWaitMs}ms queue wait, will be held for another ${SLOT_HOLD_TIMEOUT_MS}ms`,
+      {
+        event: LOG_EVENTS.SCHEDULER_SLOT_REGISTERED,
+        runId,
+        taskId,
+        queueWaitMs,
+        newHoldMs: SLOT_HOLD_TIMEOUT_MS,
+        traceId,
+      },
+      LOG_CONTEXTS.EXECUTION,
+    );
   }
 
   /**
