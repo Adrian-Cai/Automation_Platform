@@ -44,6 +44,36 @@ export const HYBRID_SYNC_CONFIG = {
  * Execution Monitor Service Configuration
  * Controls background monitoring for stuck executions
  */
+const DEFAULT_JENKINS_QUEUE_POLL_TIMEOUT_MS = 30 * 60 * 1000;
+
+export const JENKINS_QUEUE_CONFIG = {
+  /**
+   * How long to wait for a queued Jenkins item to receive a build number.
+   * Default is 30 minutes so scheduled batches are not aborted during executor congestion.
+   */
+  POLL_TIMEOUT_MS: parseInt(
+    process.env.JENKINS_QUEUE_POLL_TIMEOUT_MS || String(DEFAULT_JENKINS_QUEUE_POLL_TIMEOUT_MS),
+    10,
+  ),
+} as const;
+
+const MIN_EARLY_STUCK_THRESHOLD_SECONDS = Math.ceil(JENKINS_QUEUE_CONFIG.POLL_TIMEOUT_MS / 1000) + 60;
+
+const DEFAULT_PENDING_NO_BUILD_CLEANUP_MINUTES = Math.max(
+  60,
+  Math.ceil(JENKINS_QUEUE_CONFIG.POLL_TIMEOUT_MS / 60000) + 5,
+);
+
+const configuredEarlyStuckThresholdSeconds = parseInt(
+  process.env.EARLY_STUCK_THRESHOLD_SECONDS || String(MIN_EARLY_STUCK_THRESHOLD_SECONDS),
+  10,
+);
+
+const configuredPendingNoBuildCleanupMinutes = parseInt(
+  process.env.EXECUTION_PENDING_NO_BUILD_CLEANUP_MINUTES || String(DEFAULT_PENDING_NO_BUILD_CLEANUP_MINUTES),
+  10,
+);
+
 export const EXECUTION_MONITOR_CONFIG = {
   /** Monitor cycle interval in milliseconds (default: 20s) */
   CHECK_INTERVAL: parseInt(process.env.EXECUTION_MONITOR_INTERVAL || '20000', 10),
@@ -63,11 +93,26 @@ export const EXECUTION_MONITOR_CONFIG = {
   /** Quick fail threshold in seconds (default: 20s) */
   QUICK_FAIL_THRESHOLD_SECONDS: parseInt(process.env.QUICK_FAIL_THRESHOLD_SECONDS || '20', 10),
 
-  /** Early stuck threshold in seconds (default: 2 minutes) */
-  EARLY_STUCK_THRESHOLD_SECONDS: parseInt(process.env.EARLY_STUCK_THRESHOLD_SECONDS || '120', 10),
+  /**
+   * No-build-id guard in seconds. It must exceed Jenkins queue polling timeout; otherwise
+   * queued scheduled jobs can be marked aborted before Jenkins assigns a build number.
+   */
+  EARLY_STUCK_THRESHOLD_SECONDS: Math.max(
+    configuredEarlyStuckThresholdSeconds,
+    MIN_EARLY_STUCK_THRESHOLD_SECONDS,
+  ),
 
   /** Stuck threshold in seconds (default: 5 minutes) */
   STUCK_THRESHOLD_SECONDS: parseInt(process.env.STUCK_THRESHOLD_SECONDS || '300', 10),
+
+  /**
+   * Pending runs without start_time/build id are cleaned only after this grace period.
+   * The default follows Jenkins queue polling timeout plus a buffer, with a 60-minute floor.
+   */
+  PENDING_NO_BUILD_CLEANUP_MINUTES: Math.max(
+    configuredPendingNoBuildCleanupMinutes,
+    DEFAULT_PENDING_NO_BUILD_CLEANUP_MINUTES,
+  ),
 
   /** Cleanup interval in milliseconds (default: 1 hour) */
   CLEANUP_INTERVAL: parseInt(process.env.EXECUTION_CLEANUP_INTERVAL || '3600000', 10),
@@ -116,6 +161,7 @@ export const WEBSOCKET_CONFIG = {
 export const MONITORING_CONFIG = {
   HYBRID_SYNC: HYBRID_SYNC_CONFIG,
   EXECUTION_MONITOR: EXECUTION_MONITOR_CONFIG,
+  JENKINS_QUEUE: JENKINS_QUEUE_CONFIG,
   WEBSOCKET: WEBSOCKET_CONFIG,
 } as const;
 
@@ -171,8 +217,16 @@ export function validateMonitoringConfig(): {
     errors.push('QUICK_FAIL_THRESHOLD_SECONDS must be between 5 and 300 seconds');
   }
 
-  if (EXECUTION_MONITOR_CONFIG.EARLY_STUCK_THRESHOLD_SECONDS < 30 || EXECUTION_MONITOR_CONFIG.EARLY_STUCK_THRESHOLD_SECONDS > 600) {
-    errors.push('EARLY_STUCK_THRESHOLD_SECONDS must be between 30 and 600 seconds');
+  if (JENKINS_QUEUE_CONFIG.POLL_TIMEOUT_MS < 60_000 || JENKINS_QUEUE_CONFIG.POLL_TIMEOUT_MS > 3_600_000) {
+    errors.push('JENKINS_QUEUE_POLL_TIMEOUT_MS must be between 60000ms (1min) and 3600000ms (60min)');
+  }
+
+  if (EXECUTION_MONITOR_CONFIG.EARLY_STUCK_THRESHOLD_SECONDS > 3_900) {
+    errors.push('EARLY_STUCK_THRESHOLD_SECONDS must be no more than 3900 seconds');
+  }
+
+  if (EXECUTION_MONITOR_CONFIG.PENDING_NO_BUILD_CLEANUP_MINUTES > 24 * 60) {
+    errors.push('EXECUTION_PENDING_NO_BUILD_CLEANUP_MINUTES must be no more than 1440 minutes');
   }
 
   if (EXECUTION_MONITOR_CONFIG.STUCK_THRESHOLD_SECONDS < 60 || EXECUTION_MONITOR_CONFIG.STUCK_THRESHOLD_SECONDS > 1800) {
@@ -219,7 +273,9 @@ Execution Monitor:
   - Batch Size: ${EXECUTION_MONITOR_CONFIG.BATCH_SIZE}
   - Quick Fail Threshold: ${EXECUTION_MONITOR_CONFIG.QUICK_FAIL_THRESHOLD_SECONDS}s
   - Early Stuck Threshold: ${EXECUTION_MONITOR_CONFIG.EARLY_STUCK_THRESHOLD_SECONDS}s
+  - Pending No-build Cleanup: ${EXECUTION_MONITOR_CONFIG.PENDING_NO_BUILD_CLEANUP_MINUTES}min
   - Stuck Threshold: ${EXECUTION_MONITOR_CONFIG.STUCK_THRESHOLD_SECONDS}s
+  - Jenkins Queue Poll Timeout: ${JENKINS_QUEUE_CONFIG.POLL_TIMEOUT_MS}ms
   - Enabled: ${EXECUTION_MONITOR_CONFIG.ENABLED ? 'Yes' : 'No'}
 
 WebSocket:
