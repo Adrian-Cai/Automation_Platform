@@ -18,7 +18,6 @@ import {
   Monitor,
   Gauge,
   BrainCircuit,
-  History,
   ClipboardList,
   FileInput,
   FileText,
@@ -59,13 +58,12 @@ const navItems: NavItem[] = [
     icon: <BrainCircuit className="h-5 w-5" />,
     label: "AI 工作台",
     children: [
-      { label: "工作台首页", href: "/ai-workbench/overview", icon: <BrainCircuit className="h-4 w-4" /> },
-      { label: "全部记录", href: "/ai-workbench/records", icon: <History className="h-4 w-4" /> },
-      { label: "需求输入与解析", href: "/ai-workbench/requirement-input", icon: <FileInput className="h-4 w-4" /> },
-      { label: "需求分析与测试点", href: "/ai-workbench/requirement-analysis", icon: <ClipboardList className="h-4 w-4" /> },
-      { label: "用例生成与编辑", href: "/ai-workbench/case-generation", icon: <FileText className="h-4 w-4" /> },
-      { label: "质量检查与覆盖率", href: "/ai-workbench/quality-coverage", icon: <ShieldCheck className="h-4 w-4" /> },
-      { label: "历史记录与导出", href: "/ai-workbench/history-export", icon: <BookOpen className="h-4 w-4" /> },
+      { label: "首页", href: "/ai-workbench/home", icon: <BrainCircuit className="h-4 w-4" /> },
+      { label: "需求解析", href: "/ai-workbench/requirements", icon: <FileInput className="h-4 w-4" /> },
+      { label: "测试点", href: "/ai-workbench/test-points", icon: <ClipboardList className="h-4 w-4" /> },
+      { label: "用例生成", href: "/ai-workbench/test-cases", icon: <FileText className="h-4 w-4" /> },
+      { label: "质量检查", href: "/ai-workbench/quality", icon: <ShieldCheck className="h-4 w-4" /> },
+      { label: "导出记录", href: "/ai-workbench/exports", icon: <BookOpen className="h-4 w-4" /> },
     ],
   },
   { icon: <Boxes className="h-5 w-5" />, label: "任务管理", href: "/tasks" },
@@ -146,8 +144,8 @@ function MiniDrawer({ item, anchorRect, onClose, location, onNavigate }: MiniDra
       "
     >
       {/* Header label */}
-      <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
-        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+      <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 mb-1 min-w-0">
+        <span className="block truncate whitespace-nowrap text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
           {item.label}
         </span>
       </div>
@@ -165,17 +163,17 @@ function MiniDrawer({ item, anchorRect, onClose, location, onNavigate }: MiniDra
                   onClose();
                 }}
                 className={`
-                  w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all duration-150
+                  w-full flex h-10 items-center gap-2.5 px-3 rounded-lg text-sm transition-all duration-150 min-w-0
                   ${isActive
                     ? "bg-primary text-white shadow-sm shadow-primary/25"
                     : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                   }
                 `}
               >
-                <span className={isActive ? "text-white/80" : "text-slate-400 dark:text-slate-500"}>
+                <span className={`flex-shrink-0 ${isActive ? "text-white/80" : "text-slate-400 dark:text-slate-500"}`}>
                   {child.icon}
                 </span>
-                <span>{child.label}</span>
+                <span className="min-w-0 flex-1 truncate whitespace-nowrap text-left">{child.label}</span>
               </button>
             );
           })}
@@ -189,17 +187,17 @@ function MiniDrawer({ item, anchorRect, onClose, location, onNavigate }: MiniDra
               onClose();
             }}
             className={`
-              w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all duration-150
+              w-full flex h-10 items-center gap-2.5 px-3 rounded-lg text-sm transition-all duration-150 min-w-0
               ${item.href && isPathActive(location, item.href)
                 ? "bg-primary text-white shadow-sm shadow-primary/25"
                 : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
               }
             `}
           >
-            <span className={item.href && isPathActive(location, item.href) ? "text-white/80" : "text-slate-400 dark:text-slate-500"}>
+            <span className={`flex-shrink-0 ${item.href && isPathActive(location, item.href) ? "text-white/80" : "text-slate-400 dark:text-slate-500"}`}>
               {item.icon}
             </span>
-            <span>前往 {item.label}</span>
+            <span className="min-w-0 flex-1 truncate whitespace-nowrap text-left">前往 {item.label}</span>
           </button>
         </div>
       )}
@@ -308,22 +306,22 @@ function ExpandedNavItem({ item, location, onNavigate, defaultExpanded, badge }:
           type="button"
           onClick={() => setExpanded((v) => !v)}
           className={`
-            w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg
-            transition-all duration-200 group
+            w-full flex h-10 items-center justify-between gap-3 px-3 rounded-lg
+            transition-all duration-200 group min-w-0
             ${isActive
               ? "bg-primary/10 text-primary"
               : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white"
             }
           `}
         >
-          <div className="flex items-center gap-3">
-            <span className={`transition-colors ${isActive ? "text-primary" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`}>
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <span className={`flex-shrink-0 transition-colors ${isActive ? "text-primary" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`}>
               {item.icon}
             </span>
-            <span className="text-sm font-medium">{item.label}</span>
+            <span className="min-w-0 truncate whitespace-nowrap text-sm font-medium">{item.label}</span>
           </div>
           <ChevronDown
-            className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
+            className={`h-4 w-4 flex-shrink-0 text-slate-400 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
           />
         </button>
 
@@ -342,16 +340,16 @@ function ExpandedNavItem({ item, location, onNavigate, defaultExpanded, badge }:
                   key={child.href}
                   onClick={() => onNavigate(child.href)}
                   className={`
-                    w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm
-                    transition-all duration-150
+                    w-full flex h-10 items-center gap-2.5 px-3 rounded-lg text-sm
+                    transition-all duration-150 min-w-0
                     ${childActive
                       ? "bg-primary text-white shadow-sm shadow-primary/25"
                       : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white"
                     }
                   `}
                 >
-                  <span className={childActive ? "text-white/80" : ""}>{child.icon}</span>
-                  <span>{child.label}</span>
+                  <span className={`flex-shrink-0 ${childActive ? "text-white/80" : ""}`}>{child.icon}</span>
+                  <span className="min-w-0 flex-1 truncate whitespace-nowrap text-left">{child.label}</span>
                 </button>
               );
             })}
@@ -367,18 +365,18 @@ function ExpandedNavItem({ item, location, onNavigate, defaultExpanded, badge }:
       type="button"
       onClick={() => item.href && onNavigate(item.href)}
       className={`
-        w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
-        transition-all duration-200 group
+        w-full flex h-10 items-center gap-3 px-3 rounded-lg
+        transition-all duration-200 group min-w-0
         ${isActive
           ? "bg-primary text-white shadow-sm shadow-primary/25"
           : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white"
         }
       `}
     >
-      <span className={`transition-colors ${isActive ? "text-white/80" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`}>
+      <span className={`flex-shrink-0 transition-colors ${isActive ? "text-white/80" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`}>
         {item.icon}
       </span>
-      <span className="flex-1 text-sm font-medium text-left">{item.label}</span>
+      <span className="min-w-0 flex-1 truncate whitespace-nowrap text-left text-sm font-medium">{item.label}</span>
       {badge && <span className="flex-shrink-0">{badge}</span>}
     </button>
   );
@@ -508,7 +506,7 @@ function SidebarContent({ location, onNavigate, mode, onToggle }: SidebarContent
             {isExpanded ? (
               <>
                 <PanelLeftClose className="h-5 w-5 flex-shrink-0" />
-                <span className="text-sm font-medium">收起导航</span>
+                <span className="min-w-0 truncate whitespace-nowrap text-sm font-medium">收起导航</span>
               </>
             ) : (
               <PanelLeftOpen className="h-5 w-5" />
@@ -569,8 +567,8 @@ function SidebarContent({ location, onNavigate, mode, onToggle }: SidebarContent
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200"
           >
-            <LogOut className="h-5 w-5" />
-            <span className="text-sm font-medium">退出登录</span>
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            <span className="min-w-0 truncate whitespace-nowrap text-sm font-medium">退出登录</span>
           </button>
         ) : (
           <button

@@ -129,7 +129,7 @@ export default function AiWorkbenchHistoryExport(): JSX.Element {
 
   const handleOpenRecord = useCallback(
     (record: HistoryRecord): void => {
-      setLocation(`/ai-workbench/case-generation?docId=${encodeURIComponent(record.id)}`);
+      setLocation(`/ai-workbench/test-cases?docId=${encodeURIComponent(record.id)}`);
     },
     [setLocation]
   );
