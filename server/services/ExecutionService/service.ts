@@ -17,6 +17,7 @@ import {
 import { EXECUTION_CONFIG, EXECUTION_STATUS, TEST_RESULT_STATUS } from '../../config/constants';
 import logger from '../../utils/logger';
 import { LOG_CONTEXTS, createTimer } from '../../config/logging';
+import { EXECUTION_MONITOR_CONFIG } from '../../config/monitoring';
 import { ExecutionRepository } from '../../repositories/ExecutionRepository';
 import { dashboardService } from '../DashboardService';
 import { webSocketService } from '../WebSocketService';
@@ -829,14 +830,14 @@ export class ExecutionService {
     );
   }
 
-  async getStaleExecutionSummary(maxAgeHours = 24, stalePendingMinutes = 10) {
+  async getStaleExecutionSummary(maxAgeHours = 24, stalePendingMinutes = EXECUTION_MONITOR_CONFIG.PENDING_NO_BUILD_CLEANUP_MINUTES) {
     return this.executionRepository.getStaleExecutionSummary(maxAgeHours, stalePendingMinutes);
   }
 
   /**
    * 一次性清理历史卡住执行（pending/running -> aborted）
    */
-  async cleanupStaleExecutions(maxAgeHours = 24, stalePendingMinutes = 10, dryRun = false) {
+  async cleanupStaleExecutions(maxAgeHours = 24, stalePendingMinutes = EXECUTION_MONITOR_CONFIG.PENDING_NO_BUILD_CLEANUP_MINUTES, dryRun = false) {
     const summary = await this.executionRepository.getStaleExecutionSummary(maxAgeHours, stalePendingMinutes);
 
     if (dryRun) {

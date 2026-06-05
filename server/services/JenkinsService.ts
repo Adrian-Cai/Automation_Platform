@@ -1,4 +1,5 @@
 import { isMisconfiguredTestRepoUrl, normalizeGitRemoteUrl } from '../utils/jenkinsRepoValidation';
+import { EXECUTION_MONITOR_CONFIG, JENKINS_QUEUE_CONFIG } from '../config/monitoring';
 import { normalizeConfiguredJenkinsBaseUrl } from '../utils/jenkinsUrl';
 import logger from '../utils/logger';
 import { getSecretOrEnv } from '../utils/secrets';
@@ -680,12 +681,14 @@ export class JenkinsService {
                 });
               }
             } else {
-              // 构建被取消或轮询超时：通知调用方将平台执行状态更新为 aborted
+              // 构建被取消或超过受保护的队列等待窗口后，才通知调用方将平台执行状态更新为 aborted
               const reason = buildInfo && 'cancelled' in buildInfo ? 'cancelled' : 'timeout';
-              logger.warn('pollQueueForBuild: build not started', {
+              logger.warn('pollQueueForBuild: build not started within protected queue window', {
                 runId,
                 queueId,
                 reason,
+                queuePollTimeoutMs: JENKINS_QUEUE_CONFIG.POLL_TIMEOUT_MS,
+                pendingCleanupMinutes: EXECUTION_MONITOR_CONFIG.PENDING_NO_BUILD_CLEANUP_MINUTES,
               }, 'JENKINS');
               if (onBuildCancelled) {
                 onBuildCancelled(reason).catch(err => {
@@ -774,14 +777,14 @@ export class JenkinsService {
    *
    * @param queueId Jenkins 队列项 ID
    * @param runId 平台运行记录 ID（仅用于日志）
-   * @param maxWaitMs 最长等待时间（毫秒），默认 60 秒
+   * @param maxWaitMs 最长等待时间（毫秒），默认由 JENKINS_QUEUE_POLL_TIMEOUT_MS 控制
    * @param pollIntervalMs 轮询间隔（毫秒），默认 3 秒
    * @returns 包含 buildNumber、buildUrl 和 queueWaitMs（队列等待时长）的对象，或 null（超时/取消）
    */
   private async pollQueueForBuild(
     queueId: number,
     runId: number,
-    maxWaitMs = parseInt(process.env.JENKINS_QUEUE_POLL_TIMEOUT_MS || String(5 * 60_000), 10), // 默认等待 5 分钟（可通过环境变量调整）
+    maxWaitMs = JENKINS_QUEUE_CONFIG.POLL_TIMEOUT_MS, // 默认等待 30 分钟，避免 Jenkins executor 繁忙时误中止定时任务
     pollIntervalMs = 3_000
   ): Promise<{ buildNumber: number; buildUrl: string; queueWaitMs: number } | null | { cancelled: true } | { timeout: true }> {
 
