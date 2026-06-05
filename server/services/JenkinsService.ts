@@ -47,7 +47,7 @@ export class JenkinsService {
 
   private readonly crumbTtlMs = 5 * 60 * 1000;
 
-  /** 内存指标：queueId → buildNumber 映射统计 */
+  /** 内存指标：queueId �?buildNumber 映射统计 */
   private readonly queueMetrics: JenkinsQueueMetrics = {
     totalPolls: 0,
     resolvedCount: 0,
@@ -59,7 +59,7 @@ export class JenkinsService {
   };
 
   /**
-   * 获取 Jenkins Queue 指标快照（用于 /metrics 接口）
+   * 获取 Jenkins Queue 指标快照（用�?/metrics 接口�?
    */
   getQueueMetrics(): Readonly<JenkinsQueueMetrics> {
     return { ...this.queueMetrics };
@@ -72,7 +72,7 @@ export class JenkinsService {
     this.queueMetrics.resolvedCount++;
     this.queueMetrics.totalWaitMs += waitMs;
     this.queueMetrics.waitTimeSamples.push(waitMs);
-    // 保留最近 1000 条样本
+    // 保留最�?1000 条样�?
     if (this.queueMetrics.waitTimeSamples.length > 1000) {
       this.queueMetrics.waitTimeSamples.shift();
     }
@@ -86,7 +86,7 @@ export class JenkinsService {
   }
 
   constructor() {
-    // 从 Docker Secrets 或环境变量加载 Jenkins 配置
+    // �?Docker Secrets 或环境变量加�?Jenkins 配置
     const token = getSecretOrEnv('JENKINS_TOKEN');
     if (!token) {
       logger.warn('JENKINS_TOKEN not set, Jenkins integration disabled', {}, 'JENKINS');
@@ -180,7 +180,7 @@ export class JenkinsService {
   }
 
   /**
-   * 获取基础认证头
+   * 获取基础认证�?
    */
   private getAuthHeader(): string {
     const credentials = Buffer.from(`${this.config.username}:${this.config.token}`).toString('base64');
@@ -356,7 +356,7 @@ export class JenkinsService {
   }
 
   /**
-   * 根据用例类型获取对应的 Job 名称
+   * 根据用例类型获取对应�?Job 名称
    */
   private getJobName(type: CaseType): string {
     return this.config.jobs[type] || this.config.jobs.api;
@@ -518,7 +518,7 @@ export class JenkinsService {
       );
 
       if (response.status === 201 || response.status === 200) {
-        // 从 Location header 获取 queue ID
+        // �?Location header 获取 queue ID
         const location = response.headers.get('Location');
         const queueId = location ? this.extractQueueId(location) : undefined;
 
@@ -552,10 +552,10 @@ export class JenkinsService {
    *
    * [dev-10] 使用 queueId 可靠映射 buildId（非阻塞设计）：
    * 1. 立即触发 Jenkins 并从 Location header 获取 queueId
-   * 2. 立即返回 success（不等待构建开始），避免长时间阻塞调用方
-   * 3. 若提供了 onBuildResolved 回调，在后台异步轮询 Queue API，
-   *    一旦 Jenkins 分配了真实 buildNumber，调用回调更新数据库
-   * 注意：不再使用 lastBuild 推断（存在竞态条件，高并发时会拿到错误 build 号）
+   * 2. 立即返回 success（不等待构建开始），避免长时间阻塞调用�?
+   * 3. 若提供了 onBuildResolved 回调，在后台异步轮询 Queue API�?
+   *    一�?Jenkins 分配了真�?buildNumber，调用回调更新数据库
+   * 注意：不再使�?lastBuild 推断（存在竞态条件，高并发时会拿到错�?build 号）
    */
   async triggerBatchJob(
     runId: number,
@@ -635,7 +635,7 @@ export class JenkinsService {
       }, 'JENKINS');
 
       if (response.status === 201 || response.status === 200) {
-        // [dev-10] 从 Location header 提取 queueId（形如 .../queue/item/123/）
+        // [dev-10] �?Location header 提取 queueId（形�?.../queue/item/123/�?
         const location = response.headers.get('Location');
         const queueId = location ? this.extractQueueId(location) : undefined;
 
@@ -646,7 +646,7 @@ export class JenkinsService {
         }, 'JENKINS');
 
         if (!queueId) {
-          // 无 queueId 时：不再调用 lastBuild（竞态风险），直接返回成功但无 buildUrl
+          // �?queueId 时：不再调用 lastBuild（竞态风险），直接返回成功但�?buildUrl
           logger.warn('No queueId in Location header, buildUrl will be unknown', {
             runId,
             location,
@@ -670,7 +670,7 @@ export class JenkinsService {
         if (onBuildResolved || onBuildCancelled) {
           this.pollQueueForBuild(queueId, runId).then(buildInfo => {
             if (buildInfo && 'buildNumber' in buildInfo) {
-              // 构建成功启动：通知调用方更新 buildId/buildUrl
+              // 构建成功启动：通知调用方更�?buildId/buildUrl
               if (onBuildResolved) {
                 onBuildResolved(buildInfo.buildNumber, buildInfo.buildUrl, buildInfo.queueWaitMs).catch(err => {
                   logger.warn('onBuildResolved callback failed', {
@@ -710,11 +710,11 @@ export class JenkinsService {
           });
         }
 
-        // 立即返回（不等待 poll 完成），调用方可用 queueId 做追踪
+        // 立即返回（不等待 poll 完成），调用方可�?queueId 做追�?
         return {
           success: true,
           queueId,
-          buildUrl: undefined,   // 尚未解析，将由 onBuildResolved 回调更新
+          buildUrl: undefined,   // 尚未解析，将�?onBuildResolved 回调更新
           buildNumber: undefined,
           message: 'Batch job triggered successfully',
           errorCategory: 'none',
@@ -769,15 +769,15 @@ export class JenkinsService {
   }
 
   /**
-   * [dev-10] 通过 queueId 轮询 Jenkins Queue API，等待构建真正分配 buildNumber
+   * [dev-10] 通过 queueId 轮询 Jenkins Queue API，等待构建真正分�?buildNumber
    *
-   * Jenkins 在接受触发请求后，构建先进入队列（Queue），等待 executor 空闲后才真正开始。
+   * Jenkins 在接受触发请求后，构建先进入队列（Queue），等待 executor 空闲后才真正开始�?
    * Queue API: GET /queue/item/:queueId/api/json
-   * 当构建开始后，响应中会出现 executable.number 和 executable.url。
+   * 当构建开始后，响应中会出�?executable.number �?executable.url�?
    *
    * @param queueId Jenkins 队列项 ID
    * @param runId 平台运行记录 ID（仅用于日志）
-   * @param maxWaitMs 最长等待时间（毫秒），默认由 JENKINS_QUEUE_POLL_TIMEOUT_MS 控制
+   * @param maxWaitMs 最长等待时间（毫秒），默认由 JENKINS_QUEUE_CONFIG.POLL_TIMEOUT_MS 控制
    * @param pollIntervalMs 轮询间隔（毫秒），默认 3 秒
    * @returns 包含 buildNumber、buildUrl 和 queueWaitMs（队列等待时长）的对象，或 null（超时/取消）
    */
@@ -788,7 +788,7 @@ export class JenkinsService {
     pollIntervalMs = 3_000
   ): Promise<{ buildNumber: number; buildUrl: string; queueWaitMs: number } | null | { cancelled: true } | { timeout: true }> {
 
-    // 规范化 Jenkins base URL（确保没有尾部斜杠）
+    // 规范�?Jenkins base URL（确保没有尾部斜杠）
     const base = this.config.baseUrl.replace(/\/+$/, '');
     const queueApiUrl = `${base}/queue/item/${queueId}/api/json`;
 
@@ -796,7 +796,7 @@ export class JenkinsService {
     const deadline = startMs + maxWaitMs;
     let attempt = 0;
 
-    // 更新总轮询次数
+    // 更新总轮询次�?
     this.queueMetrics.totalPolls++;
 
     logger.debug('Starting queue poll for build resolution', {
@@ -825,14 +825,14 @@ export class JenkinsService {
             attempt,
             status: response.status,
           }, 'JENKINS');
-          // 非 200 时稍等再试（可能是瞬时网络问题）
+          // �?200 时稍等再试（可能是瞬时网络问题）
           await this.sleep(pollIntervalMs);
           continue;
         }
 
         const item = await response.json() as JenkinsQueueItem;
 
-        // 构建被取消
+        // 构建被取�?
         if (item.cancelled) {
           this.queueMetrics.timeoutCount++;
           logger.warn('Jenkins queue item was cancelled', {
@@ -843,13 +843,13 @@ export class JenkinsService {
           return { cancelled: true };
         }
 
-        // 构建已经分配到 executor，可以取出 buildNumber 和 buildUrl
+        // 构建已经分配�?executor，可以取�?buildNumber �?buildUrl
         if (item.executable) {
           const buildNumber = item.executable.number;
           const buildUrl = this.normalizeJenkinsUrl(item.executable.url);
           const queueWaitMs = Date.now() - startMs;
 
-          // 记录成功解析的队列等待时长指标
+          // 记录成功解析的队列等待时长指�?
           this.recordQueueWait(queueWaitMs);
 
           logger.info('Build started: resolved buildNumber via queueId', {
@@ -864,7 +864,7 @@ export class JenkinsService {
           return { buildNumber, buildUrl, queueWaitMs };
         }
 
-        // 仍在队列等待中（why 字段描述原因，如 "等待 executor"）
+        // 仍在队列等待中（why 字段描述原因，如 "等待 executor"�?
         logger.debug('Build still in queue, waiting...', {
           runId,
           queueId,
@@ -904,7 +904,7 @@ export class JenkinsService {
   }
 
   /**
-   * 从 Location header 中提取 Queue ID
+   * �?Location header 中提�?Queue ID
    */
   private extractQueueId(location: string): number | undefined {
     const match = location.match(/\/queue\/item\/(\d+)/);
@@ -917,7 +917,7 @@ export class JenkinsService {
   private normalizeJenkinsUrl(url: string): string {
     if (!url) return url;
 
-    // 替换错误的域名为正确的域名
+    // 替换错误的域名为正确的域�?
     const aliasedUrl = url
       .replace(/^(https?:\/\/)www\.wiac\.xyz(?::8080)?/i, '$1jenkins.wiac.xyz')
       .replace(/^(https?:\/\/jenkins\.wiac\.xyz):8080(?=\/|$)/i, '$1');
@@ -971,7 +971,7 @@ export class JenkinsService {
   }
 
   /**
-   * 获取 Jenkins 配置信息（不包含敏感信息）
+   * 获取 Jenkins 配置信息（不包含敏感信息�?
    */
   getConfigInfo(): { baseUrl: string; jobs: JenkinsConfig['jobs'] } | null {
     if (!this.enabled) {
@@ -995,10 +995,10 @@ export class JenkinsService {
   }
 
   /**
-   * 根据 HTTP 状态码对 Jenkins API 错误进行分类
+   * 根据 HTTP 状态码�?Jenkins API 错误进行分类
    *
-   * 可重试（transient）: 429 (rate limited), 5xx (server error)
-   * 不可重试（permanent）: 400 (bad request), 401/403 (auth), 404 (not found), etc.
+   * 可重试（transient�? 429 (rate limited), 5xx (server error)
+   * 不可重试（permanent�? 400 (bad request), 401/403 (auth), 404 (not found), etc.
    */
   private classifyHttpError(status: number): JenkinsErrorCategory {
     if (status === 401 || status === 403) return 'auth_failed';
@@ -1011,24 +1011,24 @@ export class JenkinsService {
   }
 
   /**
-   * 根据异常类型对网络错误进行分类
+   * 根据异常类型对网络错误进行分�?
    *
-   * 可重试: DNS失败、连接拒绝(ECONNREFUSED)、连接超时(ETIMEDOUT)、
+   * 可重�? DNS失败、连接拒�?ECONNREFUSED)、连接超�?ETIMEDOUT)�?
    *         连接重置(ECONNRESET)、网络中断等
    */
   private classifyNetworkError(err: Error): JenkinsErrorCategory {
     const msg = err.message.toLowerCase();
     const code = (err as NodeJS.ErrnoException).code;
 
-    // 网络层可重试错误码
+    // 网络层可重试错误�?
     const RETRYABLE_ERRNO_CODES = new Set([
-      'ECONNRESET',     // 连接被重置
-      'ECONNREFUSED',   // 连接被拒绝
+      'ECONNRESET',     // 连接被重�?
+      'ECONNREFUSED',   // 连接被拒�?
       'ETIMEDOUT',      // 操作超时
       'ENOTFOUND',      // DNS 解析失败
-      'EHOSTUNREACH',   // 主机不可达
+      'EHOSTUNREACH',   // 主机不可�?
       'ENETDOWN',       // 网络接口关闭
-      'ENETUNREACH',    // 网络不可达
+      'ENETUNREACH',    // 网络不可�?
       'EAI_AGAIN',      // DNS 临时失败
     ]);
 
