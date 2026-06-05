@@ -295,13 +295,18 @@ export class ExecutionMonitorService {
     this.cleanupTimer = setTimeout(async () => {
       try {
         const maxAgeHours = EXECUTION_MONITOR_CONFIG.MAX_AGE_HOURS;
-        const abandonedCount = await this.executionRepository.markOldStuckExecutionsAsAbandoned(maxAgeHours);
+        const pendingNoBuildCleanupMinutes = EXECUTION_MONITOR_CONFIG.PENDING_NO_BUILD_CLEANUP_MINUTES;
+        const abandonedCount = await this.executionRepository.markOldStuckExecutionsAsAbandoned(
+          maxAgeHours,
+          pendingNoBuildCleanupMinutes,
+        );
 
         if (abandonedCount > 0) {
           logger.info('Cleaned up old stuck executions', {
             event: LOG_EVENTS.MONITOR_CLEANUP_COMPLETED,
             abandonedCount,
             maxAgeHours,
+            pendingNoBuildCleanupMinutes,
           }, LOG_CONTEXTS.MONITOR);
         }
 
@@ -440,9 +445,9 @@ export class ExecutionMonitorService {
     const runId = execution.id;
 
     try {
-      // [dev-11] 兜底处理：如果执行超过 2 分钟仍无 jenkinsBuildId，说明 Jenkins 触发已失败
-      // 正常情况下 pollQueueForBuild 在 60 秒内会解析出 buildId，超过 2 分钟说明已完全丢失
-      const NO_BUILD_ID_TIMEOUT_SECONDS = EXECUTION_MONITOR_CONFIG.EARLY_STUCK_THRESHOLD_SECONDS; // 默认 120s
+      // [dev-11] 兜底处理：如果执行超过配置的受保护队列等待窗口仍无 jenkinsBuildId，说明 Jenkins 触发已失败
+      // 注意：该阈值必须大于 Jenkins Queue 轮询超时，避免 executor 繁忙时把仍在排队的定时任务误标为 aborted。
+      const NO_BUILD_ID_TIMEOUT_SECONDS = EXECUTION_MONITOR_CONFIG.EARLY_STUCK_THRESHOLD_SECONDS;
       if (!execution.jenkinsBuildId && execution.durationSeconds !== null && execution.durationSeconds > NO_BUILD_ID_TIMEOUT_SECONDS) {
         logger.warn('Execution has no jenkinsBuildId after threshold, marking as aborted', {
           event: LOG_EVENTS.MONITOR_EXECUTION_STUCK_DETECTED,

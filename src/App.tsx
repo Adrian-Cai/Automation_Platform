@@ -185,6 +185,12 @@ function Router() {
             <AiWorkbenchOverview />
           </ProtectedLayout>
         </Route>
+        <Route path="/ai-workbench/overview">
+          <Redirect to="/ai-workbench/home" />
+        </Route>
+            <AiWorkbenchOverview />
+          </ProtectedRoute>
+        </Route>
         <Route path="/ai-workbench/requirements">
           <ProtectedLayout>
             <AiWorkbenchRequirementInput />

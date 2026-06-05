@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Cron } from 'croner';
 
 /**
@@ -702,5 +702,178 @@ describe('TaskSchedulerService - executeTask scriptPaths 前置校验（Bug修�
 
     // 修复后：无论触发多少次，都不会创建运行记录
     expect(createdRecords).toBe(0);
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * 模拟 TaskSchedulerService 中“槽位生命周期”的核心逻辑：
+ * - registerRunningSlot: 立即启动 SLOT_HOLD_TIMEOUT_MS 计时器
+ * - resetSlotTimerForBuildStart: 构建出队列时清掉旧计时器，重新计时
+ * - 计时器到期时释放槽位并触发 drainQueue（这里用回调模拟）
+ *
+ * 用于回归测试 queue-wait 接近 SLOT_HOLD_TIMEOUT_MS 时的并发超限 bug。
+ */
+class MockSlotLifecycle {
+  readonly slots: Map<number, { taskId: number; startedAt: number; timeoutTimer: NodeJS.Timeout }> = new Map();
+  releasedRunIds: number[] = [];
+  onDrainQueue: () => void = () => {};
+
+  constructor(private readonly slotHoldTimeoutMs: number) {}
+
+  registerRunningSlot(taskId: number, runId: number): void {
+    const timeoutTimer = setTimeout(() => {
+      const slot = this.slots.get(runId);
+      if (slot) {
+        this.slots.delete(runId);
+        this.releasedRunIds.push(runId);
+        this.onDrainQueue();
+      }
+    }, this.slotHoldTimeoutMs);
+    if (timeoutTimer.unref) timeoutTimer.unref();
+    this.slots.set(runId, { taskId, startedAt: Date.now(), timeoutTimer });
+  }
+
+  resetSlotTimerForBuildStart(runId: number): boolean {
+    const slot = this.slots.get(runId);
+    if (!slot) return false;
+    clearTimeout(slot.timeoutTimer);
+    const newTimer = setTimeout(() => {
+      if (this.slots.has(runId)) {
+        this.slots.delete(runId);
+        this.releasedRunIds.push(runId);
+        this.onDrainQueue();
+      }
+    }, this.slotHoldTimeoutMs);
+    if (newTimer.unref) newTimer.unref();
+    this.slots.set(runId, { ...slot, startedAt: Date.now(), timeoutTimer: newTimer });
+    return true;
+  }
+}
+
+describe('TaskSchedulerService - 槽位计时器在 Jenkins 队列等待后正确重置（Bug 回归）', () => {
+  const SLOT_HOLD_TIMEOUT_MS = 30 * 60 * 1000;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  it('【旧行为】槽位在触发瞬间就启动计时器 → 队列等待接近 SLOT_HOLD_TIMEOUT_MS 时立即到期', () => {
+    // 旧实现：registerRunningSlot 设的 30 分钟计时器在 T+queueWaitMs+ε 触发
+    const lifecycle = new MockSlotLifecycle(SLOT_HOLD_TIMEOUT_MS);
+    const taskId = 1;
+    const runId = 100;
+
+    lifecycle.registerRunningSlot(taskId, runId);
+    expect(lifecycle.slots.has(runId)).toBe(true);
+
+    // 模拟 Jenkins 队列等待 29 分 50 秒（接近 30 分钟上限）
+    const queueWaitMs = SLOT_HOLD_TIMEOUT_MS - 10 * 1000;
+    vi.advanceTimersByTime(queueWaitMs);
+
+    // 此时槽位仍存在（差 10 秒到期）
+    expect(lifecycle.slots.has(runId)).toBe(true);
+    expect(lifecycle.releasedRunIds).toEqual([]);
+
+    // 触发构建解析 → scheduleJenkinsFallbackSync
+    // 旧实现下：再过几毫秒，原 30 分钟计时器就会到期
+    vi.advanceTimersByTime(20 * 1000);
+
+    // ❌ Bug：槽位在 scheduleJenkinsFallbackSync 之后立即被释放
+    expect(lifecycle.slots.has(runId)).toBe(false);
+    expect(lifecycle.releasedRunIds).toEqual([runId]);
+  });
+
+  it('【修复后】resetSlotTimerForBuildStart 让槽位再多保留 SLOT_HOLD_TIMEOUT_MS', () => {
+    const lifecycle = new MockSlotLifecycle(SLOT_HOLD_TIMEOUT_MS);
+    const taskId = 1;
+    const runId = 100;
+
+    lifecycle.registerRunningSlot(taskId, runId);
+
+    // 队列等待 29 分 50 秒
+    const queueWaitMs = SLOT_HOLD_TIMEOUT_MS - 10 * 1000;
+    vi.advanceTimersByTime(queueWaitMs);
+
+    // 构建出队列 → 触发修复逻辑
+    const reset = lifecycle.resetSlotTimerForBuildStart(runId);
+    expect(reset).toBe(true);
+
+    // 模拟 scheduleJenkinsFallbackSync 启动
+    vi.advanceTimersByTime(20 * 1000);
+    expect(lifecycle.slots.has(runId)).toBe(true);
+    expect(lifecycle.releasedRunIds).toEqual([]);
+
+    // 再过 (SLOT_HOLD_TIMEOUT_MS - 20s) 槽位仍应存在
+    vi.advanceTimersByTime(SLOT_HOLD_TIMEOUT_MS - 30 * 1000);
+    expect(lifecycle.slots.has(runId)).toBe(true);
+
+    // 再过 30 秒，新计时器到期，槽位才被释放
+    vi.advanceTimersByTime(30 * 1000);
+    expect(lifecycle.slots.has(runId)).toBe(false);
+    expect(lifecycle.releasedRunIds).toEqual([runId]);
+  });
+
+  it('【修复后】当槽位已被释放（队列等待 > SLOT_HOLD_TIMEOUT_MS）时，reset 安全返回 false', () => {
+    const lifecycle = new MockSlotLifecycle(SLOT_HOLD_TIMEOUT_MS);
+    const taskId = 1;
+    const runId = 100;
+
+    lifecycle.registerRunningSlot(taskId, runId);
+
+    // 队列等待超过 SLOT_HOLD_TIMEOUT_MS（极端情况：构建等了 31 分钟才被分配 buildNumber）
+    vi.advanceTimersByTime(SLOT_HOLD_TIMEOUT_MS + 60 * 1000);
+
+    // 槽位已被释放（兜底超时触发）
+    expect(lifecycle.slots.has(runId)).toBe(false);
+    expect(lifecycle.releasedRunIds).toEqual([runId]);
+
+    // 此时构建才被分配 buildNumber，调用 reset 应安全失败，不抛错
+    const reset = lifecycle.resetSlotTimerForBuildStart(runId);
+    expect(reset).toBe(false);
+    // 槽位仍不存在，没有被意外复活
+    expect(lifecycle.slots.has(runId)).toBe(false);
+  });
+
+  it('【修复后】队列等待远小于 SLOT_HOLD_TIMEOUT_MS 时，总持有时间 = queueWaitMs + SLOT_HOLD_TIMEOUT_MS', () => {
+    const lifecycle = new MockSlotLifecycle(SLOT_HOLD_TIMEOUT_MS);
+    const taskId = 1;
+    const runId = 100;
+
+    lifecycle.registerRunningSlot(taskId, runId);
+
+    const queueWaitMs = 5 * 60 * 1000; // 队列等 5 分钟
+    vi.advanceTimersByTime(queueWaitMs);
+
+    lifecycle.resetSlotTimerForBuildStart(runId);
+
+    // reset 后 (SLOT_HOLD_TIMEOUT_MS - 1ms) 槽位仍存在
+    vi.advanceTimersByTime(SLOT_HOLD_TIMEOUT_MS - 1);
+    expect(lifecycle.slots.has(runId)).toBe(true);
+
+    // 再过 1ms 触发新计时器，槽位被释放
+    vi.advanceTimersByTime(1);
+    expect(lifecycle.slots.has(runId)).toBe(false);
+    expect(lifecycle.releasedRunIds).toEqual([runId]);
+  });
+
+  it('【修复后】重置后 drainQueue 只在槽位真正到期时才被调用', () => {
+    const lifecycle = new MockSlotLifecycle(SLOT_HOLD_TIMEOUT_MS);
+    const drainCalls: number[] = [];
+    lifecycle.onDrainQueue = () => drainCalls.push(Date.now());
+
+    lifecycle.registerRunningSlot(1, 100);
+    const queueWaitMs = SLOT_HOLD_TIMEOUT_MS - 10 * 1000;
+    vi.advanceTimersByTime(queueWaitMs);
+
+    // reset 阶段不应触发 drainQueue
+    lifecycle.resetSlotTimerForBuildStart(100);
+    vi.advanceTimersByTime(60 * 1000);
+    expect(drainCalls).toEqual([]);
+
+    // 新计时器到期才 drain
+    vi.advanceTimersByTime(SLOT_HOLD_TIMEOUT_MS);
+    expect(drainCalls.length).toBe(1);
   });
 });
