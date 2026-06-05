@@ -50,16 +50,18 @@ export default function Overview() {
   return (
     <div className="max-w-full overflow-hidden p-6">
       <div className="space-y-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <section className="flex min-h-[120px] flex-col items-start justify-between gap-6 rounded-xl border border-slate-200 bg-white px-8 py-6 shadow-[0_4px_16px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-950/60 md:flex-row md:items-center">
           <div>
-            <Badge variant="secondary" className="mb-3">AI Workbench</Badge>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">AI 测试用例生成工作台</h1>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">从需求输入、测试点确认到用例生成与导出的一站式效率看板。</p>
+            <div className="mb-1.5 text-[13px] font-semibold leading-5 text-blue-600">AI Workbench</div>
+            <h1 className="m-0 text-[26px] font-bold leading-[34px] text-slate-950 dark:text-white">AI 测试用例生成工作台</h1>
+            <p className="mt-2 text-sm leading-[22px] text-slate-500 dark:text-slate-400">从需求输入、测试点确认到用例生成与导出的一站式效率看板。</p>
           </div>
-          <Button className="gap-2"><Rocket className="h-4 w-4" />快速新建需求</Button>
-        </div>
+          <div className="w-full md:w-auto">
+            <Button className="h-10 w-full gap-2 rounded-lg bg-green-600 px-5 font-medium text-white hover:bg-green-700 md:w-auto"><Rocket className="h-4 w-4" />快速新建需求</Button>
+          </div>
+        </section>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="!mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {stats.map((item) => {
             const Icon = item.icon;
             return (
@@ -75,7 +77,7 @@ export default function Overview() {
               </Card>
             );
           })}
-        </div>
+        </section>
 
         <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <Card>
