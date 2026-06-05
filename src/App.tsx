@@ -187,9 +187,9 @@ function Router() {
           </ProtectedLayout>
         </Route>
         <Route path="/ai-workbench/overview">
-          <ProtectedLayout>
+          <ProtectedRoute>
             <AiWorkbenchOverview />
-          </ProtectedLayout>
+          </ProtectedRoute>
         </Route>
         <Route path="/ai-workbench/requirement-input">
           <ProtectedLayout>
