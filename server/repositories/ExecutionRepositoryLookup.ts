@@ -11,6 +11,7 @@ import {
   TestRunResultStatusType,
   TestRunTriggerTypeType,
 } from '../../shared/types/execution';
+import { EXECUTION_MONITOR_CONFIG } from '../config/monitoring';
 import { ExecutionRepositoryBase } from './ExecutionRepositoryBase';
 import type {
   BatchResults,
@@ -356,10 +357,10 @@ export abstract class ExecutionRepositoryLookup extends ExecutionRepositoryBase 
    *   1. start_time 不为 null 且超过 maxAgeHours（正常超时的 running/pending）
    *   2. start_time IS NULL 且 created_at 超过 stuckPendingMinutes（Jenkins 从未触发的 pending，服务重启时队列丢失）
    * @param maxAgeHours        最大运行时长（小时），超过时清理 start_time 不为 null 的记录
-   * @param stuckPendingMinutes Jenkins 未触发的 pending 最长保留时间（分钟），默认 10 分钟
+   * @param stuckPendingMinutes Jenkins 未触发的 pending 最长保留时间（分钟），默认由监控配置控制
    * @returns 更新的执行数量
    */
-  async markOldStuckExecutionsAsAbandoned(maxAgeHours: number = 24, stuckPendingMinutes: number = 10): Promise<number> {
+  async markOldStuckExecutionsAsAbandoned(maxAgeHours: number = 24, stuckPendingMinutes: number = EXECUTION_MONITOR_CONFIG.PENDING_NO_BUILD_CLEANUP_MINUTES): Promise<number> {
     // 使用原生 SQL 支持 OR 条件，避免 TypeORM QueryBuilder 的 OR 限制
     const result = await this.testRunRepository.query(
       `UPDATE Auto_TestRun
@@ -381,7 +382,7 @@ export abstract class ExecutionRepositoryLookup extends ExecutionRepositoryBase 
   /**
    * 汇总历史卡住记录（用于运行记录页提示条）
    */
-  async getStaleExecutionSummary(maxAgeHours: number = 24, stuckPendingMinutes: number = 10): Promise<StaleExecutionSummary> {
+  async getStaleExecutionSummary(maxAgeHours: number = 24, stuckPendingMinutes: number = EXECUTION_MONITOR_CONFIG.PENDING_NO_BUILD_CLEANUP_MINUTES): Promise<StaleExecutionSummary> {
     const rows = await this.testRunRepository.query(
       `SELECT
          SUM(
