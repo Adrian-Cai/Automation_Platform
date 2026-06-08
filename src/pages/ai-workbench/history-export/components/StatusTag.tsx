@@ -2,13 +2,13 @@ import type { HistoryStatus } from '../types';
 
 const statusStyles: Record<HistoryStatus, string> = {
   success: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  processing: 'border-orange-200 bg-orange-50 text-orange-700',
+  draft: 'border-slate-200 bg-slate-50 text-slate-600',
   failed: 'border-red-200 bg-red-50 text-red-700',
 };
 
 const statusLabels: Record<HistoryStatus, string> = {
   success: '生成成功',
-  processing: '生成中',
+  draft: '草稿',
   failed: '生成失败',
 };
 

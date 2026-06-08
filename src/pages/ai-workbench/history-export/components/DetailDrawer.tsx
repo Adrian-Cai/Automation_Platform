@@ -20,6 +20,7 @@ export default function DetailDrawer({ record, onClose }: DetailDrawerProps): JS
     { label: '项目名称', value: record.projectName },
     { label: '需求名称', value: record.requirementName },
     { label: '生成内容', value: record.generatedContent },
+    { label: '测试点数', value: `${record.testPointCount} 条` },
     { label: '用例数量', value: `${record.caseCount} 条` },
     { label: '保存位置', value: record.owner },
     { label: '生成耗时', value: record.duration },
