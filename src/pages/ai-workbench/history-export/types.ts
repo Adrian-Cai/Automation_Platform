@@ -1,8 +1,8 @@
 import type { LucideIcon } from 'lucide-react';
 
-export type HistoryStatus = 'success' | 'processing' | 'failed';
+export type HistoryStatus = 'success' | 'draft' | 'failed';
 export type WorkspaceTab = 'history' | 'versions' | 'exports';
-export type ExportFormat = 'Excel' | 'Markdown' | 'JSON' | 'PDF';
+export type ExportFormat = 'Excel' | 'Markdown' | 'JSON' | '测试平台同步';
 
 export interface HistoryRecord {
   id: string;
@@ -10,6 +10,7 @@ export interface HistoryRecord {
   projectName: string;
   requirementName: string;
   generatedContent: string;
+  testPointCount: number;
   caseCount: number;
   status: HistoryStatus;
   owner: string;
