@@ -1,4 +1,5 @@
 import { ChevronRight, Info } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 const legendItems = [
   { label: '已覆盖', value: '312 (78%)', dotClassName: 'bg-[#2563EB]' },
@@ -7,8 +8,10 @@ const legendItems = [
 ];
 
 export default function CoverageOverviewCard(): JSX.Element {
+  const [, navigate] = useLocation();
+
   const handleViewCoverage = (): void => {
-    console.log('查看覆盖率详情');
+    navigate('/ai-workbench/quality-check');
   };
 
   return (
@@ -44,7 +47,7 @@ export default function CoverageOverviewCard(): JSX.Element {
         <span className="text-[#6B7280]">更新时间：2024-05-20 14:30</span>
       </div>
 
-      <button type="button" onClick={handleViewCoverage} className="mx-auto mt-4 flex items-center gap-1 text-sm font-medium text-[#2563EB] hover:underline">
+      <button type="button" aria-label="跳转到质量检查" onClick={handleViewCoverage} className="mx-auto mt-4 flex cursor-pointer items-center gap-1 text-sm font-medium text-[#2563EB] transition hover:text-[#1D4ED8] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
         查看覆盖率详情 <ChevronRight className="h-4 w-4" />
       </button>
     </section>

@@ -33,13 +33,13 @@ import { User } from "lucide-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
-const AI_WORKBENCH_CASE_GENERATION_ROUTE = "/ai-workbench/test-cases";
+const AI_WORKBENCH_CASE_GENERATION_ROUTES = ["/ai-workbench/test-cases", "/ai-workbench/use-case-generate"];
+const AI_WORKBENCH_CASE_GENERATION_ROUTE = AI_WORKBENCH_CASE_GENERATION_ROUTES[0];
 
 function isAiWorkbenchCaseGenerationRoute(location: string): boolean {
   const normalized = location.endsWith('/') ? location.slice(0, -1) : location;
-  return (
-    normalized === AI_WORKBENCH_CASE_GENERATION_ROUTE ||
-    normalized.startsWith(`${AI_WORKBENCH_CASE_GENERATION_ROUTE}?`)
+  return AI_WORKBENCH_CASE_GENERATION_ROUTES.some((route) =>
+    normalized === route || normalized.startsWith(`${route}?`)
   );
 }
 
@@ -180,6 +180,9 @@ function Router() {
         <Route path="/ai-workbench/test-cases">
           {null}
         </Route>
+        <Route path="/ai-workbench/use-case-generate">
+          {null}
+        </Route>
         <Route path="/ai-workbench/home">
           <ProtectedLayout>
             <AiWorkbenchOverview />
@@ -189,6 +192,11 @@ function Router() {
           <Redirect to="/ai-workbench/home" />
         </Route>
         <Route path="/ai-workbench/requirements">
+          <ProtectedLayout>
+            <AiWorkbenchRequirementInput />
+          </ProtectedLayout>
+        </Route>
+        <Route path="/ai-workbench/requirement-parse">
           <ProtectedLayout>
             <AiWorkbenchRequirementInput />
           </ProtectedLayout>
@@ -203,7 +211,17 @@ function Router() {
             <AiWorkbenchQualityCoverage />
           </ProtectedLayout>
         </Route>
+        <Route path="/ai-workbench/quality-check">
+          <ProtectedLayout>
+            <AiWorkbenchQualityCoverage />
+          </ProtectedLayout>
+        </Route>
         <Route path="/ai-workbench/exports">
+          <ProtectedLayout>
+            <AiWorkbenchHistoryExport />
+          </ProtectedLayout>
+        </Route>
+        <Route path="/ai-workbench/export-records">
           <ProtectedLayout>
             <AiWorkbenchHistoryExport />
           </ProtectedLayout>

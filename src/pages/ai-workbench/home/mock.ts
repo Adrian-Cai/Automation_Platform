@@ -22,11 +22,41 @@ export const stats: StatItem[] = [
 ];
 
 export const quickStartSteps: QuickStartStep[] = [
-  { title: '上传需求', description: '支持 Word、PDF、TXT 等格式', icon: UploadCloud },
-  { title: '智能解析', description: 'AI 解析需求内容，提取关键信息', icon: FileSearch },
-  { title: '生成测试点', description: '识别测试点，覆盖功能与非功能需求', icon: Target },
-  { title: '生成测试用例', description: 'AI 生成详细测试用例，支持编辑优化', icon: ListChecks },
-  { title: '导出 Excel', description: '一键导出测试用例，便于执行与管理', icon: FileSpreadsheet },
+  {
+    title: '上传需求',
+    description: '支持 Word、PDF、TXT 等格式',
+    icon: UploadCloud,
+    path: '/ai-workbench/requirement-parse',
+    ariaLabel: '跳转到需求解析',
+  },
+  {
+    title: '智能解析',
+    description: 'AI 解析需求内容，提取关键信息',
+    icon: FileSearch,
+    path: '/ai-workbench/test-points',
+    ariaLabel: '跳转到测试点',
+  },
+  {
+    title: '生成测试点',
+    description: '识别测试点，覆盖功能与非功能需求',
+    icon: Target,
+    path: '/ai-workbench/use-case-generate',
+    ariaLabel: '跳转到用例生成',
+  },
+  {
+    title: '生成测试用例',
+    description: 'AI 生成详细测试用例，支持编辑优化',
+    icon: ListChecks,
+    path: '/ai-workbench/use-case-generate',
+    ariaLabel: '跳转到用例生成',
+  },
+  {
+    title: '导出 Excel',
+    description: '一键导出测试用例，便于执行与管理',
+    icon: FileSpreadsheet,
+    path: '/ai-workbench/export-records',
+    ariaLabel: '跳转到导出记录',
+  },
 ];
 
 export const recentProjects: RecentProject[] = [
