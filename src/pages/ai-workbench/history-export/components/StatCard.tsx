@@ -7,7 +7,7 @@ export interface StatCardProps {
 export default function StatCard({ item }: StatCardProps): JSX.Element {
   const Icon = item.icon;
   return (
-    <section className="rounded-xl border border-[#E5E7EB] bg-white p-5 shadow-sm">
+    <section className="w-full rounded-xl border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-slate-500">{item.label}</p>
