@@ -233,7 +233,7 @@ export async function login(
       return { success: false, message: '网络错误，请稍后重试' };
     }
 
-    console.warn('Encrypted login unavailable, fallback to plaintext login', {
+    console.warn('Encrypted login unavailable, falling back to plaintext login', {
       reason: error instanceof Error ? error.message : String(error),
     });
 

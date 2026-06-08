@@ -74,6 +74,7 @@ export const TABLE_COLUMN_OPTIONS: ReadonlyArray<{ key: TaskSortKey; label: stri
 export const TASK_STATUS_SEMANTIC = {
   success: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
   running: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  pending: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
   paused: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
   failed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
   draft: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
@@ -99,15 +100,20 @@ export const parseCaseCount = (task: Task): number => {
 export const getTaskSuccessRate = (task: Task): number | null => {
   const latest = task.recentExecutions?.[0];
   if (!latest?.total_cases) return null;
-  return Math.round((latest.passed_cases / latest.total_cases) * 100);
+
+  const passedCases = latest.passed_cases ?? 0;
+  return Math.round((passedCases / latest.total_cases) * 100);
 };
 
 export const getTaskSemanticStatus = (task: Task): { key: TaskSemanticStatus; label: string } => {
   if (task.status === 'archived') return { key: 'draft', label: '草稿' };
 
   const latest = task.recentExecutions?.[0];
-  if (latest?.status === 'running' || latest?.status === 'pending') {
+  if (latest?.status === 'running') {
     return { key: 'running', label: '运行中' };
+  }
+  if (latest?.status === 'pending') {
+    return { key: 'pending', label: '排队中' };
   }
   if (task.status === 'paused') return { key: 'paused', label: '暂停' };
   if (latest?.status === 'failed') return { key: 'failed', label: '失败' };
