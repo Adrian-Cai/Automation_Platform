@@ -60,7 +60,7 @@ export const FULL_COLUMNS: CaseColumn[] = [
 ];
 
 /**
- * 简洁列配置（不含脚本路径和说明）
+ * 简洁列配置（不含说明列）
  * 适用于性能用例页面
  */
 export const SIMPLE_COLUMNS: CaseColumn[] = [
