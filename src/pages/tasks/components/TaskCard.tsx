@@ -44,6 +44,7 @@ import {
   TRIGGER_TYPE_LABELS,
 } from '@/constants/tasks';
 import { TASK_MESSAGES, TASK_PAGE } from '@/constants/messages';
+import { getTaskSuccessRate } from './taskPageConfig';
 
 interface TaskCardProps {
   task: Task;
@@ -79,11 +80,7 @@ export const TaskCard = memo(function TaskCard({
   onSelectTask,
 }: TaskCardProps) {
   const [, navigate] = useLocation();
-  const lastExecution = task.recentExecutions?.[0];
-  const successRate =
-    lastExecution?.total_cases
-      ? Math.round((lastExecution.passed_cases / lastExecution.total_cases) * 100)
-      : null;
+  const successRate = getTaskSuccessRate(task);
 
   // 是否有正在运行的执行（用于显示「取消」按钮）
   const hasActiveExecution = task.recentExecutions?.some(
