@@ -7,7 +7,7 @@ interface RequirementUploadPanelProps {
 
 function RequirementUploadPanel({ onFilesSelected }: RequirementUploadPanelProps) {
   return (
-    <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800/60 dark:bg-[#131729]">
+    <div className="w-full rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800/60 dark:bg-[#131729]">
       <div className="mb-4 flex items-center gap-3">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/40">
           <UploadCloud className="h-4 w-4 text-blue-500 dark:text-blue-400" />
