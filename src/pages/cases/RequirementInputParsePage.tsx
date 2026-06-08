@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ClipboardList, Play, Save } from "lucide-react";
+import { AlertTriangle, Blocks, ClipboardList, FileQuestion, Play, Save, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import CleanRulesPanel from "@/pages/cases/components/CleanRulesPanel";
@@ -19,6 +19,85 @@ import {
 } from "@/pages/cases/requirementInputUtils";
 
 const textFileTypes = new Set(["markdown", "text", "excel"]);
+
+interface ParseAnalysisPanelProps {
+  wordCount: number;
+}
+
+function ParseAnalysisPanel({ wordCount }: ParseAnalysisPanelProps) {
+  const summaryItems = [
+    { label: "文档字数", value: wordCount },
+    { label: "识别模块", value: 0 },
+    { label: "需求疑问", value: 0 },
+    { label: "风险点", value: 0 },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <section className="w-full rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800/60 dark:bg-[#131729]">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#39E079]/10 text-[#2ba85a] dark:bg-[#39E079]/15 dark:text-[#39E079]">
+            <Sparkles className="h-4 w-4" />
+          </div>
+          <h3 className="font-display text-sm font-semibold text-slate-900 dark:text-white">
+            解析结果摘要
+          </h3>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {summaryItems.map((item) => (
+            <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-800/60 dark:bg-slate-900/30" key={item.label}>
+              <p className="text-xs text-slate-400 dark:text-slate-500">{item.label}</p>
+              <p className="mt-1 font-display text-xl font-semibold text-slate-900 dark:text-white">{item.value}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="w-full rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800/60 dark:bg-[#131729]">
+        <div className="mb-3 flex items-center gap-2.5">
+          <Blocks className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+          <h3 className="font-display text-sm font-semibold text-slate-900 dark:text-white">识别到的功能模块</h3>
+        </div>
+        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-6 text-center text-xs text-slate-400 dark:border-slate-800 dark:bg-slate-900/30 dark:text-slate-500">
+          暂无模块，开始解析后展示
+        </div>
+      </section>
+
+      <section className="w-full rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800/60 dark:bg-[#131729]">
+        <div className="mb-3 flex items-center gap-2.5">
+          <FileQuestion className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+          <h3 className="font-display text-sm font-semibold text-slate-900 dark:text-white">需求疑问</h3>
+        </div>
+        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-6 text-center text-xs text-slate-400 dark:border-slate-800 dark:bg-slate-900/30 dark:text-slate-500">
+          暂无疑问，开始解析后展示
+        </div>
+      </section>
+
+      <section className="w-full rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800/60 dark:bg-[#131729]">
+        <div className="mb-3 flex items-center gap-2.5">
+          <AlertTriangle className="h-4 w-4 text-orange-500 dark:text-orange-400" />
+          <h3 className="font-display text-sm font-semibold text-slate-900 dark:text-white">风险提示</h3>
+        </div>
+        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-6 text-center text-xs text-slate-400 dark:border-slate-800 dark:bg-slate-900/30 dark:text-slate-500">
+          暂无风险点，开始解析后展示
+        </div>
+      </section>
+
+      <section className="w-full rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800/60 dark:bg-[#131729]">
+        <h3 className="mb-4 font-display text-sm font-semibold text-slate-900 dark:text-white">下一步操作</h3>
+        <div className="grid gap-3">
+          <Button className="h-9 w-full rounded-lg bg-[#39E079] text-sm font-semibold text-[#0a2010] hover:bg-[#32c96b]" type="button">
+            生成测试点
+          </Button>
+          <Button className="h-9 w-full rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 shadow-none hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" type="button" variant="outline">
+            查看解析报告
+          </Button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 
 function readFileAsText(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -92,10 +171,10 @@ function RequirementInputParsePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6f7f9] font-body dark:bg-[#0c0f1a]">
+    <div className="min-h-full w-full min-w-0 bg-[#f6f7f9] font-body dark:bg-[#0c0f1a]">
       {/* Header */}
       <header className="border-b border-slate-200/60 bg-white/80 backdrop-blur-sm dark:border-slate-800/60 dark:bg-[#131729]/80">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-8 py-5">
+        <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-4 px-6 py-5">
           <div className="flex items-center gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#39E079]/10 text-[#2ba85a] dark:bg-[#39E079]/15 dark:text-[#39E079]">
               <ClipboardList className="h-5 w-5" />
@@ -136,25 +215,30 @@ function RequirementInputParsePage() {
       </header>
 
       {/* Content */}
-      <main className="mx-auto max-w-[1440px] px-8 py-8">
-        <div className="grid gap-8 xl:grid-cols-[380px_1fr]">
+      <main className="w-full min-w-0 p-6">
+        <div className="grid w-full min-w-0 grid-cols-1 items-start gap-6 xl:grid-cols-[300px_minmax(0,1fr)] 2xl:grid-cols-[320px_minmax(0,1fr)_320px]">
           {/* Left column */}
-          <div className="space-y-6">
+          <aside className="w-full space-y-4">
             <RequirementUploadPanel onFilesSelected={handleFilesSelected} />
             <UploadedFileList
               files={files}
               onRemove={(id) => setFiles((currentFiles) => currentFiles.filter((file) => file.id !== id))}
             />
             <CleanRulesPanel rules={rules} onChange={setRules} />
-          </div>
+          </aside>
 
-          {/* Right column */}
-          <div className="space-y-6">
+          {/* Main parse column */}
+          <section className="min-w-0 space-y-4">
             <RequirementConfigForm config={config} onChange={setConfig} />
             <RequirementTextEditor value={rawText} onChange={setRawText} />
             <ParseProgressSteps progress={progress} />
             <RequirementContentCompare rawText={rawText} cleanedText={cleanedText} wordCount={wordCount} />
-          </div>
+          </section>
+
+          {/* Analysis column */}
+          <aside className="w-full space-y-4 xl:col-span-2 2xl:col-span-1">
+            <ParseAnalysisPanel wordCount={wordCount} />
+          </aside>
         </div>
       </main>
     </div>
