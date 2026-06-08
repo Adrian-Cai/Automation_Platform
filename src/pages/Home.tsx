@@ -82,15 +82,15 @@ export default function Home() {
   }, [timeRange]);
 
   return (
-    <div className="p-10">
-      <div className="max-w-7xl mx-auto flex flex-col gap-8">
+    <div className="p-8 lg:p-10">
+      <div className="max-w-[1400px] mx-auto flex flex-col gap-8">
           {/* Page Heading */}
           <div className="flex items-end justify-between gap-4 animate-fade-in-up">
             <div className="flex flex-col gap-1">
-              <h2 className="text-slate-900 dark:text-white text-4xl font-black tracking-tight">
+              <h1 className="text-display-xl text-slate-900 dark:text-white">
                 仪表盘
-              </h2>
-              <p className="text-slate-500 dark:text-slate-400 text-base font-normal">
+              </h1>
+              <p className="text-body-md text-slate-500 dark:text-slate-400">
                 自动化测试数据概览
               </p>
             </div>

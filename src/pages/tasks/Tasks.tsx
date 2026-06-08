@@ -544,7 +544,7 @@ export default function Tasks() {
 
   // ── 渲染 ──────────────────────────────────────────
   return (
-    <div className="space-y-8 p-6">
+    <div className="space-y-8 p-6 lg:p-8 max-w-[1400px] mx-auto">
       {/* 顶部标题 */}
       <div className="flex items-center justify-between gap-4">
         <div>

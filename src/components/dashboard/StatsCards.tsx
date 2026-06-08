@@ -26,10 +26,13 @@ function StatCard({ icon, iconBg, iconColor, label, value, trend, onClick, loadi
   return (
     <div
       onClick={onClick}
-      className={`flex flex-col gap-4 rounded-xl p-6 border border-slate-200 dark:border-border-dark bg-gradient-to-br from-white to-slate-50/50 dark:from-surface-dark dark:to-surface-dark/80 shadow-sm transition-all duration-200 overflow-visible hover:shadow-lg hover:scale-[1.02] ${onClick ? 'cursor-pointer hover:border-primary/20 hover:from-primary/5 hover:to-primary/10' : ''}`}
+      className={`group relative flex flex-col gap-4 rounded-2xl p-6 border border-slate-200/80 dark:border-border-dark/80 bg-white dark:bg-surface-dark shadow-tinted transition-all duration-300 overflow-visible hover:shadow-tinted-xl hover:border-primary/30 hover:-translate-y-0.5 ${onClick ? 'cursor-pointer' : ''}`}
     >
-      <div className="flex justify-between items-start">
-        <div className={`p-3 ${iconBg} rounded-xl shadow-sm ${iconColor} transition-transform duration-200 hover:scale-110`}>
+      {/* Subtle gradient overlay on hover */}
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+      
+      <div className="relative flex justify-between items-start">
+        <div className={`p-3 ${iconBg} rounded-xl shadow-sm ${iconColor} transition-all duration-300 group-hover:scale-110 group-hover:shadow-md`}>
           {icon}
         </div>
         <div className="flex items-center gap-2">
@@ -38,15 +41,14 @@ function StatCard({ icon, iconBg, iconColor, label, value, trend, onClick, loadi
               <TooltipTrigger asChild>
                 <button
                   onClick={(e) => e.stopPropagation()}
-                  className="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-                  aria-label={`${label} 说明`
-                  }
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
+                  aria-label={`${label} 说明`}
                 >
                   <HelpCircle className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top" sideOffset={12} className="max-w-xs">
-                <div className="text-slate-600 dark:text-gray-400 text-sm">
+                <div className="text-body-sm text-slate-600 dark:text-gray-400">
                   {description}
                 </div>
               </TooltipContent>
@@ -54,20 +56,20 @@ function StatCard({ icon, iconBg, iconColor, label, value, trend, onClick, loadi
           )}
         </div>
       </div>
-      <div className="space-y-2">
-        <p className="text-slate-500 dark:text-gray-400 text-sm font-medium">{label}</p>
+      <div className="relative space-y-2">
+        <p className="text-caption text-slate-500 dark:text-gray-400 uppercase tracking-wider font-medium">{label}</p>
         {loading ? (
           <div className="flex items-center gap-2">
             <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-            <span className="text-slate-400 text-sm">加载中...</span>
+            <span className="text-body-sm text-slate-400">加载中...</span>
           </div>
         ) : (
           <div className="space-y-1">
-            <p className="text-slate-900 dark:text-white text-3xl font-bold tracking-tight leading-none">{value}</p>
+            <p className="text-display-md text-slate-900 dark:text-white">{value}</p>
             {trend && (
               <div className="flex items-center gap-1">
                 <span
-                  className={`text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1 ${
+                  className={`text-caption font-medium px-2 py-1 rounded-full flex items-center gap-1 ${
                     trend.isPositive
                       ? "text-success bg-success/10"
                       : "text-danger bg-danger/10"

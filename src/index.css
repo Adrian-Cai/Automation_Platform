@@ -20,9 +20,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Brand Colors */
-    --primary: 142 71% 55%;
-    --primary-foreground: 144 50% 10%;
+    /* Brand Colors - Desaturated green for better visual harmony */
+    --primary: 142 45% 50%;
+    --primary-foreground: 144 30% 10%;
 
     /* Secondary & Muted */
     --secondary: 210 40% 96.1%;
@@ -71,8 +71,8 @@
     --card-foreground: 210 40% 98%;
     --popover: 222 40% 11%;
     --popover-foreground: 210 40% 98%;
-    --primary: 142 71% 55%;
-    --primary-foreground: 144 50% 10%;
+    --primary: 142 45% 50%;
+    --primary-foreground: 144 30% 10%;
     --secondary: 217 32% 17%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217 32% 17%;
@@ -114,7 +114,53 @@
   }
 
   body {
-    @apply bg-background text-foreground font-display antialiased;
+    @apply bg-background text-foreground font-body antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Typography Scale */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight text-foreground;
+  }
+
+  h1 {
+    @apply text-4xl font-bold leading-tight tracking-tighter;
+  }
+
+  h2 {
+    @apply text-3xl font-semibold leading-snug;
+  }
+
+  h3 {
+    @apply text-2xl font-medium;
+  }
+
+  h4 {
+    @apply text-xl font-medium;
+  }
+
+  p {
+    @apply leading-relaxed;
+    max-width: 65ch;
+  }
+
+  /* ----------------------------------------
+   * Focus States - Accessible focus indicators
+   * ---------------------------------------- */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+  }
+
+  /* Button focus states */
+  button:focus-visible {
+    @apply ring-2 ring-primary/50 ring-offset-2;
+  }
+
+  /* Input focus states */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    @apply ring-2 ring-primary/50 ring-offset-1;
   }
 
   /* ----------------------------------------
@@ -234,19 +280,34 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 /* ============================================
  * 动画工具类
  * ============================================ */
 .animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out both;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .animate-slide-in-right {
-  animation: slideInRight 0.5s ease-out both;
+  animation: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .animate-pulse-slow {
   animation: pulse 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
 }
 
 /* 动画延迟类 */
@@ -266,10 +327,19 @@
   animation-delay: 0.4s;
 }
 
+.animate-delay-500 {
+  animation-delay: 0.5s;
+}
+
 @layer utilities {
     @supports (text-wrap: balance) {
       .text-balance {
         text-wrap: balance;
+      }
+    }
+    @supports (text-wrap: pretty) {
+      .text-pretty {
+        text-wrap: pretty;
       }
     }
     .progress-fill {
@@ -279,6 +349,59 @@
     .text-crisp {
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Container utilities */
+    .container-tight {
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .container-normal {
+      max-width: 1400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .container-wide {
+      max-width: 1600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Spacing utilities for consistent rhythm */
+    .space-section {
+      margin-top: 4rem;
+      margin-bottom: 4rem;
+    }
+    .space-section-sm {
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+    .space-section-lg {
+      margin-top: 6rem;
+      margin-bottom: 6rem;
+    }
+
+    /* Premium gradient text */
+    .gradient-text {
+      background: linear-gradient(135deg, var(--primary) 0%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Subtle noise texture overlay */
+    .noise-overlay {
+      position: relative;
+    }
+    .noise-overlay::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1;
     }
   }
 

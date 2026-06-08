@@ -58,7 +58,7 @@ const statusIconClasses = {
 
 export const AUTH_FIELD_LABEL_CLASS_NAME = 'mb-2 block text-sm font-semibold tracking-[0.02em] text-slate-200';
 export const AUTH_FIELD_INPUT_CLASS_NAME =
-  'block w-full rounded-2xl border bg-white/[0.04] px-4 py-3.5 text-sm text-white placeholder:text-slate-500 transition-all duration-200 focus:bg-white/[0.06] focus:outline-none focus:ring-4';
+  'block w-full rounded-2xl border bg-white/[0.04] px-4 py-3.5 text-sm text-white placeholder:text-slate-500 transition-all duration-200 focus:bg-white/[0.06] focus:outline-none focus:ring-4 focus:ring-cyan-300/20';
 export const AUTH_FIELD_INPUT_NORMAL_CLASS_NAME =
   'border-white/10 focus:border-cyan-300/60 focus:ring-cyan-300/10';
 export const AUTH_FIELD_INPUT_ERROR_CLASS_NAME =
@@ -305,7 +305,7 @@ export function SubmitButton({ isLoading, disabled = false, children }: SubmitBu
     <button
       type="submit"
       disabled={isLoading || disabled}
-      className="flex w-full items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#6366f1_0%,#06b6d4_100%)] px-4 py-3.5 text-sm font-bold text-white shadow-[0_18px_40px_rgba(8,47,73,0.35)] transition-all duration-200 hover:brightness-110 focus:outline-none focus:ring-4 focus:ring-cyan-300/20 disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex w-full items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#6366f1_0%,#06b6d4_100%)] px-4 py-3.5 text-sm font-bold text-white shadow-[0_18px_40px_rgba(8,47,73,0.35)] transition-all duration-200 hover:brightness-110 hover:shadow-[0_20px_50px_rgba(8,47,73,0.4)] active:scale-[0.98] active:translate-y-px focus:outline-none focus:ring-4 focus:ring-cyan-300/20 disabled:cursor-not-allowed disabled:opacity-50"
     >
       {children}
     </button>

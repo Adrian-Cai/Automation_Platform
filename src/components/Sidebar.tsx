@@ -132,17 +132,17 @@ function MiniDrawer({ item, anchorRect, onClose, location, onNavigate }: MiniDra
   }, [top]);
 
   return createPortal(
-    <div
-      ref={overlayRef}
-      className="
-        fixed left-[72px] z-50 min-w-[180px]
-        bg-white dark:bg-slate-900
-        border border-slate-200 dark:border-slate-700
-        rounded-xl shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60
-        py-2 overflow-hidden
-        animate-in fade-in-0 slide-in-from-left-2 duration-150
-      "
-    >
+      <div
+        ref={overlayRef}
+        className="
+          fixed left-[72px] z-50 min-w-[180px]
+          bg-white dark:bg-slate-900
+          border border-slate-200 dark:border-slate-700
+          rounded-xl shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60
+          py-2 overflow-hidden
+          animate-in fade-in-0 slide-in-from-left-2 duration-[150ms]
+        "
+      >
       {/* Header label */}
       <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 mb-1 min-w-0">
         <span className="block truncate whitespace-nowrap text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">

@@ -210,7 +210,7 @@ function ChartHeader({ timeRange, chartType, onChartTypeChange, isLoading = fals
     <div className="flex justify-between items-start mb-6">
       <div>
         <div className="flex items-center gap-2">
-          <h3 className="text-slate-900 dark:text-white text-lg font-bold">
+          <h3 className="text-display-sm text-slate-900 dark:text-white">
             {TIME_RANGE_LABELS[timeRange]}
           </h3>
           <UiTooltip>
@@ -224,13 +224,13 @@ function ChartHeader({ timeRange, chartType, onChartTypeChange, isLoading = fals
               </button>
             </UiTooltipTrigger>
             <UiTooltipContent side="top" sideOffset={12} className="max-w-xs">
-              <div className="text-slate-600 dark:text-gray-400 text-sm">
+              <div className="text-body-sm text-slate-600 dark:text-gray-400">
                 展示过去 {timeRange === '7d' ? '7 天' : timeRange === '30d' ? '30 天' : '90 天'} 的成功率趋势与失败用例数，用于评估稳定性变化。
               </div>
             </UiTooltipContent>
           </UiTooltip>
         </div>
-        <p className="text-slate-500 dark:text-gray-400 text-sm">通过率 & 失败量双维度（T-1 数据）</p>
+        <p className="text-body-sm text-slate-500 dark:text-gray-400">通过率 & 失败量双维度（T-1 数据）</p>
       </div>
 
       <div className="flex items-center gap-2">
@@ -556,10 +556,12 @@ export function TrendChart({ timeRange, data, onRefresh }: TrendChartProps) {
 
   return (
     <div
-      className="rounded-xl border border-slate-200 dark:border-border-dark bg-white dark:bg-surface-dark p-6 flex flex-col transition-all duration-200 hover:shadow-lg hover:border-primary/10"
+      className="group relative rounded-2xl border border-slate-200/80 dark:border-border-dark/80 bg-white dark:bg-surface-dark p-6 flex flex-col transition-all duration-300 hover:shadow-tinted-xl hover:border-primary/30 hover:-translate-y-0.5"
       role="region"
       aria-label={TIME_RANGE_LABELS[timeRange]}
     >
+      {/* Subtle gradient overlay on hover */}
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       <ChartHeader
         timeRange={timeRange}
         chartType={chartType}
