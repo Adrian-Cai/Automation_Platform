@@ -1,6 +1,5 @@
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export interface RequirementConfig {
   title: string;
@@ -22,42 +21,66 @@ function RequirementConfigForm({ config, onChange }: RequirementConfigFormProps)
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">解析配置</CardTitle>
-        <CardDescription>设置需求元信息和 AI 解析目标，便于后续生成测试点与用例。</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800/60 dark:bg-[#131729]">
+      <h3 className="mb-4 font-display text-sm font-semibold text-slate-900 dark:text-white">
+        解析配置
+      </h3>
+      <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-3">
-          <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-            需求标题
-            <Input value={config.title} placeholder="输入需求名称" onChange={(event) => updateConfig("title", event.target.value)} />
+          <label className="space-y-1.5">
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">需求标题</span>
+            <Input
+              className="h-9 rounded-lg border-slate-200 bg-slate-50/50 text-sm transition-colors focus:bg-white dark:border-slate-700 dark:bg-slate-900/50 dark:focus:bg-slate-900"
+              value={config.title}
+              placeholder="输入需求名称"
+              onChange={(event) => updateConfig("title", event.target.value)}
+            />
           </label>
-          <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-            产品线
-            <Input value={config.productLine} placeholder="例如：交易平台" onChange={(event) => updateConfig("productLine", event.target.value)} />
+          <label className="space-y-1.5">
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">产品线</span>
+            <Input
+              className="h-9 rounded-lg border-slate-200 bg-slate-50/50 text-sm transition-colors focus:bg-white dark:border-slate-700 dark:bg-slate-900/50 dark:focus:bg-slate-900"
+              value={config.productLine}
+              placeholder="例如：交易平台"
+              onChange={(event) => updateConfig("productLine", event.target.value)}
+            />
           </label>
-          <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-            优先级
-            <Input value={config.priority} placeholder="P0 / P1 / P2" onChange={(event) => updateConfig("priority", event.target.value)} />
+          <label className="space-y-1.5">
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">优先级</span>
+            <Input
+              className="h-9 rounded-lg border-slate-200 bg-slate-50/50 text-sm transition-colors focus:bg-white dark:border-slate-700 dark:bg-slate-900/50 dark:focus:bg-slate-900"
+              value={config.priority}
+              placeholder="P0 / P1 / P2"
+              onChange={(event) => updateConfig("priority", event.target.value)}
+            />
           </label>
         </div>
         <div className="grid gap-3 md:grid-cols-3">
-          <label className="flex items-center gap-2 rounded-lg border border-slate-200 p-3 text-sm dark:border-slate-800">
-            <Checkbox checked={config.enableAiSummary} onCheckedChange={(checked) => updateConfig("enableAiSummary", checked === true)} />
-            生成需求摘要
-          </label>
-          <label className="flex items-center gap-2 rounded-lg border border-slate-200 p-3 text-sm dark:border-slate-800">
-            <Checkbox checked={config.enableRiskScan} onCheckedChange={(checked) => updateConfig("enableRiskScan", checked === true)} />
-            扫描歧义与风险
-          </label>
-          <label className="flex items-center gap-2 rounded-lg border border-slate-200 p-3 text-sm dark:border-slate-800">
-            <Checkbox checked={config.enableCaseSuggestion} onCheckedChange={(checked) => updateConfig("enableCaseSuggestion", checked === true)} />
-            生成测试点建议
-          </label>
+          {[
+            { key: "enableAiSummary" as const, label: "生成需求摘要" },
+            { key: "enableRiskScan" as const, label: "扫描歧义与风险" },
+            { key: "enableCaseSuggestion" as const, label: "生成测试点建议" },
+          ].map((item) => (
+            <label
+              key={item.key}
+              className="group flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/30 px-3 py-2.5 transition-all duration-200 hover:border-[#39E079]/30 hover:bg-[#39E079]/5 hover:shadow-sm dark:border-slate-800/60 dark:bg-slate-900/20 dark:hover:border-[#39E079]/20 dark:hover:bg-[#39E079]/5"
+            >
+              <Checkbox
+                checked={config[item.key]}
+                className="transition-transform duration-150 group-hover:scale-110"
+                onCheckedChange={(checked) => updateConfig(item.key, checked === true)}
+              />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                {item.label}
+              </span>
+              {config[item.key] && (
+                <div className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#39E079] shadow-sm shadow-[#39E079]/50" />
+              )}
+            </label>
+          ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { ClipboardList, Play, Save, Sparkles } from "lucide-react";
+import { ClipboardList, Play, Save } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import CleanRulesPanel from "@/pages/cases/components/CleanRulesPanel";
 import ParseProgressSteps from "@/pages/cases/components/ParseProgressSteps";
 import RequirementConfigForm, { RequirementConfig } from "@/pages/cases/components/RequirementConfigForm";
@@ -93,55 +92,71 @@ function RequirementInputParsePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/80 p-6 dark:bg-slate-950">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <div className="flex flex-col gap-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white shadow-lg shadow-blue-500/20 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <Badge className="mb-3 bg-white/20 text-white hover:bg-white/20">AI 工作台</Badge>
-            <h1 className="flex items-center gap-3 text-2xl font-bold md:text-3xl">
-              <ClipboardList className="h-8 w-8" />
-              需求输入与解析
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm text-blue-50">
-              汇总附件与原始需求文本，完成规则清洗、内容对比和解析配置，为 AI 用例生成提供高质量输入。
-            </p>
+    <div className="min-h-screen bg-[#f6f7f9] font-body dark:bg-[#0c0f1a]">
+      {/* Header */}
+      <header className="border-b border-slate-200/60 bg-white/80 backdrop-blur-sm dark:border-slate-800/60 dark:bg-[#131729]/80">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-8 py-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#39E079]/10 text-[#2ba85a] dark:bg-[#39E079]/15 dark:text-[#39E079]">
+              <ClipboardList className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h1 className="font-display text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
+                  需求输入与解析
+                </h1>
+                <Badge className="bg-[#39E079]/10 text-[#2ba85a] hover:bg-[#39E079]/15 dark:bg-[#39E079]/15 dark:text-[#39E079]">
+                  AI 工作台
+                </Badge>
+              </div>
+              <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                汇总需求文本与附件，完成清洗配置后启动解析
+              </p>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Button className="bg-white text-blue-700 hover:bg-blue-50" type="button" onClick={handleSaveDraft}>
-              <Save className="mr-2 h-4 w-4" />
+          <div className="flex items-center gap-3">
+            <Button
+              className="h-9 gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-none transition-all hover:bg-slate-50 hover:shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-750"
+              type="button"
+              onClick={handleSaveDraft}
+            >
+              <Save className="h-4 w-4" />
               保存草稿
             </Button>
-            <Button className="bg-slate-950 text-white hover:bg-slate-800" type="button" onClick={handleStartParse}>
-              <Play className="mr-2 h-4 w-4" />
+            <Button
+              className="h-9 gap-2 rounded-lg bg-[#39E079] px-5 text-sm font-semibold text-[#0a2010] shadow-md shadow-[#39E079]/20 transition-all hover:bg-[#32c96b] hover:shadow-lg hover:shadow-[#39E079]/25 active:scale-[0.97]"
+              type="button"
+              onClick={handleStartParse}
+            >
+              <Play className="h-4 w-4" />
               开始解析
             </Button>
           </div>
         </div>
+      </header>
 
-        <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
+      {/* Content */}
+      <main className="mx-auto max-w-[1440px] px-8 py-8">
+        <div className="grid gap-8 xl:grid-cols-[380px_1fr]">
+          {/* Left column */}
           <div className="space-y-6">
             <RequirementUploadPanel onFilesSelected={handleFilesSelected} />
-            <UploadedFileList files={files} onRemove={(id) => setFiles((currentFiles) => currentFiles.filter((file) => file.id !== id))} />
+            <UploadedFileList
+              files={files}
+              onRemove={(id) => setFiles((currentFiles) => currentFiles.filter((file) => file.id !== id))}
+            />
             <CleanRulesPanel rules={rules} onChange={setRules} />
           </div>
 
+          {/* Right column */}
           <div className="space-y-6">
             <RequirementConfigForm config={config} onChange={setConfig} />
             <RequirementTextEditor value={rawText} onChange={setRawText} />
             <ParseProgressSteps progress={progress} />
-            <Card className="border-blue-100 bg-blue-50/70 dark:border-blue-900 dark:bg-blue-950/20">
-              <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
-                <div className="flex items-center gap-2 text-sm text-blue-900 dark:text-blue-100">
-                  <Sparkles className="h-4 w-4" />
-                  清洗后共 {wordCount} 个字符，可继续调整规则或直接启动解析。
-                </div>
-                <Badge variant={wordCount > 0 ? "success" : "warning"}>{wordCount > 0 ? "输入就绪" : "等待输入"}</Badge>
-              </CardContent>
-            </Card>
-            <RequirementContentCompare rawText={rawText} cleanedText={cleanedText} />
+            <RequirementContentCompare rawText={rawText} cleanedText={cleanedText} wordCount={wordCount} />
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
