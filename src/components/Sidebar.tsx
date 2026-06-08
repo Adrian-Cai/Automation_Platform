@@ -59,11 +59,11 @@ const navItems: NavItem[] = [
     label: "AI 工作台",
     children: [
       { label: "首页", href: "/ai-workbench/home", icon: <BrainCircuit className="h-4 w-4" /> },
-      { label: "需求解析", href: "/ai-workbench/requirements", icon: <FileInput className="h-4 w-4" /> },
+      { label: "需求解析", href: "/ai-workbench/requirement-parse", icon: <FileInput className="h-4 w-4" /> },
       { label: "测试点", href: "/ai-workbench/test-points", icon: <ClipboardList className="h-4 w-4" /> },
-      { label: "用例生成", href: "/ai-workbench/test-cases", icon: <FileText className="h-4 w-4" /> },
-      { label: "质量检查", href: "/ai-workbench/quality", icon: <ShieldCheck className="h-4 w-4" /> },
-      { label: "导出记录", href: "/ai-workbench/exports", icon: <BookOpen className="h-4 w-4" /> },
+      { label: "用例生成", href: "/ai-workbench/use-case-generate", icon: <FileText className="h-4 w-4" /> },
+      { label: "质量检查", href: "/ai-workbench/quality-check", icon: <ShieldCheck className="h-4 w-4" /> },
+      { label: "导出记录", href: "/ai-workbench/export-records", icon: <BookOpen className="h-4 w-4" /> },
     ],
   },
   { icon: <Boxes className="h-5 w-5" />, label: "任务管理", href: "/tasks" },
@@ -74,13 +74,29 @@ const navItems: NavItem[] = [
 // ----------------------------------------------------------------
 // Utility: check if a nav item is active
 // ----------------------------------------------------------------
+const navPathAliases: Record<string, string> = {
+  "/ai-workbench/requirements": "/ai-workbench/requirement-parse",
+  "/ai-workbench/requirement-input": "/ai-workbench/requirement-parse",
+  "/ai-workbench/test-cases": "/ai-workbench/use-case-generate",
+  "/ai-workbench/case-generation": "/ai-workbench/use-case-generate",
+  "/ai-workbench/quality": "/ai-workbench/quality-check",
+  "/ai-workbench/quality-coverage": "/ai-workbench/quality-check",
+  "/ai-workbench/exports": "/ai-workbench/export-records",
+  "/ai-workbench/history-export": "/ai-workbench/export-records",
+};
+
 function normalizePath(path: string): string {
   return path.split(/[?#]/)[0] || "/";
 }
 
+function normalizeNavPath(path: string): string {
+  const normalized = normalizePath(path);
+  return navPathAliases[normalized] ?? normalized;
+}
+
 function isPathActive(location: string, href: string): boolean {
-  const currentPath = normalizePath(location);
-  const targetPath = normalizePath(href);
+  const currentPath = normalizeNavPath(location);
+  const targetPath = normalizeNavPath(href);
 
   return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`);
 }

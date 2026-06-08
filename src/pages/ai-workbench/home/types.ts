@@ -12,6 +12,8 @@ export interface QuickStartStep {
   title: string;
   description: string;
   icon: LucideIcon;
+  path: string;
+  ariaLabel: string;
 }
 
 export type ProjectStatus = '已完成' | '解析完成' | '用例生成中' | '测试点生成中';
