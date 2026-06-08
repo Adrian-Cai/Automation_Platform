@@ -329,13 +329,13 @@ export function RecentTests({ data, initialData, statusFilter = 'all', lastRefre
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-slate-900 dark:text-white text-xl font-bold tracking-tight">
+          <h2 className="text-display-sm text-slate-900 dark:text-white">
             最近测试运行
           </h2>
           {statusFilter !== 'all' && (
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-primary" />
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-caption font-medium bg-primary/10 text-primary">
                 {statusFilter === 'passed' && '仅显示成功'}
                 {statusFilter === 'failed' && '仅显示失败'}
                 {statusFilter === 'skipped' && '仅显示跳过'}
@@ -376,7 +376,7 @@ export function RecentTests({ data, initialData, statusFilter = 'all', lastRefre
         </div>
       </div>
 
-      <div className="w-full overflow-hidden rounded-xl border border-slate-200 dark:border-border-dark bg-white dark:bg-surface-dark transition-all duration-200 hover:shadow-lg hover:border-primary/10">
+      <div className="w-full overflow-hidden rounded-2xl border border-slate-200/80 dark:border-border-dark/80 bg-white dark:bg-surface-dark transition-all duration-300 hover:shadow-tinted-xl hover:border-primary/30">
         {loading && runs.length === 0 ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />

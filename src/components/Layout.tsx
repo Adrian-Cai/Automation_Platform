@@ -18,7 +18,7 @@ export function Layout({ children }: LayoutProps) {
       {/* ── Main Content ── */}
       {/* No top header bar — content starts from the very top of the viewport */}
       <main className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
-        <div className="flex-1 overflow-y-auto h-full">
+        <div className="h-full min-w-0 flex-1 overflow-y-auto">
           {children}
         </div>
       </main>

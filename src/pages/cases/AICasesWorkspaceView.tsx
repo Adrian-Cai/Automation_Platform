@@ -1,7 +1,6 @@
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { Activity, Bot, Bug, CheckCircle2, GitBranch, Link2, ListTree, Loader2 } from 'lucide-react';
 import { WorkbenchSidebar } from '../ai-workbench/components/WorkbenchSidebar';
-import { WorkbenchHeader } from '../ai-workbench/components/WorkbenchHeader';
 import { WorkbenchSummaryBar } from '../ai-workbench/components/WorkbenchSummaryBar';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -122,23 +121,16 @@ export function AICasesWorkspaceView({
   return (
     <div className="h-full flex flex-col bg-white dark:bg-slate-950 overflow-hidden">
 
-      {/* 顶部标题栏（全屏时隐藏） */}
-      <WorkbenchHeader
-          title="AI 用例工作台"
-          saveStateText={saveStateText}
-          remoteStatusText={remoteStatusText}
-          onOpenRequirement={() => setIsRequirementDialogOpen(true)}
-        />
-      
-          <WorkbenchSummaryBar
-            items={[
-              { label: '输入材料', value: `${workspaceSummary.materialCount}`, hint: '需求、附件和远端上下文' },
-              { label: '生成用例', value: `${workspaceSummary.caseCount}`, hint: '当前工作台中的测试点数量' },
-              { label: '高风险项', value: `${workspaceSummary.highRiskCount}`, hint: '按优先级和状态初步推断' },
-              { label: '当前覆盖率', value: workspaceSummary.coverageRate, hint: '基于节点状态的阶段性指标' },
-              { label: '执行状态', value: workspaceSummary.executionState, hint: isRemoteLinked ? remoteStatusText : '尚未发布到远端工作台' },
-            ]}
-          />
+      {/* 统计摘要栏 */}
+      <WorkbenchSummaryBar
+        items={[
+          { label: '输入材料', value: `${workspaceSummary.materialCount}`, hint: '需求、附件和远端上下文' },
+          { label: '生成用例', value: `${workspaceSummary.caseCount}`, hint: '当前工作台中的测试点数量' },
+          { label: '高风险项', value: `${workspaceSummary.highRiskCount}`, hint: '按优先级和状态初步推断' },
+          { label: '当前覆盖率', value: workspaceSummary.coverageRate, hint: '基于节点状态的阶段性指标' },
+          { label: '执行状态', value: workspaceSummary.executionState, hint: isRemoteLinked ? remoteStatusText : '尚未发布到远端工作台' },
+        ]}
+      />
 
       {/* 主体内容 */}
       {activeTab === 'overview' ? (

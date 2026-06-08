@@ -18,7 +18,7 @@ interface UploadedFileListProps {
 
 function UploadedFileList({ files, onRemove }: UploadedFileListProps) {
   return (
-    <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800/60 dark:bg-[#131729]">
+    <div className="w-full rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800/60 dark:bg-[#131729]">
       <h3 className="mb-3 font-display text-sm font-semibold text-slate-900 dark:text-white">
         已上传文件
         {files.length > 0 && (

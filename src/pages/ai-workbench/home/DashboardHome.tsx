@@ -8,7 +8,7 @@ import { capabilities, quickStartSteps, recentProjects, stats } from '@/pages/ai
 
 export default function DashboardHome(): JSX.Element {
   return (
-    <div className="mx-auto grid min-w-[1180px] max-w-[1540px] grid-cols-[minmax(0,1fr)_390px] gap-6 p-6">
+    <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_390px] gap-6 bg-[#F8FAFC] p-6">
       <div className="min-w-0 space-y-5">
         <HeroCard />
         <section className="grid grid-cols-4 gap-4">

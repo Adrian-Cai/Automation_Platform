@@ -39,10 +39,12 @@ export function TodayExecution({ data }: TodayExecutionProps) {
   };
 
   return (
-    <div className="rounded-xl border border-slate-200 dark:border-border-dark bg-white dark:bg-surface-dark p-6 flex flex-col transition-all duration-200 hover:shadow-lg hover:border-primary/10">
+    <div className="group relative rounded-2xl border border-slate-200/80 dark:border-border-dark/80 bg-white dark:bg-surface-dark p-6 flex flex-col transition-all duration-300 hover:shadow-tinted-xl hover:border-primary/30 hover:-translate-y-0.5">
+      {/* Subtle gradient overlay on hover */}
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       <div className="mb-4">
         <div className="flex items-center gap-2">
-          <h3 className="text-slate-900 dark:text-white text-lg font-bold">今日执行统计</h3>
+          <h3 className="text-display-sm text-slate-900 dark:text-white">今日执行统计</h3>
           <Tooltip>
             <TooltipTrigger asChild>
               <button className="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title="查看说明">
@@ -50,13 +52,13 @@ export function TodayExecution({ data }: TodayExecutionProps) {
               </button>
             </TooltipTrigger>
             <TooltipContent side="top" sideOffset={12} className="max-w-xs">
-              <div className="text-slate-600 dark:text-gray-400 text-sm">
+              <div className="text-body-sm text-slate-600 dark:text-gray-400">
                 显示今天内执行用例的实时状态分布（成功/失败/跳过/运行中）。
               </div>
             </TooltipContent>
           </Tooltip>
         </div>
-        <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">
+        <p className="text-body-sm text-slate-500 dark:text-gray-400 mt-1">
           今日共执行<span className="font-semibold text-slate-700 dark:text-gray-200">{chartData.total}</span> 个用例
         </p>
       </div>
