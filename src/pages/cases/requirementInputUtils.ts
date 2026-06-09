@@ -91,7 +91,7 @@ export function cleanRequirementText(
       return normalizeVisibleSpacing(line);
     }
 
-    return line.trim();
+    return line;
   });
 
   if (mergedOptions.removeEmptyLines) {
@@ -99,7 +99,8 @@ export function cleanRequirementText(
   }
 
   if (!mergedOptions.mergeBrokenLines) {
-    return lines.join("\n").trim();
+    const cleanedText = lines.join("\n");
+    return mergedOptions.trimExtraSpaces ? cleanedText.trim() : cleanedText;
   }
 
   const mergedLines: string[] = [];
@@ -115,7 +116,8 @@ export function cleanRequirementText(
     mergedLines.push(line);
   });
 
-  return mergedLines.join("\n").trim();
+  const cleanedText = mergedLines.join("\n");
+  return mergedOptions.trimExtraSpaces ? cleanedText.trim() : cleanedText;
 }
 
 export function getFileType(fileName: string): RequirementFileType {
