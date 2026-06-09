@@ -77,6 +77,7 @@ export const TASK_STATUS_SEMANTIC = {
   pending: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
   paused: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
   failed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  cancelled: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
   draft: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
 } as const;
 
@@ -117,6 +118,7 @@ export const getTaskSemanticStatus = (task: Task): { key: TaskSemanticStatus; la
   }
   if (task.status === 'paused') return { key: 'paused', label: '暂停' };
   if (latest?.status === 'failed') return { key: 'failed', label: '失败' };
+  if (latest?.status === 'cancelled') return { key: 'cancelled', label: '已取消' };
   // 从未执行过时（latest 为空），显示"空闲"而非"成功"，避免语义误导
   if (!latest) return { key: 'draft', label: '空闲' };
   return { key: 'success', label: '成功' };

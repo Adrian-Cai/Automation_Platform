@@ -22,7 +22,7 @@ function RequirementContentCompare({ rawText, cleanedText, wordCount }: Requirem
               原始 {rawLineCount} 行
             </Badge>
             <Badge className="bg-[#39E079]/10 text-[#2ba85a] dark:bg-[#39E079]/15 dark:text-[#39E079]">
-              清洗 {cleanLineCount} 行
+              清洗后 {cleanLineCount} 行
             </Badge>
           </div>
         </div>
