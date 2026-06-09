@@ -1,4 +1,4 @@
-import { BarChart3, ClipboardCheck, FileSpreadsheet, ShieldCheck } from 'lucide-react';
+import { BarChart3, ClipboardCheck, Download, FileSpreadsheet, History, RefreshCw, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useLocation } from 'wouter';
@@ -175,22 +175,57 @@ export default function AiWorkbenchHistoryExport(): JSX.Element {
 
   const pendingSyncCount = docs.filter((doc) => !doc.remoteWorkspaceId).length;
 
+  const headerInfo = useMemo(() => {
+    const latestUpdate = docs.length > 0
+      ? formatDateTime(Math.max(...docs.map((doc) => doc.updatedAt)))
+      : '--';
+    const localCount = docs.filter((doc) => !doc.remoteWorkspaceId).length;
+    const syncStatus = localCount > 0 ? '未同步' : '已同步';
+    return { latestUpdate, localCount, syncStatus };
+  }, [docs]);
+
   return (
     <>
       <div className="w-full min-w-0 p-6 space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-[#2563EB]">页面 6 / 6 · 历史记录与导出</p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">历史记录与导出</h1>
-            <p className="mt-2 text-sm text-slate-500">统一管理 AI 生成历史、版本差异、导出任务与同步状态。</p>
+        <div className="flex flex-col gap-4 rounded-xl border border-[#E5E7EB] bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-4 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#2563EB]/10">
+              <History className="h-5 w-5 text-[#2563EB]" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold tracking-tight text-slate-950">历史记录与导出</h1>
+              <p className="mt-1 text-sm text-slate-500">统一管理 AI 生成历史、版本差异、导出任务与同步状态。</p>
+              <p className="mt-2 text-xs text-slate-400">
+                当前工作区：AI Testcase Workspace · 最近更新：{headerInfo.latestUpdate} · 本地保存：{headerInfo.localCount} 条 · {headerInfo.syncStatus}
+              </p>
+            </div>
           </div>
-          <button
-            className="w-fit rounded-xl border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:border-blue-200 hover:text-[#2563EB]"
-            type="button"
-            onClick={() => toast.success('已开始导出审计日志')}
-          >
-            导出审计日志
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-blue-200 hover:text-[#2563EB]"
+              type="button"
+              onClick={() => toast.success('已开始导出审计日志')}
+            >
+              <Download className="h-4 w-4" />
+              导出审计日志
+            </button>
+            <button
+              className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-blue-200 hover:text-[#2563EB]"
+              type="button"
+              onClick={() => toast.success('已开始批量导出')}
+            >
+              <Download className="h-4 w-4" />
+              批量导出
+            </button>
+            <button
+              className="inline-flex items-center gap-2 rounded-lg bg-[#2563EB] px-3.5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#1D4ED8]"
+              type="button"
+              onClick={() => { handleSync(); }}
+            >
+              <RefreshCw className="h-4 w-4" />
+              同步测试平台
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
