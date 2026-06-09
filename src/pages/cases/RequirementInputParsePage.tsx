@@ -21,12 +21,12 @@ import {
 const textFileTypes = new Set(["markdown", "text", "excel"]);
 
 interface ParseAnalysisPanelProps {
-  wordCount: number;
+  characterCount: number;
 }
 
-function ParseAnalysisPanel({ wordCount }: ParseAnalysisPanelProps) {
+function ParseAnalysisPanel({ characterCount }: ParseAnalysisPanelProps) {
   const summaryItems = [
-    { label: "文档字数", value: wordCount },
+    { label: "文档字符数", value: characterCount },
     { label: "识别模块", value: 0 },
     { label: "需求疑问", value: 0 },
     { label: "风险点", value: 0 },
@@ -124,7 +124,7 @@ function RequirementInputParsePage() {
   });
 
   const cleanedText = useMemo(() => cleanRequirementText(rawText, rules), [rawText, rules]);
-  const wordCount = cleanedText.length;
+  const characterCount = cleanedText.length;
 
   useEffect(() => {
     const nextProgress = Math.min(100, 35 + (files.length > 0 ? 15 : 0) + (rawText.trim() ? 25 : 0) + (cleanedText.trim() ? 25 : 0));
@@ -232,12 +232,12 @@ function RequirementInputParsePage() {
             <RequirementConfigForm config={config} onChange={setConfig} />
             <RequirementTextEditor value={rawText} onChange={setRawText} />
             <ParseProgressSteps progress={progress} />
-            <RequirementContentCompare rawText={rawText} cleanedText={cleanedText} wordCount={wordCount} />
+            <RequirementContentCompare rawText={rawText} cleanedText={cleanedText} wordCount={characterCount} />
           </section>
 
           {/* Analysis column */}
           <aside className="w-full space-y-4 xl:col-span-2 2xl:col-span-1">
-            <ParseAnalysisPanel wordCount={wordCount} />
+            <ParseAnalysisPanel characterCount={characterCount} />
           </aside>
         </div>
       </main>
