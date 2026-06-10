@@ -79,6 +79,14 @@ describe('taskPageConfig - getTaskSemanticStatus', () => {
 
     expect(result).toEqual({ key: 'pending', label: '排队中' });
   });
+
+  it('cancelled 执行应显示“已取消”，避免被兜底为成功', () => {
+    const result = getTaskSemanticStatus(
+      makeTask({ recentExecutions: [makeExecution({ status: 'cancelled' })] })
+    );
+
+    expect(result).toEqual({ key: 'cancelled', label: '已取消' });
+  });
 });
 
 describe('taskPageConfig - getTaskSuccessRate', () => {

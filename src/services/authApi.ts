@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api/auth';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/auth';
 
 // 用户信息类型
 export interface UserInfo {
@@ -44,13 +44,7 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  bytes.forEach((byte) => {
-    binary += String.fromCharCode(byte);
-  });
-
-  return globalThis.btoa(binary);
+  return globalThis.btoa(String.fromCharCode(...new Uint8Array(buffer)));
 }
 
 async function encryptLoginPassword(password: string): Promise<{ encryptedPassword: string; keyId?: string }> {
@@ -150,17 +144,13 @@ export async function register(
   password: string,
   username: string
 ): Promise<AuthResponse> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, username }),
-    });
-    return await response.json();
-  } catch (error) {
-    console.error('Register error:', error);
-    return { success: false, message: '网络错误，请稍后重试' };
-  }
+  const response = await fetch(`${API_BASE_URL}/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, username }),
+  });
+
+  return await response.json();
 }
 
 function isLoginEncryptionRecoverableError(error: unknown): boolean {
@@ -276,7 +266,7 @@ export async function logout(): Promise<{ success: boolean; message: string }> {
   } catch (error) {
     console.error('Logout error:', error);
     clearToken();
-    return { success: true, message: '已登出' };
+    return { success: true, message: '本地已登出，服务端状态未知' };
   }
 }
 
@@ -284,17 +274,13 @@ export async function logout(): Promise<{ success: boolean; message: string }> {
 export async function forgotPassword(
   email: string
 ): Promise<{ success: boolean; message: string }> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/forgot-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-    return await response.json();
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    return { success: false, message: '网络错误，请稍后重试' };
-  }
+  const response = await fetch(`${API_BASE_URL}/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  return await response.json();
 }
 
 // 重置密码
@@ -302,17 +288,13 @@ export async function resetPassword(
   token: string,
   password: string
 ): Promise<{ success: boolean; message: string }> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/reset-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, password }),
-    });
-    return await response.json();
-  } catch (error) {
-    console.error('Reset password error:', error);
-    return { success: false, message: '网络错误，请稍后重试' };
-  }
+  const response = await fetch(`${API_BASE_URL}/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, password }),
+  });
+
+  return await response.json();
 }
 
 // 获取当前用户信息
