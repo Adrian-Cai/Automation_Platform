@@ -55,20 +55,33 @@ export class DailySummaryScheduler {
   }
 
   /**
+   * 获取下一次每日汇总执行时间。
+   * 如果服务在当天 00:05 之前启动，应调度到当天 00:05，避免跳过一次 T-1 汇总。
+   */
+  private getNextExecutionTime(now: Date = new Date()): Date {
+    const nextRun = new Date(now);
+    nextRun.setHours(0, 5, 0, 0);
+
+    if (now.getTime() >= nextRun.getTime()) {
+      nextRun.setDate(nextRun.getDate() + 1);
+    }
+
+    return nextRun;
+  }
+
+  /**
    * 计算并调度下一次执行
    */
   private scheduleNextExecution(): void {
     const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 5, 0, 0); // 设置为明天 00:05
+    const nextRun = this.getNextExecutionTime(now);
 
-    const timeUntilNextRun = tomorrow.getTime() - now.getTime();
+    const timeUntilNextRun = nextRun.getTime() - now.getTime();
 
     logger.debug('Scheduling next daily summary execution', {
       event: LOG_EVENTS.SCHEDULER_DAILY_SUMMARY_STARTED,
       currentTime: now.toISOString(),
-      nextRunTime: tomorrow.toISOString(),
+      nextRunTime: nextRun.toISOString(),
       delayMs: timeUntilNextRun,
     }, LOG_CONTEXTS.SCHEDULER);
 
@@ -161,12 +174,7 @@ export class DailySummaryScheduler {
     };
 
     if (this.isRunning) {
-      // 计算下一次执行时间
-      const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 5, 0, 0);
-      status.nextExecution = tomorrow.toISOString();
+      status.nextExecution = this.getNextExecutionTime().toISOString();
     }
 
     return status;
