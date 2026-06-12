@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 工作台 · ER 图</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+    }
+    header {
+      background: linear-gradient(135deg, #1565c0 0%, #0d47a1 60%, #1a237e 100%);
+      color: #fff;
+      padding: 20px 32px 18px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+    header .icon { font-size: 32px; }
+    header h1   { font-size: 22px; font-weight: 700; letter-spacing: .5px; }
+    header p    { font-size: 13px; opacity: .8; margin-top: 3px; }
+    .legend-bar {
+      display: flex; flex-wrap: wrap; gap: 12px 24px;
+      padding: 12px 32px; background: #fff;
+      border-bottom: 1px solid #dde3ec; font-size: 13px; align-items: center;
+    }
+    .legend-bar strong { color: #555; margin-right: 8px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;
+    }
+    .badge-sys { background:#e3f2fd; color:#1565c0; border:1px solid #90caf9; }
+    .badge-ws  { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; }
+    .badge-req { background:#fff3e0; color:#e65100; border:1px solid #ffcc80; }
+    .badge-res { background:#f3e5f5; color:#6a1b9a; border:1px solid #ce93d8; }
+    .sep { color:#ccc; }
+    main { padding: 28px 32px 48px; overflow-x: auto; }
+    .diagram-card {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.08);
+      padding: 28px 20px; min-width: 900px;
+    }
+    .mermaid svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+    .table-desc {
+      margin-top: 36px; background: #fff; border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.08); overflow: hidden;
+    }
+    .table-desc h2 {
+      padding: 16px 24px; background: #1565c0;
+      color: #fff; font-size: 15px; font-weight: 700;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead tr { background: #e3f2fd; }
+    th { padding: 10px 16px; text-align: left; font-weight: 700; color: #1565c0; border-bottom: 2px solid #90caf9; }
+    td { padding: 9px 16px; border-bottom: 1px solid #eceff1; color: #444; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #fafafa; }
+    tr:hover td { background: #e8f5e9; }
+    .g-sys { color:#1565c0; font-weight:600; }
+    .g-ws  { color:#2e7d32; font-weight:600; }
+    .g-req { color:#e65100; font-weight:600; }
+    .g-res { color:#6a1b9a; font-weight:600; }
+    footer { text-align: center; padding: 16px; font-size: 12px; color: #aaa; }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="icon">🗄️</span>
+  <div>
+    <h1>AI 工作台 · 数据库实体关系图（ER Diagram）</h1>
+    <p>Automation_Platform &nbsp;·&nbsp; 16 张表 &nbsp;·&nbsp; 27 条关联关系 &nbsp;·&nbsp; Mermaid v10 渲染</p>
+  </div>
+</header>
+
+<div class="legend-bar">
+  <strong>模块：</strong>
+  <span class="badge badge-sys">🔵 系统/外部依赖</span>
+  <span class="badge badge-ws">🟢 AI 用例工作台</span>
+  <span class="badge badge-req">🟠 需求解析模块</span>
+  <span class="badge badge-res">🟣 解析结果 &amp; 日志</span>
+  <span class="sep">|</span>
+  <strong>关系：</strong>
+  <span>||--o{ 一对多</span>&nbsp;
+  <span>||--|| 一对一</span>&nbsp;
+  <span>}o--|| 多对一</span>
+</div>
+
+<main>
+  <div class="diagram-card">
+    <div class="mermaid">
+erDiagram
+
+    Auto_Users {
+        bigint   id            PK
+        varchar  username
+        varchar  email
+        varchar  password_hash
+        tinyint  is_active
+        datetime created_at
+        datetime updated_at
+    }
+
+    Auto_TestCaseProjects {
+        bigint   id          PK
+        varchar  name
+        varchar  description
+        tinyint  is_active
+        datetime created_at
+    }
+
+    Auto_AiCaseWorkspaces {
+        bigint   id                    PK
+        varchar  workspace_key
+        varchar  name
+        bigint   project_id            FK
+        longtext requirement_text
+        longtext requirement_embedding
+        tinyint  is_knowledge_base
+        decimal  quality_score
+        json     map_data
+        varchar  status
+        int      version
+        int      total_cases
+        bigint   created_by            FK
+        bigint   updated_by            FK
+        datetime created_at
+        datetime updated_at
+    }
+
+    Auto_AiCaseNodeExecutions {
+        bigint   id              PK
+        bigint   workspace_id    FK
+        varchar  node_id
+        varchar  node_topic
+        varchar  previous_status
+        varchar  current_status
+        bigint   operator_id     FK
+        text     comment
+        datetime created_at
+    }
+
+    Auto_AiCaseNodeAttachments {
+        bigint   id               PK
+        bigint   workspace_id     FK
+        varchar  node_id
+        bigint   execution_log_id FK
+        varchar  file_name
+        varchar  storage_key
+        bigint   uploaded_by      FK
+        datetime created_at
+    }
+
+    Auto_AiRequirementParseTasks {
+        bigint   id            PK
+        varchar  task_key
+        varchar  task_no
+        bigint   workspace_id  FK
+        varchar  title
+        varchar  product_line
+        varchar  priority
+        longtext raw_text
+        longtext cleaned_text
+        varchar  status
+        int      progress
+        varchar  current_stage
+        bigint   created_by    FK
+        bigint   updated_by    FK
+        datetime created_at
+        datetime updated_at
+    }
+
+    Auto_AiRequirementAttachments {
+        bigint   id                 PK
+        bigint   task_id            FK
+        varchar  file_key
+        varchar  original_file_name
+        varchar  extract_status
+        longtext extracted_text
+        bigint   uploaded_by        FK
+        datetime created_at
+    }
+
+    Auto_AiRequirementCleaningRules {
+        bigint   id                 PK
+        varchar  rule_code
+        varchar  rule_name
+        text     description
+        tinyint  enabled_by_default
+        int      sort_order
+        tinyint  is_active
+        datetime created_at
+    }
+
+    Auto_AiRequirementTaskCleaningRules {
+        bigint  id            PK
+        bigint  task_id       FK
+        bigint  rule_id       FK
+        tinyint enabled
+        tinyint applied
+        int     changed_count
+    }
+
+    Auto_AiRequirementParseConfigs {
+        bigint   id                   PK
+        bigint   task_id              FK
+        tinyint  generate_summary
+        tinyint  scan_ambiguity_risk
+        tinyint  generate_test_points
+        varchar  model_name
+        decimal  temperature
+        int      max_tokens
+        datetime created_at
+        datetime updated_at
+    }
+
+    Auto_AiRequirementItems {
+        bigint   id                  PK
+        bigint   task_id             FK
+        bigint   module_id           FK
+        varchar  requirement_code
+        varchar  requirement_type
+        varchar  title
+        text     description
+        text     acceptance_criteria
+        varchar  priority
+        decimal  confidence_score
+        datetime created_at
+        datetime updated_at
+    }
+
+    Auto_AiRequirementParseStageLogs {
+        bigint   id            PK
+        bigint   task_id       FK
+        varchar  stage_code
+        varchar  stage_name
+        varchar  status
+        int      progress
+        datetime started_at
+        datetime completed_at
+        int      duration_ms
+        text     error_message
+    }
+
+    Auto_AiRequirementParseResults {
+        bigint   id             PK
+        bigint   task_id        FK
+        text     summary
+        text     business_goal
+        json     user_roles
+        json     structured_json
+        varchar  ai_model
+        datetime created_at
+        datetime updated_at
+    }
+
+    Auto_AiRequirementModules {
+        bigint   id                PK
+        bigint   task_id           FK
+        varchar  module_key
+        varchar  module_name
+        varchar  business_priority
+        decimal  confidence_score
+        int      sort_order
+        datetime created_at
+    }
+
+    Auto_AiRequirementQuestions {
+        bigint   id                  PK
+        bigint   task_id             FK
+        bigint   requirement_item_id FK
+        varchar  question_type
+        text     question_content
+        varchar  severity
+        varchar  status
+        bigint   answered_by         FK
+        text     answer_content
+        datetime created_at
+        datetime updated_at
+    }
+
+    Auto_AiRequirementRisks {
+        bigint   id                  PK
+        bigint   task_id             FK
+        bigint   requirement_item_id FK
+        varchar  risk_type
+        varchar  risk_title
+        text     risk_description
+        varchar  severity
+        varchar  possibility
+        varchar  status
+        datetime created_at
+    }
+
+    Auto_AiRequirementTestPointSuggestions {
+        bigint   id                     PK
+        bigint   task_id                FK
+        bigint   module_id              FK
+        bigint   requirement_item_id    FK
+        varchar  test_point_title
+        text     test_point_description
+        varchar  test_type
+        varchar  priority
+        varchar  status
+        bigint   converted_workspace_id FK
+        datetime created_at
+        datetime updated_at
+    }
+
+    Auto_AiRequirementModelCallLogs {
+        bigint   id              PK
+        bigint   task_id         FK
+        varchar  stage_code
+        varchar  model_name
+        int      request_tokens
+        int      response_tokens
+        int      total_tokens
+        int      latency_ms
+        varchar  status
+        text     error_message
+        datetime created_at
+    }
+
+    Auto_Users                             ||--o{ Auto_AiCaseWorkspaces                     : "creates/updates"
+    Auto_TestCaseProjects                  ||--o{ Auto_AiCaseWorkspaces                     : "belongs to"
+    Auto_AiCaseWorkspaces                  ||--o{ Auto_AiCaseNodeExecutions                 : "1:N workspace_id"
+    Auto_AiCaseWorkspaces                  ||--o{ Auto_AiCaseNodeAttachments                : "1:N workspace_id"
+    Auto_AiCaseNodeExecutions              ||--o{ Auto_AiCaseNodeAttachments                : "1:N execution_log_id"
+    Auto_Users                             ||--o{ Auto_AiCaseNodeExecutions                 : "operator_id"
+    Auto_Users                             ||--o{ Auto_AiCaseNodeAttachments                : "uploaded_by"
+    Auto_AiCaseWorkspaces                  ||--o{ Auto_AiRequirementParseTasks              : "1:N workspace_id"
+    Auto_Users                             ||--o{ Auto_AiRequirementParseTasks              : "creates"
+    Auto_AiRequirementParseTasks           ||--o{ Auto_AiRequirementAttachments             : "1:N task_id"
+    Auto_AiRequirementParseTasks           ||--|| Auto_AiRequirementParseConfigs            : "1:1 task_id"
+    Auto_AiRequirementParseTasks           ||--o{ Auto_AiRequirementTaskCleaningRules       : "1:N task_id"
+    Auto_AiRequirementParseTasks           ||--o{ Auto_AiRequirementParseStageLogs          : "1:N task_id"
+    Auto_AiRequirementParseTasks           ||--|| Auto_AiRequirementParseResults            : "1:1 task_id"
+    Auto_AiRequirementParseTasks           ||--o{ Auto_AiRequirementModules                 : "1:N task_id"
+    Auto_AiRequirementParseTasks           ||--o{ Auto_AiRequirementItems                   : "1:N task_id"
+    Auto_AiRequirementParseTasks           ||--o{ Auto_AiRequirementQuestions               : "1:N task_id"
+    Auto_AiRequirementParseTasks           ||--o{ Auto_AiRequirementRisks                   : "1:N task_id"
+    Auto_AiRequirementParseTasks           ||--o{ Auto_AiRequirementTestPointSuggestions    : "1:N task_id"
+    Auto_AiRequirementParseTasks           ||--o{ Auto_AiRequirementModelCallLogs           : "1:N task_id"
+    Auto_AiRequirementCleaningRules        ||--o{ Auto_AiRequirementTaskCleaningRules       : "1:N rule_id"
+    Auto_AiRequirementModules              ||--o{ Auto_AiRequirementItems                   : "1:N module_id"
+    Auto_AiRequirementModules              ||--o{ Auto_AiRequirementTestPointSuggestions    : "1:N module_id"
+    Auto_AiRequirementItems                ||--o{ Auto_AiRequirementQuestions               : "1:N requirement_item_id"
+    Auto_AiRequirementItems                ||--o{ Auto_AiRequirementRisks                   : "1:N requirement_item_id"
+    Auto_AiRequirementItems                ||--o{ Auto_AiRequirementTestPointSuggestions    : "1:N requirement_item_id"
+    Auto_Users                             ||--o{ Auto_AiRequirementQuestions               : "answers"
+    Auto_AiRequirementTestPointSuggestions }o--|| Auto_AiCaseWorkspaces                    : "convert to workspace"
+    </div>
+  </div>
+
+  <div class="table-desc">
+    <h2>📋 表结构说明 · Table Reference</h2>
+    <table>
+      <thead>
+        <tr><th>模块</th><th>表名</th><th>说明</th><th>关键字段</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="g-sys">系统/外部</td><td>Auto_Users</td><td>系统用户表</td><td>id PK · username · email</td></tr>
+        <tr><td class="g-sys">系统/外部</td><td>Auto_TestCaseProjects</td><td>测试项目表</td><td>id PK · name</td></tr>
+        <tr><td class="g-ws">AI 用例工作台</td><td>Auto_AiCaseWorkspaces</td><td>工作台主表（含思维导图、质量评分）</td><td>id PK · workspace_key · project_id FK · map_data · quality_score</td></tr>
+        <tr><td class="g-ws">AI 用例工作台</td><td>Auto_AiCaseNodeExecutions</td><td>节点状态变更流水</td><td>id PK · workspace_id FK · node_id · current_status</td></tr>
+        <tr><td class="g-ws">AI 用例工作台</td><td>Auto_AiCaseNodeAttachments</td><td>节点截图与证据附件</td><td>id PK · workspace_id FK · execution_log_id FK</td></tr>
+        <tr><td class="g-req">需求解析</td><td>Auto_AiRequirementParseTasks</td><td>需求解析任务主表</td><td>id PK · task_key · workspace_id FK · status · current_stage</td></tr>
+        <tr><td class="g-req">需求解析</td><td>Auto_AiRequirementAttachments</td><td>需求文件附件</td><td>id PK · task_id FK · extract_status</td></tr>
+        <tr><td class="g-req">需求解析</td><td>Auto_AiRequirementCleaningRules</td><td>清洗规则字典</td><td>id PK · rule_code · enabled_by_default</td></tr>
+        <tr><td class="g-req">需求解析</td><td>Auto_AiRequirementTaskCleaningRules</td><td>任务与清洗规则关联</td><td>id PK · task_id FK · rule_id FK</td></tr>
+        <tr><td class="g-req">需求解析</td><td>Auto_AiRequirementParseConfigs</td><td>解析配置（1:1 任务）</td><td>id PK · task_id FK · model_name · temperature</td></tr>
+        <tr><td class="g-req">需求解析</td><td>Auto_AiRequirementItems</td><td>结构化需求点</td><td>id PK · task_id FK · module_id FK · priority</td></tr>
+        <tr><td class="g-res">解析结果&amp;日志</td><td>Auto_AiRequirementParseStageLogs</td><td>解析阶段执行日志</td><td>id PK · task_id FK · stage_code · duration_ms</td></tr>
+        <tr><td class="g-res">解析结果&amp;日志</td><td>Auto_AiRequirementParseResults</td><td>解析结果摘要（1:1 任务）</td><td>id PK · task_id FK · summary · structured_json</td></tr>
+        <tr><td class="g-res">解析结果&amp;日志</td><td>Auto_AiRequirementModules</td><td>功能模块划分</td><td>id PK · task_id FK · module_name · confidence_score</td></tr>
+        <tr><td class="g-res">解析结果&amp;日志</td><td>Auto_AiRequirementQuestions</td><td>需求疑问（含回答者）</td><td>id PK · task_id FK · requirement_item_id FK · answered_by FK</td></tr>
+        <tr><td class="g-res">解析结果&amp;日志</td><td>Auto_AiRequirementRisks</td><td>风险提示</td><td>id PK · task_id FK · severity · possibility</td></tr>
+        <tr><td class="g-res">解析结果&amp;日志</td><td>Auto_AiRequirementTestPointSuggestions</td><td>测试点建议（可转换为工作台）</td><td>id PK · task_id FK · converted_workspace_id FK</td></tr>
+        <tr><td class="g-res">解析结果&amp;日志</td><td>Auto_AiRequirementModelCallLogs</td><td>AI 模型调用日志</td><td>id PK · task_id FK · model_name · latency_ms</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<footer>AI 工作台 ER 图 &nbsp;·&nbsp; Automation_Platform &nbsp;·&nbsp; Mermaid.js v10 &nbsp;·&nbsp; 2026-06-12</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    er: {
+      diagramPadding: 30,
+      layoutDirection: 'TB',
+      minEntityWidth: 100,
+      minEntityHeight: 75,
+      entityPadding: 15,
+      useMaxWidth: true,
+    },
+    themeVariables: {
+      primaryColor:       '#1565c0',
+      primaryTextColor:   '#ffffff',
+      primaryBorderColor: '#0d47a1',
+      lineColor:          '#546e7a',
+      secondaryColor:     '#e3f2fd',
+      tertiaryColor:      '#f3e5f5',
+      fontFamily:         '"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif',
+      fontSize:           '13px',
+    }
+  });
+</script>
+</body>
+</html>

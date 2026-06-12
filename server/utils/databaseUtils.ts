@@ -19,13 +19,13 @@ export function isMySQLMetadata(obj: unknown): obj is MySQLResultMetadata {
 
 /**
  * 批量插入数据
- * 
+ *
  * @param connection 数据库连接或连接池
  * @param table 表名
  * @param rows 行数据数组
  * @param options 配置选项
  * @returns 插入的总行数
- * 
+ *
  * @example
  * const rows = [
  *   { name: 'case1', status: 'passed' },
@@ -57,20 +57,20 @@ export async function batchInsert<T extends Record<string, unknown>>(
     for (let i = 0; i < rows.length; i += batchSize) {
       const batch = rows.slice(i, i + batchSize);
       const columns = Object.keys(batch[0]);
-      
+
       // 构建 placeholders: (?, ?, ?), (?, ?, ?), ...
-      const placeholders = batch.map(() => 
-        `(${columns.map(() => '?').join(',')})`
+      const placeholders = batch.map(() =>
+        `()`
       ).join(',');
-      
+
       // 构建参数数组
-      const values = batch.flatMap(row => 
+      const values = batch.flatMap(row =>
         columns.map(col => row[col])
       );
 
       const sql = `
-        INSERT INTO \`${table}\` (\`${columns.join('`,`')}\`) 
-        VALUES ${placeholders}
+        INSERT INTO \`\` (\`\`)
+        VALUES
       `;
 
       const [result] = await connection.execute(sql, values as any[]);
@@ -112,13 +112,13 @@ export async function batchInsert<T extends Record<string, unknown>>(
 
 /**
  * 批量更新数据
- * 
+ *
  * @param connection 数据库连接
  * @param table 表名
  * @param updates 更新数据和条件
  * @param options 配置选项
  * @returns 更新的总行数
- * 
+ *
  * @example
  * const updates = [
  *   { set: { status: 'completed', duration: 100 }, where: { id: 1 } },
@@ -153,19 +153,19 @@ export async function batchUpdate<T extends Record<string, unknown>>(
     for (const update of updates) {
       const setColumns = Object.keys(update.set);
       const whereColumns = Object.keys(update.where);
-      
-      const setClause = setColumns.map(col => `\`${col}\` = ?`).join(', ');
-      const whereClause = whereColumns.map(col => `\`${col}\` = ?`).join(' AND ');
-      
+
+      const setClause = setColumns.map(col => `\`\` = ?`).join(', ');
+      const whereClause = whereColumns.map(col => `\`\` = ?`).join(' AND ');
+
       const values = [
         ...setColumns.map(col => update.set[col]),
         ...whereColumns.map(col => update.where[col]),
       ];
 
       const sql = `
-        UPDATE \`${table}\`
-        SET ${setClause}
-        WHERE ${whereClause}
+        UPDATE \`\`
+        SET
+        WHERE
       `;
 
       const [result] = await connection.execute(sql, values as any[]);
@@ -199,28 +199,43 @@ export async function batchUpdate<T extends Record<string, unknown>>(
 /**
  * 事务执行辅助函数
  * 自动处理事务的开始、提交和回滚
- * 
+ *
  * @param connection 数据库连接
  * @param callback 事务内执行的回调函数
  * @param options 配置选项
+ *   - timeout: 超时时间（毫秒，暂未实现）
+ *   - autoRelease: 事务结束后是否自动释放连接（默认 true）
+ *     传入 `{ autoRelease: false }` 以保留连接，用于需要在事务外进行额外操作的场景
  * @returns 回调函数的返回值
- * 
+ *
  * @example
+ * // 默认：自动释放连接
  * const result = await executeInTransaction(connection, async (conn) => {
  *   const [result1] = await conn.execute('INSERT INTO ...', values1);
  *   const [result2] = await conn.execute('UPDATE ...', values2);
  *   return { insertId: result1.insertId };
  * });
+ *
+ * @example
+ * // 不释放连接（原 executeInTransactionNoRelease 行为）
+ * const result = await executeInTransaction(connection, async (conn) => {
+ *   return await doSomething(conn);
+ * }, { autoRelease: false });
  */
 export async function executeInTransaction<T>(
   connection: PoolConnection,
   callback: (connection: PoolConnection) => Promise<T>,
-  options: { timeout?: number } = {}
+  options: { timeout?: number; autoRelease?: boolean } = {}
 ): Promise<T> {
+  const { autoRelease = true } = options;
   const timer = createTimer();
 
   try {
-    logger.debug('Starting transaction', {}, LOG_CONTEXTS.DATABASE);
+    logger.debug(
+      autoRelease ? 'Starting transaction' : 'Starting transaction (no auto-release)',
+      {},
+      LOG_CONTEXTS.DATABASE
+    );
 
     await connection.beginTransaction();
 
@@ -255,69 +270,20 @@ export async function executeInTransaction<T>(
     throw error;
 
   } finally {
-    connection.release();
-  }
-}
-
-/**
- * 事务执行辅助函数（不释放连接）
- * 用于需要在事务外进行额外操作的场景
- * 
- * @param connection 数据库连接
- * @param callback 事务内执行的回调函数
- * @returns 回调函数的返回值
- */
-export async function executeInTransactionNoRelease<T>(
-  connection: PoolConnection,
-  callback: (connection: PoolConnection) => Promise<T>
-): Promise<T> {
-  const timer = createTimer();
-
-  try {
-    logger.debug('Starting transaction (no auto-release)', {}, LOG_CONTEXTS.DATABASE);
-
-    await connection.beginTransaction();
-
-    const result = await callback(connection);
-
-    await connection.commit();
-
-    const duration = timer();
-    logger.debug('Transaction committed successfully', {
-      durationMs: duration,
-    }, LOG_CONTEXTS.DATABASE);
-
-    return result;
-
-  } catch (error) {
-    const duration = timer();
-
-    try {
-      await connection.rollback();
-      logger.warn('Transaction rolled back due to error', {
-        error: error instanceof Error ? error.message : String(error),
-        durationMs: duration,
-      }, LOG_CONTEXTS.DATABASE);
-    } catch (rollbackError) {
-      logger.errorLog(
-        rollbackError,
-        'Failed to rollback transaction',
-        { durationMs: duration }
-      );
+    if (autoRelease) {
+      connection.release();
     }
-
-    throw error;
   }
 }
 
 /**
  * 使用 Savepoint 进行条件性回滚
  * 适用于部分操作可以失败的场景
- * 
+ *
  * @param connection 数据库连接
  * @param savepointName Savepoint 的名称
  * @param callback 需要设置 Savepoint 的回调
- * 
+ *
  * @example
  * try {
  *   await executeWithSavepoint(connection, 'before_details', async () => {
@@ -336,7 +302,7 @@ export async function executeWithSavepoint(
   try {
     logger.debug('Creating savepoint', { savepointName }, LOG_CONTEXTS.DATABASE);
 
-    await connection.execute(`SAVEPOINT \`${savepointName}\``);
+    await connection.execute(`SAVEPOINT \`\``);
 
     try {
       await callback(connection);
@@ -347,7 +313,7 @@ export async function executeWithSavepoint(
         error: error instanceof Error ? error.message : String(error),
       }, LOG_CONTEXTS.DATABASE);
 
-      await connection.execute(`ROLLBACK TO SAVEPOINT \`${savepointName}\``);
+      await connection.execute(`ROLLBACK TO SAVEPOINT \`\``);
       return false;
     }
 
@@ -357,55 +323,10 @@ export async function executeWithSavepoint(
   }
 }
 
-/**
- * 获取执行ID的查找函数
- * 尝试从多个角度查找 executionId，最后返回找到的 ID
- * 
- * @deprecated 此函数应被避免使用。建议从 triggerTestExecution 返回值直接获取 executionId
- */
-export async function findExecutionId(
-  connection: PoolConnection,
-  runId: number
-): Promise<number | undefined> {
-  logger.warn('findExecutionId called - consider refactoring to return executionId directly', {
-    runId,
-  }, LOG_CONTEXTS.DATABASE);
-
-  try {
-    // 策略1：尝试从 Auto_TestRun 表直接获取（如果表中有 execution_id 字段）
-    const [runRecord] = await connection.execute<any[]>(
-      'SELECT execution_id FROM Auto_TestRun WHERE id = ? LIMIT 1',
-      [runId]
-    );
-
-    if (Array.isArray(runRecord) && runRecord.length > 0 && runRecord[0].execution_id) {
-      return runRecord[0].execution_id;
-    }
-
-    // 策略2：尝试从 Auto_TestRunResults 查找
-    const [results] = await connection.execute<any[]>(
-      'SELECT DISTINCT execution_id FROM Auto_TestRunResults WHERE execution_id IS NOT NULL LIMIT 1'
-    );
-
-    if (Array.isArray(results) && results.length > 0 && results[0].execution_id) {
-      return results[0].execution_id;
-    }
-
-    logger.warn('Could not find executionId for runId', { runId }, LOG_CONTEXTS.DATABASE);
-    return undefined;
-
-  } catch (error) {
-    logger.errorLog(error, 'Error finding executionId', { runId });
-    return undefined;
-  }
-}
-
 export default {
   isMySQLMetadata,
   batchInsert,
   batchUpdate,
   executeInTransaction,
-  executeInTransactionNoRelease,
   executeWithSavepoint,
-  findExecutionId,
 };

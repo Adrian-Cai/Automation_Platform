@@ -1,3 +1,17 @@
+export interface DashboardStats {
+  totalCases: number;
+  todayRuns: number;
+  todaySuccessRate: number;
+  runningTasks: number;
+}
+
+export interface TodayExecution {
+  total: number;
+  passed: number;
+  failed: number;
+  skipped: number;
+}
+
 export interface DashboardResponse {
   stats: {
     totalCases: number;

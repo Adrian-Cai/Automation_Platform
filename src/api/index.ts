@@ -1,4 +1,3 @@
-import type { AiCaseMindData, AiCaseNodeStatus, AiCaseWorkspaceStatus } from '@/types/aiCases';
 import { clearToken } from '@/services/authApi';
 
 const API_BASE = '/api';
@@ -59,20 +58,8 @@ export async function request<T>(
 }
 
 // ==================== Dashboard API ====================
-
-export interface DashboardStats {
-  totalCases: number;
-  todayRuns: number;
-  todaySuccessRate: number;
-  runningTasks: number;
-}
-
-export interface TodayExecution {
-  total: number;
-  passed: number;
-  failed: number;
-  skipped: number;
-}
+// DashboardStats / TodayExecution / RecentRun 统一定义在 src/types/dashboard.ts，此处 re-export 避免重复维护
+export type { DashboardStats, TodayExecution, RecentRun } from '@/types/dashboard';
 
 export interface DailySummary {
   date: string;
@@ -89,18 +76,7 @@ export interface ComparisonData {
   failureComparison: number | null;
 }
 
-export interface RecentRun {
-  id: number;
-  suiteName: string;
-  status: 'pending' | 'running' | 'success' | 'failed' | 'cancelled';
-  duration: number | null;
-  startTime: string;
-  totalCases: number;
-  passedCases: number;
-  failedCases: number;
-  executedBy: string;
-  executedById: number;
-}
+import type { DashboardStats, TodayExecution, RecentRun } from '@/types/dashboard';
 
 export const dashboardApi = {
   getStats: () => request<DashboardStats>('/dashboard/stats'),
@@ -183,182 +159,9 @@ export interface ExecutionDetail {
   caseResults: ExecutionCaseResult[];
 }
 
-export const executionApi = {
-  run: (taskId: number, triggeredBy: number = 1) =>
-    request<ExecutionResult>('/executions/run', {
-      method: 'POST',
-      body: JSON.stringify({ taskId, triggeredBy }),
-    }),
-
-  getDetail: (id: number) => request<ExecutionDetail>(`/executions/${id}`),
-
-  getList: (limit: number = 20) => request<ExecutionRunDetail[]>(`/executions?limit=${limit}`),
-
-  cancel: (id: number) =>
-    request(`/executions/${id}/cancel`, { method: 'POST' }),
-
-  getAvailableRunners: () =>
-    request<{ type: string; name: string; available: boolean }[]>(
-      '/executions/runners/available'
-    ),
-};
-
-// ==================== Cases API ====================
-
-export interface TestCase {
-  id: number;
-  name: string;
-  description: string | null;
-  projectId: number | null;
-  projectName: string | null;
-  module: string | null;
-  priority: 'P0' | 'P1' | 'P2' | 'P3';
-  type: 'api' | 'postman' | 'pytest' | 'playwright';
-  status: 'active' | 'inactive' | 'deprecated';
-  tags: string | null;
-  configJson: string | null;
-  createdBy: number;
-  createdByName: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateCaseInput {
-  name: string;
-  description?: string;
-  projectId?: number;
-  module?: string;
-  priority?: string;
-  type?: string;
-  tags?: string;
-  configJson?: object;
-}
-
-export const casesApi = {
-  getList: (params?: {
-    projectId?: number;
-    module?: string;
-    status?: string;
-    type?: string;
-    search?: string;
-    limit?: number;
-    offset?: number;
-  }) => {
-    const query = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) query.append(key, String(value));
-      });
-    }
-    return request<TestCase[]>(`/cases?${query}`);
-  },
-
-  getDetail: (id: number) => request<TestCase>(`/cases/${id}`),
-
-  create: (data: CreateCaseInput) =>
-    request<{ id: number }>('/cases', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  update: (id: number, data: Partial<CreateCaseInput>) =>
-    request(`/cases/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
-
-  delete: (id: number) =>
-    request(`/cases/${id}`, { method: 'DELETE' }),
-
-  getModules: () => request<string[]>('/cases/modules'),
-};
-
-// ==================== Tasks API ====================
-
-export interface Task {
-  id: number;
-  name: string;
-  description: string | null;
-  projectId: number | null;
-  projectName: string | null;
-  caseIds: string;
-  triggerType: 'manual' | 'scheduled' | 'ci_triggered';
-  cronExpression: string | null;
-  environmentId: number | null;
-  environmentName: string | null;
-  status: 'active' | 'paused' | 'archived';
-  createdBy: number;
-  createdByName: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateTaskInput {
-  name: string;
-  description?: string;
-  projectId?: number;
-  caseIds?: number[];
-  triggerType?: string;
-  cronExpression?: string;
-  environmentId?: number;
-}
-
-export const tasksApi = {
-  getList: (params?: { projectId?: number; status?: string; limit?: number }) => {
-    const query = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) query.append(key, String(value));
-      });
-    }
-    return request<Task[]>(`/tasks?${query}`);
-  },
-
-  getDetail: (id: number) => request<Task & {
-    cases: Array<{ id: number; name: string; type: string; status: string; priority: string }>;
-    recentExecutions: Array<{
-      id: number;
-      status: string;
-      startTime: string | null;
-      endTime: string | null;
-      duration: number | null;
-      passedCases: number;
-      failedCases: number;
-      totalCases: number;
-    }>;
-    latestRunId: number | null;
-  }>(`/tasks/${id}`),
-
-  create: (data: CreateTaskInput) =>
-    request<{ id: number }>('/tasks', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  update: (id: number, data: Partial<CreateTaskInput & { status?: string }>) =>
-    request(`/tasks/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
-
-  delete: (id: number) =>
-    request(`/tasks/${id}`, { method: 'DELETE' }),
-
-  getExecutions: (id: number, limit: number = 20) =>
-    request<Array<{
-      id: number;
-      status: string;
-      startTime: string | null;
-      endTime: string | null;
-      duration: number | null;
-      passedCases: number;
-      failedCases: number;
-      totalCases: number;
-      executedByName: string | null;
-    }>>(`/tasks/${id}/executions?limit=${limit}`),
-};
-
 // ==================== AI Cases API ====================
+
+import type { AiCaseMindData, AiCaseNodeStatus, AiCaseWorkspaceStatus } from '@/types/aiCases';
 
 export interface AiCaseWorkspaceSummary {
   id: number;
@@ -446,16 +249,6 @@ export interface AiCaseAttachmentItem {
 }
 
 export const aiCasesApi = {
-  /**
-   * 调用 AI 生成测试用例结构
-   *
-   * @param data.requirementText - 需求文档文本（必填）
-   * @param data.workspaceName   - 工作台名称（可选，默认由 AI 推断）
-   * @param data.projectId       - 关联项目 ID（可选）
-   * @param data.persist         - 是否将结果持久化到数据库
-   *   - false/undefined（默认）：返回 AiCaseGenerationResult（仅生成结果，不持久化）
-   *   - true：返回 { generated, workspace }（生成结果 + 已创建的工作台详情）
-   */
   generate: <TPersist extends boolean = false>(data: {
     requirementText: string;
     workspaceName?: string;

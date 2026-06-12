@@ -39,7 +39,7 @@ const AI_WORKBENCH_CASE_GENERATION_ROUTE = AI_WORKBENCH_CASE_GENERATION_ROUTES[0
 function isAiWorkbenchCaseGenerationRoute(location: string): boolean {
   const normalized = location.endsWith('/') ? location.slice(0, -1) : location;
   return AI_WORKBENCH_CASE_GENERATION_ROUTES.some((route) =>
-    normalized === route || normalized.startsWith(`${route}?`)
+    normalized === route || normalized.startsWith(`?`)
   );
 }
 
@@ -51,22 +51,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-function TasksPage() {
-  return <Tasks />;
-}
-
-function ReportsPage() {
-  return <Reports />;
-}
-
-function ReportDetailPage() {
-  return <ReportDetail />;
-}
-
-function SettingsPage() {
-  return <SystemSettings />;
-}
 
 function ProfilePage() {
   return (
@@ -226,9 +210,6 @@ function Router() {
             <AiWorkbenchHistoryExport />
           </ProtectedLayout>
         </Route>
-        <Route path="/ai-workbench/overview">
-          <Redirect to="/ai-workbench/home" />
-        </Route>
         <Route path="/ai-workbench/requirement-input">
           <Redirect to="/ai-workbench/requirements" />
         </Route>
@@ -251,28 +232,28 @@ function Router() {
         <Route path="/tasks">
           <ProtectedRoute>
             <Layout>
-              <TasksPage />
+              <Tasks />
             </Layout>
           </ProtectedRoute>
         </Route>
         <Route path="/reports">
           <ProtectedRoute>
             <Layout>
-              <ReportsPage />
+              <Reports />
             </Layout>
           </ProtectedRoute>
         </Route>
         <Route path="/reports/:id">
           <ProtectedRoute>
             <Layout>
-              <ReportDetailPage />
+              <ReportDetail />
             </Layout>
           </ProtectedRoute>
         </Route>
         <Route path="/settings">
           <ProtectedRoute>
             <Layout>
-              <SettingsPage />
+              <SystemSettings />
             </Layout>
           </ProtectedRoute>
         </Route>
