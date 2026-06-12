@@ -1,4 +1,4 @@
-import { AppDataSource } from '../../database/database';
+import { AppDataSource } from '../../config/database';
 import {
   ExecutionRecord,
   TestResultRecord,
