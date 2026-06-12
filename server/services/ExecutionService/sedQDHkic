@@ -1,4 +1,4 @@
-import { AppDataSource } from '../../database/database';
+﻿import { AppDataSource } from '../../config/database';
 import {
   ExecutionRecord,
   TestResultRecord,
@@ -11,6 +11,7 @@ import {
 import {
   batchInsert,
   isMySQLMetadata,
+  executeInTransaction,
   executeWithSavepoint,
 } from '../../utils/databaseUtils';
 import { EXECUTION_CONFIG, EXECUTION_STATUS, TEST_RESULT_STATUS } from '../../config/constants';
@@ -664,7 +665,7 @@ export class ExecutionService {
         throw new Error(`Execution not found: runId=${runId}`);
       }
 
-      // 2. 幂等性检查：仅跳过"无结果载荷"的空重复回调
+      // 2. 幂等性检查：仅跳过“无结果载荷”的空重复回调
       // 场景：Jenkins 轮询/手动同步可能先把 TestRun 标记为终态，随后回调才携带详细 results 到达。
       // 该场景必须继续执行回写，否则会残留预创建的 error 占位记录。
       const hasDetailedResults = Array.isArray(results.results) && results.results.length > 0;
