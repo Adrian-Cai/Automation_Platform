@@ -30,6 +30,7 @@ export interface TaskExecution {
   duration?: number;
   passed_cases: number;
   failed_cases: number;
+  skipped_cases: number;
   total_cases: number;
 }
 

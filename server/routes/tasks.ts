@@ -70,6 +70,7 @@ interface TaskExecution {
   duration?: number;
   passed_cases: number;
   failed_cases: number;
+  skipped_cases: number;
   total_cases: number;
   executed_by_name?: string;
 }
@@ -306,12 +307,12 @@ router.get('/', async (req, res) => {
 
       // MariaDB 窗口函数：RANK() OVER PARTITION BY task_id
       const executions = await query<(TaskExecution & { task_id: number })[]>(
-        `SELECT id, task_id, status, start_time, end_time, duration, passed_cases, failed_cases, total_cases
+        `SELECT id, task_id, status, start_time, end_time, duration, passed_cases, failed_cases, skipped_cases, total_cases
          FROM (
-           SELECT id, task_id, status, start_time, end_time, duration, passed_cases, failed_cases, total_cases,
-                  RANK() OVER (PARTITION BY task_id ORDER BY COALESCE(start_time, id) DESC) AS rn
-           FROM Auto_TestCaseTaskExecutions
-           WHERE task_id IN (${placeholders})
+           SELECT id, task_id, status, start_time, end_time, duration, passed_cases, failed_cases, skipped_cases, total_cases,
+                   RANK() OVER (PARTITION BY task_id ORDER BY COALESCE(start_time, id) DESC) AS rn
+            FROM Auto_TestCaseTaskExecutions
+            WHERE task_id IN (${placeholders})
          ) ranked
          WHERE rn <= 5
          ORDER BY task_id, COALESCE(start_time, id) DESC`,
@@ -396,7 +397,7 @@ router.get('/:id', async (req, res) => {
     // 并行获取最近运行记录和最新关联 TestRun
     const [recentExecutions, latestRunRow] = await Promise.all([
       query<TaskExecution[]>(`
-SELECT id, status, start_time, end_time, duration, passed_cases, failed_cases, total_cases
+SELECT id, status, start_time, end_time, duration, passed_cases, failed_cases, skipped_cases, total_cases
 FROM Auto_TestCaseTaskExecutions
 WHERE task_id = ?
 ORDER BY COALESCE(start_time, id) DESC

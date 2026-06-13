@@ -40,6 +40,7 @@ export const EXECUTION_STATUS_CONFIG: Record<
 > = {
   success: { color: 'bg-green-500', label: '成功' },
   failed: { color: 'bg-red-500', label: '失败' },
+  skipped: { color: 'bg-slate-400', label: '跳过' },
   running: { color: 'bg-blue-500 animate-pulse', label: '运行中' },
   pending: { color: 'bg-slate-300', label: '等待中' },
   cancelled: { color: 'bg-slate-400', label: '已取消' },
