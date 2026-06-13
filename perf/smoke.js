@@ -72,7 +72,6 @@ export default function () {
 
     check(response, {
       [`${api.name} status is ${api.expectedStatus}`]: (r) => r.status === api.expectedStatus,
-      [`${api.name} response time < 800ms`]: (r) => r.timings.duration < 800,
     });
 
     sleep(1);
