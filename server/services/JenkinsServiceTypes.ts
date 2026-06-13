@@ -9,6 +9,7 @@ export interface JenkinsConfig {
   };
   testRepoUrl?: string;
   testRepoBranch: string;
+  platformApiKey?: string;
 }
 
 export interface JenkinsJobInspection {

@@ -22,7 +22,7 @@ import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { useTestRuns, type TestRunFilters } from '@/hooks/useExecutions';
+import { useTestRuns, type TestRunFilters, type TestRunRecord } from '@/hooks/useExecutions';
 import { cn } from '@/lib/utils';
 
 type MultiSelectOption = {
@@ -39,6 +39,19 @@ function formatDuration(ms: number | null | undefined): string {
   const minutes = Math.floor(seconds / 60);
   const remainSeconds = seconds % 60;
   return remainSeconds > 0 ? `${minutes}m ${remainSeconds}s` : `${minutes}m`;
+}
+
+export function getDisplayRunStatus(record: Pick<TestRunRecord, 'status' | 'passed_cases' | 'failed_cases' | 'skipped_cases'>): string {
+  if (
+    record.status === 'success' &&
+    record.skipped_cases > 0 &&
+    record.passed_cases === 0 &&
+    record.failed_cases === 0
+  ) {
+    return 'skipped';
+  }
+
+  return record.status;
 }
 
 export default function Reports() {
@@ -224,7 +237,7 @@ export default function Reports() {
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
-                        <StatusBadge status={record.status} reason={record.abort_reason} />
+                        <StatusBadge status={getDisplayRunStatus(record)} reason={record.abort_reason} />
                         {record.status === 'aborted' && record.abort_reason ? (
                           <div
                             className="mt-1 max-w-[220px] truncate text-[10px] text-amber-600 dark:text-amber-400"
@@ -239,6 +252,8 @@ export default function Reports() {
                           <span className="font-medium text-green-600">{record.passed_cases} 通过</span>
                           <span className="text-slate-300">/</span>
                           <span className="font-medium text-red-500">{record.failed_cases} 失败</span>
+                          <span className="text-slate-300">/</span>
+                          <span className="font-medium text-slate-500">{record.skipped_cases} 跳过</span>
                           <span className="text-slate-300">/</span>
                           <span className="text-slate-400">{record.total_cases} 总计</span>
                         </div>
@@ -471,6 +486,7 @@ function StatusBadge({ status, reason }: { status: string; reason?: string | nul
     failed: { label: '失败', variant: 'destructive', icon: XCircle },
     running: { label: '运行中', variant: 'secondary', icon: Loader2 },
     pending: { label: '等待中', variant: 'outline', icon: Clock },
+    skipped: { label: '跳过', variant: 'secondary', icon: AlertCircle },
     aborted: { label: '已中止', variant: 'warning', icon: AlertCircle },
     cancelled: { label: '已取消', variant: 'warning', icon: AlertCircle },
   };

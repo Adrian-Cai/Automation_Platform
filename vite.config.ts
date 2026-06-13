@@ -64,7 +64,7 @@ export default defineConfig({
     include: ['test_case/frontend/**/*.test.{ts,tsx}', 'test_case/backend/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json'],
+      reporter: ['text', 'json', 'json-summary'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/**/*.d.ts',

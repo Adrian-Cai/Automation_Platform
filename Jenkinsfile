@@ -9,6 +9,7 @@ pipeline {
         string(name: 'MARKER',       description: 'Pytest marker标记',  defaultValue: '')
         string(name: 'REPO_URL',     description: '测试用例仓库URL',    defaultValue: '')
         string(name: 'REPO_BRANCH',  description: '测试用例仓库分支',   defaultValue: 'master')
+        password(name: 'JENKINS_API_KEY', description: '平台 API Key，用于测试容器上报执行开始状态', defaultValue: '')
         string(name: 'PARALLEL_WORKERS', description: '并发进程数（N=指定数量，0或空=串行）headless2模式下每Chrome约250MB，建议master填3，Agent-node-2填4', defaultValue: '3')
         booleanParam(name: 'FORCE_PULL_IMAGE', description: '强制重新拉取测试镜像（镜像有更新时勾选）', defaultValue: false)
     }
@@ -38,8 +39,15 @@ pipeline {
         stage('执行测试') {
             agent { label "${env.EXEC_NODE}" }
             steps {
-                checkout scm  // skipDefaultCheckout 后需手动执行
                 script {
+                    sh """
+                        if [ -e "${env.WORKSPACE}/.git" ] && ! git rev-parse --resolve-git-dir "${env.WORKSPACE}/.git" > /dev/null 2>&1; then
+                            echo "检测到损坏的主仓库 .git，清理后重新 checkout"
+                            rm -rf "${env.WORKSPACE}/.git"
+                        fi
+                    """
+                    checkout scm  // skipDefaultCheckout 后需手动执行
+
                     if (!params.RUN_ID && !params.SCRIPT_PATHS && !params.MARKER) {
                         echo "⚠️ 未传入执行参数（可能是定时触发），跳过执行测试"
                         return
@@ -160,6 +168,7 @@ pipeline {
                         "MARKER=${params.MARKER ?: ''}",
                         "PARALLEL_WORKERS=${params.PARALLEL_WORKERS ?: 'auto'}",
                         "CALLBACK_URL=${callbackUrl}",
+                        "JENKINS_API_KEY=${params.JENKINS_API_KEY ?: ''}",
                         "REPO_PRELOADED=${repoPreloaded}",
                     ].join('\n') + '\n'
 

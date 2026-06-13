@@ -1,14 +1,14 @@
-# Byte-compiled / optimized / DLL files
+# 字节码编译 / 优化 / DLL 文件
 __pycache__/
 *.py[cod]
 *$py.class
-# C extensions
+# C 扩展
 *.so
 
-# C extensions
+# C 扩展
 *.so
 
-# Project specific
+# 项目特定
 .trae/
 .claude/
 .catpaw/
@@ -33,7 +33,7 @@ Jenkinsfile.optimized
 .superpowers/*
 .worktrees/
 
-# Distribution / packaging
+# 分发 / 打包
 .Python
 build/
 develop-eggs/
@@ -56,17 +56,18 @@ share/python-wheels/
 MANIFEST
 
 # PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+#  通常，这些文件是由一个基于模板的Python脚本编写的
+#  在PyInstaller构建exe文件之前，以便向其中注入日期/其他信息。
 *.manifest
 *.spec
 
-# Installer logs
+# 安装程序日志
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# 单元测试 / 覆盖率报告
 htmlcov/
+coverage/
 .tox/
 .nox/
 .coverage
@@ -79,24 +80,24 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# Translations
+# 翻译文件
 *.mo
 *.pot
 
-# Django stuff:
+# Django 相关：
 *.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
-# Flask stuff:
+# Flask 相关：
 instance/
 .webassets-cache
 
-# Scrapy stuff:
+# Scrapy 相关：
 .scrapy
 
-# Sphinx documentation
+# Sphinx 文档
 docs/_build/
 
 # PyBuilder
@@ -113,23 +114,22 @@ ipython_config.py
 .python-version
 
 # pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
+#   根据 pypa/pipenv#598 的建议，建议将 Pipfile.lock 纳入版本控制。
+#   然而，在协作情况下，如果存在平台特定的依赖项或没有跨平台支持的依赖项，
+#   pipenv 可能会安装无法工作或未安装所有必要依赖项的依赖项。
 #Pipfile.lock
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+# PEP 582；例如被 github.com/David-OConnor/pyflow 使用
 __pypackages__/
 
-# Celery stuff
+# Celery 相关
 celerybeat-schedule
 celerybeat.pid
 
-# SageMath parsed files
+# SageMath 解析文件
 *.sage.py
 
-# Environments
+# 环境
 .env
 .venv
 env/
@@ -138,14 +138,14 @@ ENV/
 env.bak/
 venv.bak/
 
-# Spyder project settings
+# Spyder 项目设置
 .spyderproject
 .spyproject
 
-# Rope project settings
+# Rope 项目设置
 .ropeproject
 
-# mkdocs documentation
+# mkdocs 文档
 /site
 
 # mypy
@@ -153,7 +153,7 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
-# Pyre type checker
+# Pyre 类型检查器
 .pyre/
 
 # IDE
@@ -162,7 +162,7 @@ dmypy.json
 *.swp
 *.swo
 
-# OS
+# 操作系统
 .DS_Store
 .DS_Store?
 ._*
@@ -174,26 +174,26 @@ Thumbs.db
 # Vercel
 .vercel/
 
-# Custom
+# 自定义
 deepseek_*
 test_crypto.py
 node_modules
 .playwright-mcp/
 *.patch
 
-# Project specific
+# 项目特定
 tmp/
 archive/
 *.db
 server/db/autotest.db
 
-# MCP config (contains credentials)
+# MCP 配置（包含凭证）
 .mcp.json
 
-# Playwright MCP snapshots
+# Playwright MCP 快照
 .playwright-mcp/
 
-# Docker Secrets (contains sensitive information)
+# Docker 密钥（包含敏感信息）
 deployment/secrets/
 *.secret
 *.key

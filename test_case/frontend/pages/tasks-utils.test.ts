@@ -13,6 +13,7 @@ function makeExecution(overrides: Partial<TaskExecution> = {}): TaskExecution {
     status: 'success',
     passed_cases: 0,
     failed_cases: 0,
+    skipped_cases: 0,
     total_cases: 0,
     ...overrides,
   };
@@ -86,6 +87,22 @@ describe('taskPageConfig - getTaskSemanticStatus', () => {
     );
 
     expect(result).toEqual({ key: 'cancelled', label: '已取消' });
+  });
+
+  it('最近一次执行全部跳过时应显示“跳过”，避免被兜底为成功', () => {
+    const result = getTaskSemanticStatus(
+      makeTask({
+        recentExecutions: [makeExecution({
+          status: 'success',
+          passed_cases: 0,
+          failed_cases: 0,
+          skipped_cases: 1,
+          total_cases: 1,
+        })],
+      })
+    );
+
+    expect(result).toEqual({ key: 'skipped', label: '跳过' });
   });
 });
 

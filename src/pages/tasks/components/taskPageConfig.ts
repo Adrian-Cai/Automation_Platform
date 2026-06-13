@@ -73,6 +73,7 @@ export const TABLE_COLUMN_OPTIONS: ReadonlyArray<{ key: TaskSortKey; label: stri
 
 export const TASK_STATUS_SEMANTIC = {
   success: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  skipped: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
   running: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
   pending: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
   paused: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
@@ -119,6 +120,9 @@ export const getTaskSemanticStatus = (task: Task): { key: TaskSemanticStatus; la
   if (task.status === 'paused') return { key: 'paused', label: '暂停' };
   if (latest?.status === 'failed') return { key: 'failed', label: '失败' };
   if (latest?.status === 'cancelled') return { key: 'cancelled', label: '已取消' };
+  if ((latest?.skipped_cases ?? 0) > 0 && (latest?.passed_cases ?? 0) === 0 && (latest?.failed_cases ?? 0) === 0) {
+    return { key: 'skipped', label: '跳过' };
+  }
   // 从未执行过时（latest 为空），显示"空闲"而非"成功"，避免语义误导
   if (!latest) return { key: 'draft', label: '空闲' };
   return { key: 'success', label: '成功' };

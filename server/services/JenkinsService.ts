@@ -117,6 +117,7 @@ export class JenkinsService {
       },
       testRepoUrl: configuredTestRepoUrl || undefined,
       testRepoBranch: configuredTestRepoBranch || 'master',
+      platformApiKey: getSecretOrEnv('JENKINS_API_KEY') || undefined,
     };
 
     if (!this.config.testRepoUrl) {
@@ -132,6 +133,7 @@ export class JenkinsService {
       hasTestRepoUrl: Boolean(this.config.testRepoUrl),
       testRepoUrl: this.config.testRepoUrl,
       platformRepoUrl: this.platformRepoUrl,
+      hasPlatformApiKey: Boolean(this.config.platformApiKey),
     }, 'JENKINS');
   }
 
@@ -313,7 +315,8 @@ export class JenkinsService {
 
   private async postTriggerRequestWithCrumbFallback(
     url: string,
-    logContext: Record<string, unknown>
+    logContext: Record<string, unknown>,
+    body: URLSearchParams
   ): Promise<JenkinsTriggerHttpResult> {
     const crumbHeader = await this.getCrumbHeader();
     const crumbWasPresent = Object.keys(crumbHeader).length > 0;
@@ -321,6 +324,7 @@ export class JenkinsService {
     const performRequest = (headers: Record<string, string>) => fetch(url, {
       method: 'POST',
       headers,
+      body,
     });
 
     const initialResponse = await performRequest(this.getTriggerRequestHeaders(crumbHeader));
@@ -404,7 +408,12 @@ export class JenkinsService {
 
     if (!parameterized) {
       issues.push('Target Jenkins job is not parameterized');
-      recommendations.push('Save the Pipeline job until Jenkins shows Build with Parameters and exposes RUN_ID, CASE_IDS, SCRIPT_PATHS, CALLBACK_URL, REPO_URL, and REPO_BRANCH.');
+      recommendations.push('Save the Pipeline job until Jenkins shows Build with Parameters and exposes RUN_ID, CASE_IDS, SCRIPT_PATHS, CALLBACK_URL, REPO_URL, REPO_BRANCH, and JENKINS_API_KEY.');
+    }
+
+    if (this.config.platformApiKey && !parameterNames.includes('JENKINS_API_KEY')) {
+      issues.push('Target Jenkins job does not expose JENKINS_API_KEY parameter');
+      recommendations.push('Add a password/string parameter named JENKINS_API_KEY so the test runner can authenticate execution-start callbacks.');
     }
 
     if (definitionClass !== 'org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition') {
@@ -427,10 +436,13 @@ export class JenkinsService {
       recommendations.push('Disable the Jenkins timer trigger so the platform remains the single scheduler.');
     }
 
+    const hasRequiredSecretParameters = !this.config.platformApiKey || parameterNames.includes('JENKINS_API_KEY');
+
     const triggerReady = parameterized
       && definitionClass === 'org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition'
       && (!scriptPath || scriptPath === 'Jenkinsfile')
-      && (!normalizedConfiguredRepoUrl || !normalizedScmUrl || normalizedConfiguredRepoUrl === normalizedScmUrl);
+      && (!normalizedConfiguredRepoUrl || !normalizedScmUrl || normalizedConfiguredRepoUrl === normalizedScmUrl)
+      && hasRequiredSecretParameters;
 
     return {
       jobName,
@@ -498,6 +510,9 @@ export class JenkinsService {
     if (callbackUrl) {
       params.append('CALLBACK_URL', callbackUrl);
     }
+    if (this.config.platformApiKey) {
+      params.append('JENKINS_API_KEY', this.config.platformApiKey);
+    }
     if (repoValidation.repoUrl) {
       params.append('REPO_URL', repoValidation.repoUrl);
     }
@@ -513,8 +528,9 @@ export class JenkinsService {
 
       // 调用 Jenkins API
       const { response, errorText } = await this.postTriggerRequestWithCrumbFallback(
-        `${triggerUrl}?${params.toString()}`,
-        { caseId, caseType: type, jobName }
+        triggerUrl,
+        { caseId, caseType: type, jobName },
+        params
       );
 
       if (response.status === 201 || response.status === 200) {
@@ -598,6 +614,9 @@ export class JenkinsService {
     if (callbackUrl) {
       params.append('CALLBACK_URL', callbackUrl);
     }
+    if (this.config.platformApiKey) {
+      params.append('JENKINS_API_KEY', this.config.platformApiKey);
+    }
     if (repoValidation.repoUrl) {
       params.append('REPO_URL', repoValidation.repoUrl);
       params.append('REPO_BRANCH', this.config.testRepoBranch);
@@ -615,16 +634,17 @@ export class JenkinsService {
       }, 'JENKINS');
 
       // 调用 Jenkins API
-      const fullUrl = `${triggerUrl}?${params.toString()}`;
       logger.debug('Making Jenkins API request', {
         runId,
-        url: `${triggerUrl}?[PARAMS_REDACTED]`,
+        url: triggerUrl,
         method: 'POST',
+        parameterNames: Array.from(params.keys()),
       }, 'JENKINS');
       
       const { response, errorText } = await this.postTriggerRequestWithCrumbFallback(
-        fullUrl,
-        { runId, caseCount: caseIds.length, jobName }
+        triggerUrl,
+        { runId, caseCount: caseIds.length, jobName },
+        params
       );
 
       logger.debug('Jenkins API response received', {
