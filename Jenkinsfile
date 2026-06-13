@@ -41,10 +41,15 @@ pipeline {
             steps {
                 script {
                     sh """
-                        if [ -e "${env.WORKSPACE}/.git" ] && ! git rev-parse --resolve-git-dir "${env.WORKSPACE}/.git" > /dev/null 2>&1; then
-                            echo "检测到损坏的主仓库 .git，清理后重新 checkout"
-                            rm -rf "${env.WORKSPACE}/.git"
+                        set +e
+                        cd "${env.WORKSPACE}"
+
+                        if [ -e .git ] && ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+                            echo "检测到损坏的主仓库 .git，清理 Git 元数据后重新 checkout"
+                            rm -rf .git .git.lock
                         fi
+
+                        find . -maxdepth 1 -name '.git*.lock' -delete
                     """
                     checkout scm  // skipDefaultCheckout 后需手动执行
 
