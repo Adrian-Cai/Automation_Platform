@@ -4,6 +4,7 @@ import {
   deriveCallbackTerminalStatus,
   normalizeCallbackTerminalStatus,
 } from '../../server/services/ExecutionService/callbackStatus';
+import { shouldPromoteFailedPlaceholdersForZeroSummarySuccess } from '../../server/repositories/ExecutionRepositoryBatch';
 
 describe('callback status derivation', () => {
   it('treats mixed passed and failed case results as failed overall', () => {
@@ -37,5 +38,34 @@ describe('callback status derivation', () => {
     });
 
     expect(status).toBe('aborted');
+  });
+});
+
+describe('zero-summary success callback reconciliation', () => {
+  it('promotes failed placeholders when Jenkins reports success without result details', () => {
+    expect(shouldPromoteFailedPlaceholdersForZeroSummarySuccess({
+      status: 'success',
+      dbTotal: 2,
+      dbFailed: 2,
+      dbFinished: 2,
+    })).toBe(true);
+  });
+
+  it('does not promote mixed persisted results that may contain real failures', () => {
+    expect(shouldPromoteFailedPlaceholdersForZeroSummarySuccess({
+      status: 'success',
+      dbTotal: 2,
+      dbFailed: 1,
+      dbFinished: 2,
+    })).toBe(false);
+  });
+
+  it('does not promote placeholders for non-success Jenkins results', () => {
+    expect(shouldPromoteFailedPlaceholdersForZeroSummarySuccess({
+      status: 'failed',
+      dbTotal: 2,
+      dbFailed: 2,
+      dbFinished: 2,
+    })).toBe(false);
   });
 });
