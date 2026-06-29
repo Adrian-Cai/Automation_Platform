@@ -27,6 +27,19 @@ import type {
   TestRunStatusInfo,
   TestRunWithUser,
 } from './ExecutionRepositoryTypes';
+
+export function shouldPromoteFailedPlaceholdersForZeroSummarySuccess(input: {
+  status: string;
+  dbTotal: number;
+  dbFailed: number;
+  dbFinished: number;
+}): boolean {
+  return input.status === 'success'
+    && input.dbTotal > 0
+    && input.dbFailed > 0
+    && input.dbFinished === input.dbFailed;
+}
+
 export abstract class ExecutionRepositoryBatch extends ExecutionRepositoryStatusUtilities {
   abstract bulkUpdateErrorResults(executionId: number, targetStatus: 'passed' | 'failed' | 'skipped'): Promise<number>;
 
@@ -929,7 +942,32 @@ export abstract class ExecutionRepositoryBatch extends ExecutionRepositoryStatus
         const dbTotal    = Number(countRows[0].total       ?? 0);
         const dbFinished = dbPassed + dbFailed + dbSkipped;
 
-        if (dbTotal > 0 && dbFinished > 0) {
+        if (shouldPromoteFailedPlaceholdersForZeroSummarySuccess({
+          status: results.status,
+          dbTotal,
+          dbFailed,
+          dbFinished,
+        })) {
+          await this.testRunResultRepository.query(`
+            UPDATE Auto_TestRunResults
+            SET status = 'passed',
+                end_time = COALESCE(end_time, NOW())
+            WHERE execution_id = ? AND status = 'failed'
+          `, [executionId]);
+
+          const newCounts = await this.countResultsByStatus(executionId);
+          await this.testRunRepository.update(runId, {
+            passedCases:  newCounts.passed,
+            failedCases:  newCounts.failed,
+            skippedCases: newCounts.skipped,
+          });
+
+          logger.info(
+            `Reconciled zero-summary success callback from failed placeholders`,
+            { runId, executionId, previousFailed: dbFailed, newCounts },
+            LOG_CONTEXTS.REPOSITORY
+          );
+        } else if (dbTotal > 0 && dbFinished > 0) {
           // 已有非 error 的真实结果，直接用统计值回填 Auto_TestRun，不覆盖为0
           await this.testRunRepository.update(runId, {
             passedCases:  dbPassed,
