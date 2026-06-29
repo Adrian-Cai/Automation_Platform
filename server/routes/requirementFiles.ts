@@ -5,7 +5,6 @@ import { RequirementFileRepository } from '../repositories/RequirementFileReposi
 import { RequirementFileUploadService } from '../services/requirementFiles/uploadService';
 import { CleanRequirementOptions } from '../services/requirementFiles/types';
 import logger from '../utils/logger';
-import { LOG_CONTEXTS } from '../config/logging';
 
 const router = Router();
 const upload = multer({
@@ -108,7 +107,7 @@ router.delete('/:fileId', async (req, res) => {
     logger.errorLog(error, 'Requirement file delete failed', {
       event: 'REQUIREMENT_FILE_DELETE_FAILED',
       fileId: req.params.fileId,
-    }, LOG_CONTEXTS.CASES);
+    });
     sendError(res, 500, error instanceof Error ? error.message : '删除失败');
   }
 });
