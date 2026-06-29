@@ -16,6 +16,7 @@ import tasksRoutes from './routes/tasks';
 import jenkinsRoutes from './routes/jenkins';
 import authRoutes from './routes/auth';
 import aiCasesRoutes from './routes/aiCases';
+import requirementFilesRoutes from './routes/requirementFiles';
 import { dailySummaryScheduler } from './services/DailySummaryScheduler';
 import { executionMonitorService } from './services/ExecutionMonitorService';
 import { initializeWebSocketService, webSocketService } from './services/WebSocketService';
@@ -176,6 +177,7 @@ app.use('/api/cases', casesRoutes);
 app.use('/api/tasks', tasksRoutes);
 app.use('/api/jenkins', jenkinsRoutes);
 app.use('/api/ai-cases', aiCasesRoutes);
+app.use('/api/requirements/files', requirementFilesRoutes);
 
 // 管理员操作速率限制 - 防止滥用和暴力攻击
 const adminRateLimiter = rateLimit({
