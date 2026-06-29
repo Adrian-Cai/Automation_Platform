@@ -139,7 +139,7 @@ export class RequirementFileRepository {
     await this.dataSource.query(
       `INSERT INTO Auto_RequirementFileContent
         (file_id, raw_text, cleaned_text, clean_config, text_hash)
-       VALUES (?, ?, ?, CAST(? AS JSON), ?)`,
+       VALUES (?, ?, ?, ?, ?)`,
       [input.fileId, input.rawText || '', input.cleanedText || '', JSON.stringify(input.cleanConfig), hashText(input.cleanedText || '')]
     );
 
