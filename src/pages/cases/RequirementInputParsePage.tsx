@@ -17,8 +17,15 @@ import {
   saveDraftToStorage,
   CleanRequirementOptions,
 } from "@/pages/cases/requirementInputUtils";
+import {
+  deleteRequirementFile,
+  listRequirementFiles,
+  RequirementFileDto,
+  uploadRequirementFiles,
+} from "@/pages/cases/requirementFileApi";
 
-const textFileTypes = new Set(["markdown", "text", "excel"]);
+const requirementProjectId = "default";
+const requirementSessionKey = "requirement-input-default";
 
 interface ParseAnalysisPanelProps {
   characterCount: number;
@@ -98,14 +105,19 @@ function ParseAnalysisPanel({ characterCount }: ParseAnalysisPanelProps) {
   );
 }
 
-
-function readFileAsText(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
-    reader.onerror = () => reject(new Error(`无法读取文件：${file.name}`));
-    reader.readAsText(file);
-  });
+function mapRequirementFileDto(file: RequirementFileDto): UploadedRequirementFile {
+  return {
+    id: file.fileId,
+    fileId: file.fileId,
+    name: file.originalFileName || file.fileName,
+    size: file.fileSize,
+    type: file.fileType || getFileType(file.originalFileName || file.fileName),
+    extractedText: file.rawText,
+    cleanedText: file.cleanedText,
+    parseStatus: file.parseStatus,
+    parseError: file.parseError,
+    uploadedAt: file.uploadedAt,
+  };
 }
 
 function RequirementInputParsePage() {
@@ -114,6 +126,7 @@ function RequirementInputParsePage() {
   const [rules, setRules] = useState<CleanRequirementOptions>(defaultCleanRequirementOptions);
   const [files, setFiles] = useState<UploadedRequirementFile[]>([]);
   const [progress, setProgress] = useState(35);
+  const [isUploading, setIsUploading] = useState(false);
   const [config, setConfig] = useState<RequirementConfig>({
     title: draft?.title ?? "",
     productLine: draft?.productLine ?? "",
@@ -127,33 +140,74 @@ function RequirementInputParsePage() {
   const characterCount = cleanedText.length;
 
   useEffect(() => {
+    listRequirementFiles(requirementProjectId)
+      .then((remoteFiles) => setFiles(remoteFiles.map(mapRequirementFileDto)))
+      .catch((error: unknown) => {
+        console.warn("加载需求附件失败", error);
+      });
+  }, []);
+
+  useEffect(() => {
     const nextProgress = Math.min(100, 35 + (files.length > 0 ? 15 : 0) + (rawText.trim() ? 25 : 0) + (cleanedText.trim() ? 25 : 0));
     setProgress(nextProgress);
   }, [cleanedText, files.length, rawText]);
 
-  const handleFilesSelected = (selectedFiles: File[]) => {
-    selectedFiles.forEach((file) => {
-      const fileType = getFileType(file.name);
-      const baseFile: UploadedRequirementFile = {
-        id: `${file.name}-${file.lastModified}-${file.size}`,
-        name: file.name,
-        size: file.size,
-        type: fileType,
-      };
+  const handleFilesSelected = async (selectedFiles: File[]) => {
+    if (selectedFiles.length === 0) {
+      return;
+    }
 
-      setFiles((currentFiles) => [...currentFiles, baseFile]);
+    const pendingFiles: UploadedRequirementFile[] = selectedFiles.map((file) => ({
+      id: `pending-${file.name}-${file.lastModified}-${file.size}`,
+      name: file.name,
+      size: file.size,
+      type: getFileType(file.name),
+      parseStatus: "parsing",
+    }));
 
-      if (textFileTypes.has(fileType)) {
-        readFileAsText(file)
-          .then((content) => {
-            setFiles((currentFiles) => currentFiles.map((item) => (item.id === baseFile.id ? { ...item, extractedText: content } : item)));
-            setRawText((currentText) => [currentText, content].filter((item) => item.trim().length > 0).join("\n\n"));
-          })
-          .catch((error: unknown) => {
-            console.warn("读取需求附件失败", error);
-          });
+    setFiles((currentFiles) => [...pendingFiles, ...currentFiles]);
+    setIsUploading(true);
+
+    try {
+      const result = await uploadRequirementFiles({
+        files: selectedFiles,
+        projectId: requirementProjectId,
+        sessionKey: requirementSessionKey,
+        cleanConfig: rules,
+      });
+
+      const uploadedFiles = result.files.map(mapRequirementFileDto);
+      const pendingIds = new Set(pendingFiles.map((file) => file.id));
+      setFiles((currentFiles) => [
+        ...uploadedFiles,
+        ...currentFiles.filter((file) => !pendingIds.has(file.id)),
+      ]);
+
+      if (result.mergedText.trim()) {
+        setRawText((currentText) => [currentText, result.mergedText].filter((item) => item.trim().length > 0).join("\n\n"));
       }
-    });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "上传失败";
+      const pendingIds = new Set(pendingFiles.map((file) => file.id));
+      setFiles((currentFiles) => currentFiles.map((file) => (
+        pendingIds.has(file.id) ? { ...file, parseStatus: "failed", parseError: message } : file
+      )));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveFile = async (id: string) => {
+    const target = files.find((file) => file.id === id);
+    setFiles((currentFiles) => currentFiles.filter((file) => file.id !== id));
+
+    if (target?.fileId) {
+      try {
+        await deleteRequirementFile(target.fileId);
+      } catch (error: unknown) {
+        console.warn("删除需求附件失败", error);
+      }
+    }
   };
 
   const handleSaveDraft = () => {
@@ -219,10 +273,10 @@ function RequirementInputParsePage() {
         <div className="grid w-full min-w-0 grid-cols-1 items-start gap-6 xl:grid-cols-[300px_minmax(0,1fr)] 2xl:grid-cols-[320px_minmax(0,1fr)_320px]">
           {/* Left column */}
           <aside className="w-full space-y-4">
-            <RequirementUploadPanel onFilesSelected={handleFilesSelected} />
+            <RequirementUploadPanel onFilesSelected={handleFilesSelected} disabled={isUploading} />
             <UploadedFileList
               files={files}
-              onRemove={(id) => setFiles((currentFiles) => currentFiles.filter((file) => file.id !== id))}
+              onRemove={handleRemoveFile}
             />
             <CleanRulesPanel rules={rules} onChange={setRules} />
           </aside>

@@ -2,18 +2,40 @@ import { FileText, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatFileSize, RequirementFileType } from "@/pages/cases/requirementInputUtils";
+import { RequirementFileParseStatus } from "@/pages/cases/requirementFileApi";
 
 export interface UploadedRequirementFile {
   id: string;
+  fileId?: string;
   name: string;
   size: number;
   type: RequirementFileType;
   extractedText?: string;
+  cleanedText?: string;
+  parseStatus?: RequirementFileParseStatus;
+  parseError?: string;
+  uploadedAt?: string;
 }
 
 interface UploadedFileListProps {
   files: UploadedRequirementFile[];
   onRemove: (id: string) => void;
+}
+
+function getStatusBadge(file: UploadedRequirementFile) {
+  if (file.parseStatus === "failed") {
+    return <Badge className="bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400">解析失败</Badge>;
+  }
+
+  if (file.parseStatus === "success" || file.extractedText || file.cleanedText) {
+    return <Badge className="bg-[#39E079]/10 text-[#2ba85a] dark:bg-[#39E079]/15 dark:text-[#39E079]">已读取</Badge>;
+  }
+
+  if (file.parseStatus === "parsing" || file.parseStatus === "pending") {
+    return <Badge className="bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">解析中</Badge>;
+  }
+
+  return <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">待解析</Badge>;
 }
 
 function UploadedFileList({ files, onRemove }: UploadedFileListProps) {
@@ -36,46 +58,45 @@ function UploadedFileList({ files, onRemove }: UploadedFileListProps) {
           files.map((file, index) => (
             <div
               key={file.id}
-              className="group flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2.5 transition-all duration-200 hover:border-slate-200 hover:bg-white hover:shadow-sm dark:border-slate-800/60 dark:bg-slate-900/30 dark:hover:border-slate-700 dark:hover:bg-slate-900/50"
+              className="group rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2.5 transition-all duration-200 hover:border-slate-200 hover:bg-white hover:shadow-sm dark:border-slate-800/60 dark:bg-slate-900/30 dark:hover:border-slate-700 dark:hover:bg-slate-900/50"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/40">
-                  <FileText className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/40">
+                    <FileText className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                      {file.name}
+                    </p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                      {formatFileSize(file.size)}{file.uploadedAt ? ` · ${new Date(file.uploadedAt).toLocaleString()}` : ""}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-                    {file.name}
-                  </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500">
-                    {formatFileSize(file.size)}
-                  </p>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    {file.type}
+                  </Badge>
+                  {getStatusBadge(file)}
+                  <Button
+                    aria-label={`移除 ${file.name}`}
+                    className="h-7 w-7 rounded-lg opacity-0 transition-all duration-200 hover:bg-red-50 hover:text-red-500 group-hover:opacity-100 dark:hover:bg-red-950/30"
+                    size="icon"
+                    type="button"
+                    variant="ghost"
+                    onClick={() => onRemove(file.id)}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                  {file.type}
-                </Badge>
-                {file.extractedText ? (
-                  <Badge className="bg-[#39E079]/10 text-[#2ba85a] dark:bg-[#39E079]/15 dark:text-[#39E079]">
-                    已读取
-                  </Badge>
-                ) : (
-                  <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
-                    待解析
-                  </Badge>
-                )}
-                <Button
-                  aria-label={`移除 ${file.name}`}
-                  className="h-7 w-7 rounded-lg opacity-0 transition-all duration-200 hover:bg-red-50 hover:text-red-500 group-hover:opacity-100 dark:hover:bg-red-950/30"
-                  size="icon"
-                  type="button"
-                  variant="ghost"
-                  onClick={() => onRemove(file.id)}
-                >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+              {file.parseError && (
+                <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600 dark:bg-red-950/20 dark:text-red-400">
+                  {file.parseError}
+                </p>
+              )}
             </div>
           ))
         )}
