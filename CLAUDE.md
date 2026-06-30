@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## ⚠️ 任务执行规范（必须遵守）
 
 **每次开始任何任务之前，必须：**
+
 1. 用自己的话重新复述用户的需求，明确描述要做什么、预期效果是什么
 2. 等待用户回复"确认"之后，才能开始执行任务
 3. 未经用户确认，不得修改任何代码或文件
@@ -30,16 +31,18 @@ npm run server:build
 
 ## 本地调试环境
 
-| 服务 | 地址 | 说明 |
-|------|------|------|
-| 前端页面 | http://localhost:5173 | Vite 开发服务器 |
-| 后端 API | http://localhost:3000 | Express API 服务 |
+| 服务      | 地址                       | 说明               |
+|:----------|:---------------------------|:-------------------|
+| 前端页面  | `http://localhost:5173`    | Vite 开发服务器    |
+| 后端 API  | `http://localhost:3000`    | Express API 服务   |
 
 **测试账号**（本地登录）：
+
 - 邮箱：`zhaoliu@autotest.com`
 - 密码：`test123456`
 
 **常用调试接口**：
+
 ```bash
 # 调度器实时状态
 curl http://localhost:3000/api/tasks/scheduler/status
@@ -134,12 +137,14 @@ npx tsc --noEmit -p tsconfig.server.json
 ## 测试规范
 
 ### 前端测试
+
 - **框架**：Vitest + React Testing Library + jsdom
 - **位置**：`test_case/frontend/`（组件测试：`components/`，Hook 测试：`hooks/`）
 - **命名**：测试文件以 `.test.tsx` 结尾，使用 `describe()` 和 `it()` 组织
 - **模拟**：UI 组件使用 `vi.mock()` 进行模拟
 
 ### 后端测试
+
 - **位置**：`test_case/backend/`（`config/`、`services/`）
 - **框架**：Vitest
 
@@ -179,7 +184,7 @@ npx tsc --noEmit -p tsconfig.server.json
 ### 前端（`src/`）
 
 | 场景 | 使用库 | 说明 |
-|------|--------|------|
+|---|---|---|
 | 日期格式化 / 计算 | `date-fns` | `format`, `addDays`, `differenceInDays` 等，**禁止**手写日期运算 |
 | 日期选择器 | `react-day-picker` | 已集成，直接复用 |
 | 图表 | `recharts` | 折线/柱状/饼图/甜甜圈，**禁止**用 SVG 手写 |
@@ -195,7 +200,7 @@ npx tsc --noEmit -p tsconfig.server.json
 ### 后端（`server/`）
 
 | 场景 | 使用库 | 说明 |
-|------|--------|------|
+|---|---|---|
 | ORM / 数据库 | `TypeORM` + `mysql2` | 实体定义在 `server/entities/`，禁止裸 SQL 字符串拼接 |
 | HTTP 路由 | `express` | 路由文件在 `server/routes/` |
 | 定时任务 | `croner` | 已有 `TaskSchedulerService` 封装，**勿重复实现** Cron 逻辑 |
@@ -211,7 +216,7 @@ npx tsc --noEmit -p tsconfig.server.json
 ## 📚 按需参考文档（AI：按场景主动读取）
 
 | 场景 | 文档 |
-|------|------|
+|---|---|
 | 新增/修改 API 端点，核对路由定义和请求/响应格式 | `docs/API_DOCUMENTATION.md` |
 | 操作数据库表、添加新表、查看表结构变更历史 | `docs/database-design.md` |
 | Jenkins 集成、回调格式、认证方式、Git 仓库同步 | `docs/integrations.md` |
