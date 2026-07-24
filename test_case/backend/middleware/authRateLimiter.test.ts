@@ -36,8 +36,8 @@ describe('Auth Rate Limiters', () => {
       app = createApp(loginRateLimiter);
     });
 
-    it('should allow 5 requests within 15 minutes', async () => {
-      for (let i = 0; i < 5; i++) {
+    it('should allow 60 requests within 1 second', async () => {
+      for (let i = 0; i < 60; i++) {
         const res = await request(app)
           .post('/test')
           .send({ email: 'test@example.com', password: 'password' });
@@ -46,15 +46,15 @@ describe('Auth Rate Limiters', () => {
       }
     });
 
-    it('should block 6th request with 429 status', async () => {
+    it('should block 61st request with 429 status', async () => {
       // Exhaust the limit
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 60; i++) {
         await request(app)
           .post('/test')
           .send({ email: 'test@example.com', password: 'password' });
       }
 
-      // 6th request should be blocked
+      // 61st request should be blocked
       const res = await request(app)
         .post('/test')
         .send({ email: 'test@example.com', password: 'password' });
@@ -72,12 +72,12 @@ describe('Auth Rate Limiters', () => {
 
       expect(res.headers).toHaveProperty('ratelimit-limit');
       expect(res.headers).toHaveProperty('ratelimit-remaining');
-      expect(res.headers['ratelimit-limit']).toBe('5');
+      expect(res.headers['ratelimit-limit']).toBe('60');
     });
 
     it('should include retry-after information in 429 response', async () => {
       // Exhaust the limit
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 60; i++) {
         await request(app).post('/test');
       }
 
@@ -266,13 +266,13 @@ describe('Auth Rate Limiters', () => {
     it('should include RateLimit-Limit header', async () => {
       const res = await request(app).post('/test');
       expect(res.headers).toHaveProperty('ratelimit-limit');
-      expect(res.headers['ratelimit-limit']).toBe('5');
+      expect(res.headers['ratelimit-limit']).toBe('60');
     });
 
     it('should include RateLimit-Remaining header', async () => {
       const res = await request(app).post('/test');
       expect(res.headers).toHaveProperty('ratelimit-remaining');
-      expect(parseInt(res.headers['ratelimit-remaining'])).toBeLessThan(5);
+      expect(parseInt(res.headers['ratelimit-remaining'])).toBeLessThan(60);
     });
 
     it('should include RateLimit-Reset header', async () => {
@@ -282,8 +282,8 @@ describe('Auth Rate Limiters', () => {
       // Reset time is returned (could be absolute timestamp or relative seconds)
       const resetTime = parseInt(res.headers['ratelimit-reset']);
       expect(resetTime).toBeGreaterThan(0);
-      // Should be within reasonable range (15 minutes window = 900 seconds)
-      expect(resetTime).toBeLessThanOrEqual(15 * 60 + Date.now() / 1000);
+      // Should be within reasonable range (1 second window = 1 second)
+      expect(resetTime).toBeLessThanOrEqual(1 + Date.now() / 1000);
     });
 
     it('should decrement RateLimit-Remaining with each request', async () => {
@@ -303,7 +303,7 @@ describe('Auth Rate Limiters', () => {
 
     it('should show 0 remaining when limit is reached', async () => {
       // Exhaust limit
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 60; i++) {
         await request(app).post('/test');
       }
 
@@ -320,7 +320,7 @@ describe('Auth Rate Limiters', () => {
 
     it('should return consistent error format on rate limit', async () => {
       // Exhaust limit
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 60; i++) {
         await request(app).post('/test');
       }
 
@@ -337,7 +337,7 @@ describe('Auth Rate Limiters', () => {
 
     it('should include retry information', async () => {
       // Exhaust limit
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 60; i++) {
         await request(app).post('/test');
       }
 
@@ -351,7 +351,7 @@ describe('Auth Rate Limiters', () => {
       const app1 = createApp(loginRateLimiter);
 
       // First IP exhausts its limit
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 60; i++) {
         await request(app1).post('/test');
       }
 

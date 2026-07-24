@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { authService } from '../services/AuthService';
 import { authenticate } from '../middleware/auth';
 import {
+  loginRateLimiter,
   registerRateLimiter,
   forgotPasswordRateLimiter,
   resetPasswordRateLimiter,
@@ -84,7 +85,7 @@ router.get('/public-key', async (_req: Request, res: Response) => {
 });
 
 // 用户登录
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', loginRateLimiter, async (req: Request, res: Response) => {
   try {
     const body = (req.body ?? {}) as Record<string, unknown>;
     const email = typeof body['email'] === 'string' ? body['email'] : '';

@@ -43,18 +43,17 @@ const baseConfig = {
 /**
  * Login Rate Limiter
  *
- * Limit: 5 requests per 15 minutes per IP
+ * Limit: 60 requests per 1 second per IP
  *
  * Rationale:
- * - Matches existing account lockout (5 failed attempts)
- * - Prevents distributed brute force attacks across multiple IPs
- * - Complements user-level protection with network-level defense
+ * - Prevents automated brute force flooding at extreme rates
+ * - Documented threshold: 60 requests per second
  */
 export const loginRateLimiter = rateLimit({
   ...baseConfig,
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
-  message: 'Too many login attempts, please try again after 15 minutes',
+  windowMs: 1000, // 1 second
+  max: 60,
+  message: 'Too many login attempts, please try again later',
   skipSuccessfulRequests: false, // Count all requests (success or fail)
 });
 
