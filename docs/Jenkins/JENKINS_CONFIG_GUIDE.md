@@ -15,7 +15,7 @@
 
 ---
 
-## 🚀 快速开始
+## 快速开始
 
 ### 第一步：准备配置文件
 
@@ -85,7 +85,7 @@ curl -X POST http://localhost:3000/api/jenkins/callback/test \
 
 ---
 
-## 🔧 详细配置步骤
+## 详细配置步骤
 
 ### 步骤 1：获取 Jenkins 凭证
 
@@ -210,7 +210,7 @@ curl ipinfo.io/ip
 
 ---
 
-## 📖 环境变量说明
+## 环境变量说明
 
 | 变量 | 类型 | 必需 | 说明 |
 |------|------|------|------|
@@ -230,7 +230,7 @@ curl ipinfo.io/ip
 
 ---
 
-## 🔍 诊断和故障排查
+## 诊断和故障排查
 
 ### 诊断工具 1：环境变量诊断
 
@@ -297,7 +297,7 @@ grep "\[AUTH\]\|\[CALLBACK\]\|\[IP-DETECTION\]" app.log
 
 ---
 
-## 🔐 安全最佳实践
+## 安全最佳实践
 
 ### 1. 密钥管理
 
@@ -349,7 +349,7 @@ grep "\[AUTH\]\|\[CALLBACK\]\|\[IP-DETECTION\]" app.log
 
 ---
 
-## ❓ 常见问题
+## 常见问题
 
 ### Q1: "Missing required environment variable" 错误
 

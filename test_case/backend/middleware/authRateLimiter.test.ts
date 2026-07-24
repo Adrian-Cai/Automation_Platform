@@ -12,6 +12,8 @@ import {
 
 describe('Auth Rate Limiters', () => {
   let app: Express;
+  let originalDateNow: typeof Date.now;
+  let mockTime = 1718000000000; // Starting timestamp
 
   // Helper to create a fresh Express app for each test
   const createApp = (limiter: any) => {
@@ -26,7 +28,14 @@ describe('Auth Rate Limiters', () => {
     return testApp;
   };
 
+  beforeEach(() => {
+    mockTime += 24 * 60 * 60 * 1000; // Increment by 1 day
+    originalDateNow = Date.now;
+    Date.now = () => mockTime;
+  });
+
   afterEach(() => {
+    Date.now = originalDateNow;
     // Clear any timers or intervals
     vi.clearAllTimers();
   });
